@@ -1,0 +1,22 @@
+{
+  "HookModels": [
+    {
+      "Hook": "patient-view",
+      "Title": "檢核BMI",
+      "Description": "檢查BMI是否為正常",
+      "Id": "bmichecker",
+      "AppName": "CdsApp.CdsCardBuilder",
+      "Prefetch": [
+       
+        {
+          "Key": "patient",
+          "Value": "Patient/{{context.patientId}}"
+        },
+        {
+          "Key": "Observation",
+          "Value": "Observation?patient={{context.patientId}}&code=39156-5"
+        }
+      ]
+    }
+  ]
+}
