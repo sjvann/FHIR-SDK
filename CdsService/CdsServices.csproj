@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CdsApp\CdsApp.csproj" />
-    <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
 </Project>

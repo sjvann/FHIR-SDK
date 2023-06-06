@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ExtensionModel\**" />
+    <EmbeddedResource Remove="ExtensionModel\**" />
+    <None Remove="ExtensionModel\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Managed\IManagedResource.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hl7.Fhir.R4" Version="3.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+</Project>
