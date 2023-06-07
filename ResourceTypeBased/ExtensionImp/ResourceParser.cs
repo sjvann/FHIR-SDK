@@ -10,12 +10,13 @@ namespace ResourceTypeBased.ExtensionImp
         {
             if (source == null) return null;
             return (T?)Activator.CreateInstance(typeof(T), source);
+
         }
 
         public static T? ParseToResource<T>(this string source) where T : ResourceAbstract
         {
             if (source == null) return null;
-            return (T?)Activator.CreateInstance(typeof(T), source.Parse());
+            return (T?)Activator.CreateInstance(typeof(T), source);
         }
     }
 }
