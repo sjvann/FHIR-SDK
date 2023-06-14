@@ -1,5 +1,4 @@
-﻿
-using Core.Attribute;
+﻿using Core.Attribute;
 using Core.ExtensionImp;
 using DataTypeService.BaseTypes;
 using DataTypeService.Complex;
@@ -44,7 +43,7 @@ namespace ResourceTypeBased
         private void SetupElementsValue(JsonNode? source)
         {
             var sourceType = typeof(T);
-            if (sourceType != null)
+            if (sourceType != null &&  ResourceTypeHelper.CheckResourceType(source, sourceType.Name))
             {
                 var properties = sourceType.GetProperties();
                 if (properties != null && properties.Any())
@@ -123,6 +122,7 @@ namespace ResourceTypeBased
             }
 
         }
+
         private static KeyValuePair<string, JsonNode?> GetChoiceValue(JsonObject? source, string jsonName)
         {
             KeyValuePair<string, JsonNode?> result = new();
