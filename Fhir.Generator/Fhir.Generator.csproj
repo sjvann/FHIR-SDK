@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ===== Package References ===== -->
+  <ItemGroup>
+    <!-- Library for parsing command-line arguments -->
+    <PackageReference Include="OneOf" Version="3.0.271" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <!-- High-performance templating engine for code generation -->
+    <PackageReference Include="Scriban" Version="5.10.0" />
+  </ItemGroup>
+
+  <!-- ===== Embedded Resources & Content ===== -->
+  <ItemGroup>
+    <!-- Embeds the Scriban templates directly into the assembly. -->
+    <!-- This makes the CLI tool self-contained and easier to distribute. -->
+    <EmbeddedResource Include="scriban\**\*.*" />
+
+    <!-- Copies definition files to the output directory for easy access during development. -->
+    <!-- For production, the file path should be passed as a CLI argument. -->
+    <None Update="definitions.*.json.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- ===== Project Properties ===== -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Fhir.Generator</RootNamespace>
+  </PropertyGroup>
+
+</Project>

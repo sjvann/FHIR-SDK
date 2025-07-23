@@ -1,0 +1,42 @@
+// Auto-generated for FHIR R5
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using Fhir.Support.Base;
+using Fhir.Support.Attributes;
+
+namespace Fhir.R5.Models;
+
+/// <summary>
+/// A URI that is a reference to a canonical URL on a FHIR resource
+/// </summary>
+public class FhirUrl : FhirStringType
+{
+    /// <summary>
+    /// 建立新的 FhirUrl 實例
+    /// </summary>
+    public FhirUrl() { }
+
+    /// <summary>
+    /// 建立新的 FhirUrl 實例
+    /// </summary>
+    /// <param name="value">初始值</param>
+    public FhirUrl(string value) : base(value) { }
+
+    /// <summary>
+    /// 隱式轉換從 string
+    /// </summary>
+    /// <param name="value">原生值</param>
+    public static implicit operator FhirUrl?(string value)
+    {
+        return value == null ? null : new FhirUrl(value);
+    }
+
+    /// <summary>
+    /// 隱式轉換到 string
+    /// </summary>
+    /// <param name="fhirValue">FHIR 值</param>
+    public static implicit operator string(FhirUrl? fhirValue)
+    {
+        return fhirValue?.Value;
+    }
+}

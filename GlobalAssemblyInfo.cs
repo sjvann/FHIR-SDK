@@ -1,9 +1,11 @@
 using System.Reflection;
 
 // Global assembly information for FHIR SDK
-[assembly: AssemblyCompany("FHIR SDK Team")]
+[assembly: AssemblyCompany("YOUR_COMPANY")]
 [assembly: AssemblyProduct("FHIR SDK")]
-[assembly: AssemblyCopyright("Copyright © 2025")]
+[assembly: AssemblyCopyright("Copyright © 2024")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: AssemblyInformationalVersion("1.0.0")]

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "fhir": "^4.12.0",
+    "hl7.fhir.r5.core": "^5.0.0"
+  }
+}

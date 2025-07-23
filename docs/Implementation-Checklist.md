@@ -1,238 +1,77 @@
-# FHIR SDK 系統提升實施檢查清單
+# FHIR SDK 實施檢查清單
 
-## ✅ 第一階段：基礎架構現代化 (已完成)
+## ✅ 第一階段：核心功能 (已完成)
 
-### 核心框架升級
-- [x] 升級到 .NET 8.0 LTS
+### 核心框架
+- [x] 升級到 .NET 9.0
 - [x] 啟用 Nullable Reference Types
-- [x] 實現版本化基礎架構
-- [x] 建立異常處理系統
-- [x] 實現依賴注入擴展
+- [x] 建立版本化基礎架構 (`IVersionAware`)
+- [x] 建立強型別 FHIR R5 核心類別
 
-### 版本管理系統
-- [x] `FhirVersion` 枚舉定義
-- [x] `IVersionAware` 介面
-- [x] `FhirVersionManager` 服務
-- [x] R5到R6遷移框架
-- [x] 版本兼容性檢查
+### 核心功能
+- [x] JSON 序列化/反序列化
+- [x] XML 序列化/反序列化
+- [x] 資源內建驗證框架
 
-### 配置管理
-- [x] `FhirSdkOptions` 配置類
-- [x] 驗證和性能選項
-- [x] 版本特定配置
-- [x] 配置驗證機制
+## 🔄 第二階段：功能完善 (進行中)
 
-## 🔄 第二階段：企業級功能 (進行中)
+### 驗證系統
+- [ ] 完善所有 R5 資源的內建驗證規則
+- [ ] 支援 Profile Validation
+- [ ] 支援 Terminology Validation (版本感知)
 
-### 資源管理
-- [x] `IFhirResourceFactory` 介面
-- [x] 版本化資源工廠
-- [x] 自動類型檢測
-- [ ] 資源驗證系統
-- [ ] 資源快取機制
+### 序列化增強
+- [ ] 提供更多序列化選項 (例如，摘要模式)
+- [ ] 提升大規模資料的序列化性能
+- [ ] 處理自訂擴充的序列化 (版本感知)
 
-### Repository模式
-- [x] `IFhirRepository<T>` 介面
-- [ ] 記憶體Repository實現
-- [ ] 資料庫Repository實現
-- [ ] 搜索和分頁支援
+### CLI 工具
+- [ ] `Fhir.Generator` 專案初始化
+- [ ] 從 Profile 生成 C# 類別
+- [ ] 管理 FHIR 版本定義檔
 
-### 安全性
-- [ ] SMART on FHIR實現
-- [ ] OAuth 2.0整合
-- [ ] 審計日誌系統
-- [ ] 權限控制
+## ⏳ 第三階段：R6 支援與生態系 (計劃中)
 
-## ⏳ 第三階段：R6準備 (計劃中)
+### R6 規範支援
+- [ ] 監控 R6 規範發展
+- [ ] 透過 CLI 工具生成 `Fhir.R6.Core`
+- [ ] 測試 R5 和 R6 的並行支援
 
-### R6規範追蹤
-- [ ] 監控R6規範發展
-- [ ] 分析變更影響
-- [ ] 更新遷移器
-- [ ] 建立R6資源定義
-
-### 測試和驗證
-- [ ] R5功能完整性測試
-- [ ] 版本遷移測試
-- [ ] 性能基準測試
-- [ ] 相容性測試
-
-### 文檔和培訓
-- [x] R6遷移策略文檔
-- [ ] API文檔生成
-- [ ] 使用範例
-- [ ] 最佳實踐指南
-
-## 🚀 部署檢查清單
-
-### 開發環境設置
-```bash
-# 1. 確認.NET 8 SDK安裝
-dotnet --version  # 應該顯示 8.0.x
-
-# 2. 還原套件
-dotnet restore
-
-# 3. 建置專案
-dotnet build --configuration Release
-
-# 4. 執行測試
-dotnet test
-```
-
-### 配置檢查
-- [ ] `appsettings.json` 配置正確
-- [ ] FHIR服務器連接設定
-- [ ] 日誌級別適當
-- [ ] 性能參數調整
-
-### 生產部署
-- [ ] 容器化配置
-- [ ] 健康檢查端點
-- [ ] 監控和告警
-- [ ] 備份策略
-
-## 📋 升級步驟
-
-### 從舊版本升級
-
-1. **備份現有資料**
-   ```bash
-   # 備份資料庫
-   pg_dump fhir_db > backup_$(date +%Y%m%d).sql
-   ```
-
-2. **更新程式碼**
-   ```bash
-   git pull origin main
-   dotnet restore
-   dotnet build
-   ```
-
-3. **執行遷移**
-   ```bash
-   dotnet run -- migrate --from R4 --to R5
-   ```
-
-4. **驗證升級**
-   ```bash
-   dotnet test --filter Category=Integration
-   ```
-
-### 新專案設置
-
-1. **建立新專案**
-   ```bash
-   dotnet new webapi -n MyFhirApp
-   cd MyFhirApp
-   ```
-
-2. **安裝FHIR SDK**
-   ```bash
-   dotnet add package FhirSdk.Core
-   dotnet add package FhirSdk.ResourceTypes.R5
-   ```
-
-3. **配置服務**
-   ```csharp
-   // Program.cs
-   builder.Services.AddFhirSdkDefault();
-   ```
-
-4. **添加配置**
-   ```json
-   // appsettings.json
-   {
-     "FhirSdk": {
-       "DefaultVersion": "R5"
-     }
-   }
-   ```
+### 開發生態系
+- [ ] 發布 NuGet 套件
+- [ ] 建立完整的 API 文件
+- [ ] 提供更多實用範例
+- [ ] 撰寫貢獻指南
 
 ## 🔧 疑難排解
 
 ### 常見問題
 
-#### 版本兼容性錯誤
-```
-FhirVersionNotSupportedException: FHIR version R6 is not supported
-```
-**解決方案：** 更新配置以支援R6或使用遷移器
+#### 序列化/反序列化錯誤
+- **原因**：來源 JSON/XML 格式錯誤，或 `resourceType` 不匹配。
+- **解決方案**：使用線上工具檢查格式，並確認反序列化的類型正確。
 
-#### 序列化錯誤
-```
-FhirSerializationException: Invalid JSON format
-```
-**解決方案：** 檢查JSON格式，使用驗證工具
-
-#### 依賴注入錯誤
-```
-InvalidOperationException: Unable to resolve service
-```
-**解決方案：** 確認服務正確註冊
-
-### 性能調優
-
-#### 記憶體使用優化
-```csharp
-services.Configure<PerformanceOptions>(options =>
-{
-    options.MaxCacheSizeMB = 200;  // 調整快取大小
-    options.EnableParallelProcessing = true;
-});
-```
-
-#### 資料庫連接優化
-```csharp
-services.Configure<DbContextOptions>(options =>
-{
-    options.EnableSensitiveDataLogging = false;  // 生產環境關閉
-    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-});
-```
-
-## 📊 監控指標
-
-### 關鍵指標
-- 資源建立/更新延遲
-- 搜索查詢性能
-- 記憶體使用量
-- 錯誤率
-
-### 監控設置
-```csharp
-services.AddHealthChecks()
-    .AddCheck<FhirHealthCheck>("fhir")
-    .AddCheck<DatabaseHealthCheck>("database");
-```
+#### 驗證失敗
+- **原因**：資源的屬性不符合當前宣告的 FHIR 版本規範。
+- **解決方案**：檢查 `ValidationResult.Issues` 提供的詳細錯誤資訊，並對照官方文件進行修正。
 
 ## 🎯 下一步計劃
 
 ### 短期目標 (1-3個月)
-- [ ] 完成資源驗證系統
-- [ ] 實現快取機制
-- [ ] 改善錯誤處理
-- [ ] 增加更多測試
-
-### 中期目標 (3-6個月)
-- [ ] R6 Beta支援
-- [ ] GraphQL API
-- [ ] 術語服務增強
-- [ ] 性能基準測試
+- [ ] 完成所有 R5 資源的驗證規則。
+- [ ] 發布第一個 Alpha 版本的 NuGet 套件。
+- [ ] 完成 CLI 工具生成新版本核心的功能。
 
 ### 長期目標 (6-12個月)
-- [ ] R6正式支援
-- [ ] 微服務架構
-- [ ] 雲原生部署
-- [ ] AI/ML整合
+- [ ] 完整支援 FHIR R6。
+- [ ] 提供對 GraphQL 的查詢支援 (版本感知)。
+- [ ] 建立一個活躍的開源社群。
 
-## 📞 支援聯絡
+## 📞 支援
 
-- **技術支援：** 建立GitHub Issue
-- **文檔問題：** 檢查Wiki或建立Issue
-- **功能請求：** 提交Feature Request
-- **安全問題：** 私人聯絡維護團隊
+- **回報問題或建議**：在 GitHub 上建立 Issue。
+- **查閱文件**：閱讀 `docs` 資料夾下的 `README.md` 和 `Architecture.md`。
 
 ---
 
-*最後更新：2025年1月16日*
+*最後更新：2024年7月26日*

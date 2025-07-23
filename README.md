@@ -1,295 +1,111 @@
-# FHIR SDK - 企業級FHIR解決方案
+# FHIR .NET SDK - 強型別 FHIR 開發工具包
 
-[![.NET 8](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)
+[![.NET 9](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
 [![FHIR R5](https://img.shields.io/badge/FHIR-R5-green.svg)](https://hl7.org/fhir/R5/)
 [![R6 Ready](https://img.shields.io/badge/FHIR-R6%20Ready-orange.svg)](https://hl7.org/fhir/R6/)
+[![NuGet](https://img.shields.io/nuget/v/Fhir.SDK.svg)](https://www.nuget.org/packages/Fhir.SDK/)
 
 ## 概述
 
-FHIR SDK 是一個為.NET開發者設計的企業級FHIR R5解決方案，具備完整的R6升級準備能力。提供強型別的C#類別來表示FHIR資源，並支援無縫的資料轉換和版本遷移。
+FHIR .NET SDK 是一個為 .NET 開發者設計的高性能、強型別的 FHIR 開發函式庫。它旨在提供一個清晰、版本化的架構，讓開發者可以輕鬆地在應用程式中處理不同版本的 FHIR 資料。
+
+本 SDK 的核心理念是**版本特定的核心定義**與**通用的功能模組**分離。開發者只需在使用時宣告所要使用的 FHIR 版本，SDK 內部即可自動處理對應的強型別物件、序列化和驗證規則。
 
 ## 🚀 核心特性
 
-### ✅ 已實現功能
-- **完整FHIR R5支援** - 所有資源類型和資料類型
-- **強型別API** - C#原生類型到FHIR類型的自動轉換
-- **CDS Hooks整合** - 臨床決策支援標準實現
-- **多版本架構** - 為FHIR R6準備的版本化基礎設施
-- **企業級配置** - 靈活的配置管理和依賴注入
-- **高性能** - 優化的序列化和快取機制
-
-### 🔄 版本遷移能力
-- **自動版本檢測** - 智能識別FHIR資源版本
-- **漸進式遷移** - 支援R5到R6的平滑升級路徑
-- **資料備份** - 遷移前自動備份和回滾機制
-- **兼容性檢查** - 確保版本間的最大兼容性
+- **多版本並行支援**：在同一個應用程式中無縫使用 FHIR R5 或未來的 R6 版本。
+- **強型別核心**：每個 FHIR 版本都有其獨立的、強型別的 C# 類別庫 (例如 `Fhir.R5.Core`)。
+- **通用功能模組**：提供共用的序列化 (JSON/XML) 和驗證功能，這些功能會根據您所選的 FHIR 版本自動調整。
+- **CLI 工具驅動的版本擴充**：當新的 FHIR 版本發布時，可透過 CLI 工具讀取官方定義檔，自動生成對應版本的核心專案。
 
 ## 📦 專案結構
 
 ```
 FHIR-SDK/
-├── Core/                    # 核心基礎設施 (版本無關)
-│   ├── Versioning/         # 版本管理和遷移
-│   ├── Contracts/          # 核心介面定義
-│   ├── Factories/          # 資源工廠
-│   └── Configuration/      # 配置管理
-├── DataTypeService/        # FHIR資料類型實現
-├── DataTypeHelper/         # 類型轉換輔助工具
-├── ResourceTypeServices/   # FHIR R5資源實現
-├── ResourceService/        # 資源管理服務
-├── TerminologyService/     # 術語服務
-├── CdsApp/                # CDS Hooks應用範例
-├── CdsService/            # CDS Hooks服務
-├── MainServices/          # 主要API服務
-└── DataSource/            # 資料持久化 (Umbraco)
+├── Fhir.Models/
+│   ├── R5/                   # FHIR R5 的核心強型別定義
+│   │   └── Fhir.R5.Core.csproj
+│   └── Base/                   # FHIR 通用核心
+│       └── Fhir.Models.csproj
+├── Fhir.Serialization.Json/  # 通用的 JSON 序列化模組
+├── Fhir.Serialization.Xml/   # 通用的 XML 序列化模組
+├── Fhir.Validation/          # 通用的驗證模組
+├── Fhir.Support/             # 共用的輔助函式庫
+├── Fhir.Generator/           # 用於生成新版本核心的 CLI 工具
+├── docs/                     # 專案文件
+├── Fhir.Tests/               # 單元測試
+└── FHIR Solution.sln         # Visual Studio 方案檔
 ```
 
 ## 🛠️ 快速開始
 
-### 1. 安裝套件
+### 1. 建立並設定 FHIR 上下文
+在您的應用程式中，首先需要建立一個 `IFhirContext` 的實例，來決定您想要使用的 FHIR 版本。
+
+```csharp
+using Fhir.Support;
+using Fhir.Support.Versioning;
+
+// 建立一個 R5 版本的上下文
+IFhirContext fhirContext = new FhirContext(FhirVersion.R5);
+```
+
+### 2. 使用 SDK
+將您建立的上下文實例傳遞給 SDK 的功能模組 (如序列化、驗證)。
+
+```csharp
+using Fhir.Models.R5; 
+using Fhir.Serialization.Json;
+using Fhir.Serialization.Xml;
+
+// 將上下文注入到 Parser 中
+var parser = new JsonParser(fhirContext); 
+Patient patient = parser.Parse<Patient>(jsonContent);
+
+// 驗證也會使用 R5 的規則
+// var validator = new FhirValidator(fhirContext); // 範例
+// var validationResult = validator.Validate(patient); 
+
+// 序列化同樣遵循 R5 規範
+// var serializer = new XmlSerializer(fhirContext); // 範例
+// string xmlContent = serializer.SerializeToString(patient);
+```
+
+### 3. 未來擴充到 R6
+當 HL7 發布 R6 版本時，您可以使用 CLI 工具來擴充 SDK：
+
 ```bash
-dotnet add package FhirSdk.Core
-dotnet add package FhirSdk.ResourceTypes.R5
+# 透過 CLI 工具生成 R6 的核心專案
+dotnet fhir-generator --version R6 --definition-file r6-definitions.zip
 ```
 
-### 2. 配置服務
-```csharp
-// 開發環境 - 使用預設配置
-services.AddFhirSdkDefault();
-
-// 生產環境 - 使用生產配置
-services.AddFhirSdkProduction();
-
-// R6準備 - 支援雙版本
-services.AddFhirSdkR6Ready();
+執行後，您的專案結構會變為：
 ```
-
-### 3. 使用資源
-```csharp
-// 建立患者資源
-var patient = resourceFactory.Create<Patient>();
-patient.Id = "patient-123";
-patient.Name = new[]
-{
-    new HumanName
-    {
-        Family = "王".ToFhirString(),
-        Given = new[] { "小明".ToFhirString() }
-    }
-};
-
-// 轉換為JSON
-var json = patient.ToJson();
-
-// 從JSON建立資源
-var restoredPatient = resourceFactory.CreateFromJson<Patient>(json);
+FHIR-SDK/
+├── Fhir.Models/
+│   ├── R5/
+│   └── R6/
+├── Fhir.Serialization.Json/  # 通用的 JSON 序列化模組
+├── Fhir.Serialization.Xml/   # 通用的 XML 序列化模組
+├── Fhir.Validation/          # 通用的驗證模組
+├── Fhir.Support/             # 共用的輔助函式庫
+├── Fhir.Generator/           # 用於生成新版本核心的 CLI 工具
+├── docs/                     # 專案文件
+├── Fhir.Tests/               # 單元測試
+└── FHIR Solution.sln         # Visual Studio 方案檔
 ```
+接著，您只需將建立上下文的程式碼改為 `new FhirContext(FhirVersion.R6)`，即可在應用程式中使用 R6 的強型別物件和規則。
 
-### 4. 版本遷移 (R6準備)
-```csharp
-// 自動遷移 (當R6可用時)
-var migratedData = await versionManager.MigrateAsync(
-    r5Data, 
-    FhirVersion.R5, 
-    FhirVersion.R6
-);
-```
+## 📚 文件
 
-## ⚙️ 配置選項
-
-### appsettings.json
-```json
-{
-  "FhirSdk": {
-    "DefaultVersion": "R5",
-    "SupportedVersions": ["R5"],
-    "EnableAutoMigration": true,
-    "Validation": {
-      "StrictValidation": false,
-      "ValidateProfiles": true,
-      "ValidateTerminology": false
-    },
-    "Performance": {
-      "EnableCaching": true,
-      "CacheExpirationMinutes": 60,
-      "MaxCacheSizeMB": 100
-    }
-  }
-}
-```
-
-### 程式碼配置
-```csharp
-services.AddFhirSdk(options =>
-{
-    options.DefaultVersion = FhirVersion.R5;
-    options.SupportedVersions = new[] { FhirVersion.R5, FhirVersion.R6 };
-    options.EnableAutoMigration = true;
-    options.Validation.StrictValidation = true;
-});
-```
-
-## 🔧 開發工具
-
-### 型別轉換助手
-```csharp
-// 字串轉換
-"Hello World".ToFhirString();
-"2023-12-25".ToFhirDate();
-"https://example.com".ToFhirUri();
-
-// 數值轉換
-42.ToFhirInteger();
-3.14m.ToFhirDecimal();
-true.ToFhirBoolean();
-
-// 複雜型別
-DateTime.Now.ToFhirDateTime();
-TimeSpan.FromHours(1).ToFhirTime();
-```
-
-### CDS Hooks範例
-```csharp
-public class BmiChecker
-{
-    public IEnumerable<CardModel> CheckBmi(IEnumerable<Observation> observations)
-    {
-        return observations
-            .Where(obs => obs.Code.Coding.Any(c => c.Code == "39156-5"))
-            .Select(CreateBmiCard);
-    }
-}
-```
-
-## 🚦 R6升級路徑
-
-### 當前狀態 (R5)
-- ✅ 完整R5實現
-- ✅ 版本化基礎設施
-- ✅ 遷移框架準備
-
-### R6 Beta階段
-- 🔄 R6規範追蹤
-- 🔄 R5到R6遷移器開發
-- 🔄 雙版本測試
-
-### R6正式發布
-- ⏳ R6生產支援
-- ⏳ 性能優化
-- ⏳ 完整文檔
-
-### 升級檢查清單
-- [ ] 更新配置啟用R6支援
-- [ ] 測試現有R5資料遷移
-- [ ] 驗證應用程式相容性
-- [ ] 部署新版本
-
-## 📋 最佳實踐
-
-### 1. 版本管理
-```csharp
-// 始終檢查版本相容性
-if (!resource.CanHandle(targetVersion))
-{
-    await versionManager.MigrateAsync(data, currentVersion, targetVersion);
-}
-```
-
-### 2. 錯誤處理
-```csharp
-try
-{
-    var patient = factory.CreateFromJson<Patient>(json);
-}
-catch (FhirValidationException ex)
-{
-    logger.LogError("驗證失敗: {Issues}", ex.OperationOutcome);
-}
-catch (FhirVersionNotSupportedException ex)
-{
-    logger.LogError("版本不支援: {Version}", ex.RequestedVersion);
-}
-```
-
-### 3. 性能優化
-```csharp
-// 使用快取
-services.Configure<PerformanceOptions>(options =>
-{
-    options.EnableCaching = true;
-    options.CacheExpirationMinutes = 120;
-});
-
-// 批次處理
-var results = await repository.SearchAsync(searchParams);
-```
-
-## 🧪 測試
-
-### 單元測試
-```bash
-dotnet test Core.Tests
-dotnet test ResourceTypeServices.Tests
-```
-
-### 整合測試
-```bash
-dotnet test --filter Category=Integration
-```
-
-### 版本遷移測試
-```bash
-dotnet test --filter Category=Migration
-```
-
-## 📚 文檔
-
-### 🚀 開始使用
-- **[快速入門指南](docs/Quick-Start-Guide.md)** - 適合初學者的完整教學與實用案例
-- **[進階使用手冊](docs/Advanced-User-Manual.md)** - 資深開發者的詳細參考手冊
-
-### 📋 部署與維護
-- [FHIR R6升級遷移策略](docs/R6-Migration-Strategy.md) - 無痛升級到R6版本
-- [實施檢查清單](docs/Implementation-Checklist.md) - 部署前的完整檢查項目
-
-### 📖 參考資料
-- [API文檔](docs/api/README.md)
-- [配置指南](docs/Configuration.md)
-- [最佳實踐](docs/BestPractices.md)
-- [疑難排解](docs/Troubleshooting.md)
+- **[快速入門指南](docs/Quick-Start-Guide.md)** - 學習如何設定和使用 SDK。
+- **[架構說明](docs/Architecture.md)** - 深入了解 SDK 的設計理念。
+- **[CLI 工具指南](docs/Cli-Guide.md)** - 學習如何使用 CLI 工具擴充新的 FHIR 版本。
 
 ## 🤝 貢獻
 
-1. Fork專案
-2. 建立功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交變更 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送分支 (`git push origin feature/AmazingFeature`)
-5. 開啟Pull Request
+我們歡迎任何形式的貢獻！請參考 [CONTRIBUTING.md](CONTRIBUTING.md) 以了解如何參與。
 
 ## 📄 授權
 
-此專案使用 MIT 授權 - 詳見 [LICENSE](LICENSE) 檔案
-
-## 🙋‍♂️ 支援
-
-- 建立 [Issue](https://github.com/sjvann/FHIR-SDK/issues) 回報問題
-- 查看 [Wiki](https://github.com/sjvann/FHIR-SDK/wiki) 取得詳細文檔
-- 聯絡維護團隊
-
----
-
-## 版本歷史
-
-### v1.0.0 (2025-01-01)
-- ✅ 完整FHIR R5支援
-- ✅ 版本化架構實現
-- ✅ R6遷移準備完成
-- ✅ 企業級配置系統
-- ✅ CDS Hooks整合
-- ✅ 效能優化
-
-### 下一版本計畫
-- 🔄 FHIR R6 Beta支援
-- 🔄 增強術語服務
-- 🔄 GraphQL支援
-- 🔄 更多CDS應用範例
+此專案使用 MIT 授權 - 詳見 [LICENSE](LICENSE) 檔案。
