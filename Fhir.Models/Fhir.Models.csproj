@@ -6,15 +6,16 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Fhir.Models</RootNamespace>
     <AssemblyName>Fhir.Models</AssemblyName>
-
-    <!-- Disable default compile items to avoid duplicates -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-
-    <!-- Define a default version, e.g., R5 -->
-    <FhirVersion Condition=" '$(FhirVersion)' == '' ">R5</FhirVersion>
+    <FhirVersion Condition=" '$(FhirVersion)' == '' ">R4</FhirVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
-  <!-- Include files based on the FhirVersion property -->
+  <ItemGroup Condition=" '$(FhirVersion)' == 'R4' ">
+    <Compile Include="R4\**\*.cs" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(FhirVersion)' == 'R5' ">
     <Compile Include="R5\**\*.cs" />
   </ItemGroup>
@@ -27,6 +28,10 @@
     <ProjectReference Include="..\Fhir.Support\Fhir.Support.csproj" />
   </ItemGroup>
 
-  <!-- This section can be extended for future versions like R7 -->
+  <!-- Adding explicit using directives to solve reference issues -->
+  <ItemGroup>
+    <Using Include="System.Text.Json.Serialization" />
+    <Using Include="System.ComponentModel.DataAnnotations" />
+  </ItemGroup>
 
 </Project> 

@@ -7,7 +7,7 @@ public class SpecialTypeGenerator
         var typesDir = Path.Combine(outputDir, "DataTypes");
         Directory.CreateDirectory(typesDir);
         
-        await GenerateReferenceTypeAsync(typesDir, version);
+        await GenerateReferenceAsync(typesDir, version);
         await GenerateCodeableConceptAsync(typesDir, version);
         await GenerateCodingAsync(typesDir, version);
         await GenerateQuantityAsync(typesDir, version);
@@ -15,67 +15,177 @@ public class SpecialTypeGenerator
         await GenerateRangeAsync(typesDir, version);
     }
     
-    private async Task GenerateReferenceTypeAsync(string typesDir, string version)
+    private async Task GenerateReferenceAsync(string typesDir, string version)
     {
         var content = $@"// Auto-generated for FHIR {version}
+using System.ComponentModel.DataAnnotations;
+
 namespace Fhir.{version}.Models;
 
 /// <summary>
-/// A reference from one resource to another.
+/// Reference Type: A reference from one resource to another.
+/// This is the base non-generic Reference type used in FHIR resources.
 /// </summary>
-/// <typeparam name=""T"">The type of resource being referenced</typeparam>
-public class Reference<T> : DataType where T : Resource
+public class Reference : DataType
 {{
     /// <summary>
-    /// Literal reference, Relative, internal or absolute URL.
+    /// Unique id for the element within a resource (for internal references).
     /// </summary>
-    public string? Reference {{ get; set; }}
-    
+    [FhirElement(""id"", Order = 10)]
+    [Cardinality(0, 1)]
+    [JsonPropertyName(""id"")]
+    public virtual FhirString? Id {{ get; set; }}
+
     /// <summary>
-    /// Type the reference refers to (e.g. ""Patient"").
+    /// Additional content defined by implementations.
     /// </summary>
-    public FhirUri? Type {{ get; set; }}
-    
+    [FhirElement(""extension"", Order = 11)]
+    [Cardinality(0, int.MaxValue)]
+    [JsonPropertyName(""extension"")]
+    public virtual List<Extension>? Extension {{ get; set; }}
+
     /// <summary>
-    /// Logical reference, when literal reference is not known.
+    /// A reference to a location at which the other resource is found.
     /// </summary>
-    public Identifier? Identifier {{ get; set; }}
-    
+    [FhirElement(""reference"", Order = 12)]
+    [Cardinality(0, 1)]
+    [JsonPropertyName(""reference"")]
+    public virtual FhirString? ReferenceValue {{ get; set; }}
+
     /// <summary>
-    /// Text alternative for the resource.
+    /// The expected type of the target of the reference.
     /// </summary>
-    public string? Display {{ get; set; }}
-    
+    [FhirElement(""type"", Order = 13)]
+    [Cardinality(0, 1)]
+    [JsonPropertyName(""type"")]
+    public virtual FhirUri? Type {{ get; set; }}
+
     /// <summary>
-    /// Gets the expected resource type.
+    /// An identifier for the target resource.
     /// </summary>
-    public string ExpectedResourceType => typeof(T).Name;
-    
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    [FhirElement(""identifier"", Order = 14)]
+    [Cardinality(0, 1)]
+    [JsonPropertyName(""identifier"")]
+    public virtual Identifier? Identifier {{ get; set; }}
+
+    /// <summary>
+    /// Plain text narrative that identifies the resource.
+    /// </summary>
+    [FhirElement(""display"", Order = 15)]
+    [Cardinality(0, 1)]
+    [JsonPropertyName(""display"")]
+    public virtual FhirString? Display {{ get; set; }}
+
+    /// <summary>
+    /// Validates this reference according to FHIR rules.
+    /// </summary>
+    public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {{
-        var results = base.Validate(validationContext).ToList();
-        
-        // 至少要有 Reference 或 Identifier
-        if (string.IsNullOrEmpty(Reference) && Identifier == null)
+        var results = new List<ValidationResult>();
+
+        // Reference 必須有 reference 或 identifier 至少其中一個
+        if (string.IsNullOrEmpty(ReferenceValue?.Value) && Identifier == null)
         {{
             results.Add(new ValidationResult(
                 ""Reference must have either a reference or an identifier"",
-                new[] {{ nameof(Reference), nameof(Identifier) }}));
+                new[] {{ nameof(ReferenceValue), nameof(Identifier) }}));
         }}
-        
+
+        // 驗證巢狀物件
+        if (Identifier != null)
+        {{
+            Validator.TryValidateObject(Identifier, new ValidationContext(Identifier), results, true);
+        }}
+
         return results;
     }}
 }}
 
 /// <summary>
-/// Non-generic reference for cases where the target type is not known at compile time.
+/// Generic Reference Type: A strongly-typed reference to a specific type of resource.
+/// This provides compile-time type checking and enhanced validation.
 /// </summary>
-public class Reference : DataType
+/// <typeparam name=""T"">The expected resource type</typeparam>
+public class Reference<T> : Reference where T : Resource
 {{
-    public string? Reference {{ get; set; }}
-    public FhirUri? Type {{ get; set; }}
-    public Identifier? Identifier {{ get; set; }}
-    public string? Display {{ get; set; }}
+    /// <summary>
+    /// Gets the expected resource type name.
+    /// </summary>
+    public string ExpectedResourceType => typeof(T).Name;
+
+    /// <summary>
+    /// Creates a reference to a specific resource instance.
+    /// </summary>
+    /// <param name=""resource"">The resource to reference</param>
+    /// <returns>A new reference pointing to the resource</returns>
+    public static Reference<T> CreateFor(T resource)
+    {{
+        if (resource == null) throw new ArgumentNullException(nameof(resource));
+        
+        return new Reference<T>
+        {{
+            ReferenceValue = new FhirString($""{{typeof(T).Name}}/{{resource.Id?.Value}}""),
+            Type = new FhirUri($""http://hl7.org/fhir/StructureDefinition/{{typeof(T).Name}}""),
+            Display = resource.ToString() // 或其他適當的顯示邏輯
+        }};
+    }}
+
+    /// <summary>
+    /// Creates a reference using just an ID.
+    /// </summary>
+    /// <param name=""id"">The resource ID</param>
+    /// <returns>A new reference pointing to the resource</returns>
+    public static Reference<T> CreateFor(string id)
+    {{
+        if (string.IsNullOrEmpty(id)) throw new ArgumentException(""ID cannot be null or empty"", nameof(id));
+        
+        return new Reference<T>
+        {{
+            ReferenceValue = new FhirString($""{{typeof(T).Name}}/{{id}}""),
+            Type = new FhirUri($""http://hl7.org/fhir/StructureDefinition/{{typeof(T).Name}}"")
+        }};
+    }}
+
+    /// <summary>
+    /// Enhanced validation that includes type checking.
+    /// </summary>
+    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {{
+        var results = base.Validate(validationContext).ToList();
+
+        // 檢查類型一致性
+        if (!string.IsNullOrEmpty(Type?.Value))
+        {{
+            var expectedCanonical = $""http://hl7.org/fhir/StructureDefinition/{{ExpectedResourceType}}"";
+            var expectedShort = ExpectedResourceType;
+            
+            if (!string.Equals(Type.Value, expectedCanonical, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(Type.Value, expectedShort, StringComparison.OrdinalIgnoreCase))
+            {{
+                results.Add(new ValidationResult(
+                    $""Reference type '{{Type.Value}}' does not match expected type '{{ExpectedResourceType}}'"",
+                    new[] {{ nameof(Type) }}));
+            }}
+        }}
+
+        // 檢查 reference 字串中的資源類型
+        if (!string.IsNullOrEmpty(ReferenceValue?.Value) && 
+            !ReferenceValue.Value.StartsWith(""#"") && // 不是內含資源參考
+            !Uri.IsWellFormedUriString(ReferenceValue.Value, UriKind.Absolute)) // 不是絕對 URL
+        {{
+            // 假設是相對參考，檢查格式 ResourceType/id
+            var parts = ReferenceValue.Value.Split('/');
+            if (parts.Length >= 2 && 
+                !string.Equals(parts[0], ExpectedResourceType, StringComparison.OrdinalIgnoreCase))
+            {{
+                results.Add(new ValidationResult(
+                    $""Reference '{{ReferenceValue.Value}}' does not match expected resource type '{{ExpectedResourceType}}'"",
+                    new[] {{ nameof(ReferenceValue) }}));
+            }}
+        }}
+
+        return results;
+    }}
 }}";
         
         await File.WriteAllTextAsync(Path.Combine(typesDir, "Reference.cs"), content);

@@ -23,7 +23,7 @@ public class {{ model.name }}{{ if model.base_type }} : {{ model.base_type }}{{ 
     [ChoiceType]
     {{- end }}
     [JsonPropertyName("{{ property.original_name | default property.name }}")]
-    public {{ property.type }}{{ if property.is_array }}[]{{ end }} {{ property.name }} { get; set; }
+    public {{ if property.needs_new_keyword }}new {{ end }}{{ property.type }}{{ if property.is_array }}[]{{ end }} {{ property.name }} { get; set; }
     {{- end }}
 
     {{- if model.has_choice_types }}

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>FHIR SDK 完整使用手冊 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="FHIR SDK 完整使用手冊 ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/sjvann/FHIR-SDK/blob/master/Documentation/docs/Advanced-User-Manual.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="fhir-sdk-完整使用手冊">FHIR SDK 完整使用手冊</h1>
+
+<h2 id="目錄">目錄</h2>
+<ol>
+<li><a href="#%E6%A6%82%E8%BF%B0">概述</a></li>
+<li><a href="#%E6%9E%B6%E6%A7%8B%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90">架構深度解析</a></li>
+<li><a href="#%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD">核心功能</a></li>
+<li><a href="#%E7%89%88%E6%9C%AC%E9%81%B7%E7%A7%BB">版本遷移</a></li>
+<li><a href="#%E6%93%B4%E5%B1%95%E9%96%8B%E7%99%BC">擴展開發</a></li>
+<li><a href="#%E6%95%85%E9%9A%9C%E6%8E%92%E9%99%A4">故障排除</a></li>
+</ol>
+<hr>
+<h2 id="概述">概述</h2>
+<p>FHIR SDK 是一個企業級的.NET FHIR實現，專為需要高性能、可擴展和版本兼容的應用程式而設計。本手冊涵蓋了所有高級功能和最佳實踐。</p>
+<h3 id="核心價值主張">核心價值主張</h3>
+<ul>
+<li><strong>類型安全</strong>：強型別C#類別對應所有FHIR資源。</li>
+<li><strong>高性能序列化</strong>：在強型別物件與 JSON/XML 之間進行高效能轉換。</li>
+<li><strong>內建驗證</strong>：資源本身具備驗證能力，確保資料合規性。</li>
+<li><strong>版本管理</strong>：內建R5到R6的遷移路徑。</li>
+</ul>
+<hr>
+<h2 id="架構深度解析">架構深度解析</h2>
+<h3 id="分層架構">分層架構</h3>
+<pre><code class="lang-mermaid">graph TD
+    A[核心層] --&gt; B[資料類型層]
+    B --&gt; C[資源層]
+    C --&gt; D[序列化/驗證層]
+    
+    subgraph core[核心層]
+        E1[版本管理]
+        E2[配置管理]
+        E3[異常處理]
+    end
+    
+    subgraph resources[資源層]
+        C1[Patient]
+        C2[Observation]
+        C3[Practitioner]
+        C4[Organization]
+    end
+</code></pre>
+<h3 id="關鍵組件">關鍵組件</h3>
+<h4 id="1-版本管理系統">1. 版本管理系統</h4>
+<p>所有核心組件都實現了 <code>IVersionAware</code> 介面，允許在執行時期處理不同版本的 FHIR 資源。</p>
+<pre><code class="lang-csharp">public interface IVersionAware
+{
+    FhirVersion SupportedVersion { get; }
+}
+</code></pre>
+<h4 id="2-序列化器">2. 序列化器</h4>
+<p>SDK 提供了高效的 JSON 和 XML 序列化器，可以輕鬆地在強型別物件和字串之間進行轉換。</p>
+<pre><code class="lang-csharp">// 將 Patient 物件序列化為 JSON 字串
+var patient = new Patient { Id = &quot;123&quot; };
+var json = new FhirJsonSerializer().SerializeToString(patient);
+
+// 將 XML 字串反序列化為 Observation 物件
+var xml = &quot;&lt;Observation&gt;&lt;id value=\&quot;456\&quot;/&gt;&lt;/Observation&gt;&quot;;
+var observation = new FhirXmlParser().Parse&lt;Observation&gt;(xml);
+</code></pre>
+<hr>
+<h2 id="核心功能">核心功能</h2>
+<h3 id="資源的建立與操作">資源的建立與操作</h3>
+<p>您可以像操作普通 C# 物件一樣建立和修改 FHIR 資源。</p>
+<pre><code class="lang-csharp">        var patient = new Patient
+        {
+            Id = Guid.NewGuid().ToString(),
+    Active = true,
+    Name = new List&lt;HumanName&gt;
+    {
+        new HumanName
+        {
+            Use = HumanName.NameUse.Official,
+            Family = &quot;陳&quot;,
+            Given = new List&lt;string&gt; { &quot;大文&quot; }
+        }
+    },
+    BirthDateElement = new Date(1990, 1, 1)
+};
+
+patient.Gender = AdministrativeGender.Male;
+</code></pre>
+<h3 id="內建驗證">內建驗證</h3>
+<p>所有 FHIR 資源物件都內建了 <code>Validate()</code> 方法，可以根據 FHIR 規範驗證其內容。</p>
+<pre><code class="lang-csharp">var validationResult = patient.Validate();
+
+if (!validationResult.IsValid)
+{
+    foreach (var issue in validationResult.Issues)
+    {
+        Console.WriteLine($&quot;驗證錯誤: {issue.Details} at {issue.Location}&quot;);
+    }
+}
+</code></pre>
+<hr>
+<h2 id="版本遷移">版本遷移</h2>
+<h3 id="自定義遷移器實現">自定義遷移器實現</h3>
+<p>您可以實現自己的遷移器，處理不同版本之間的資源轉換邏輯。</p>
+<pre><code class="lang-csharp">public class CustomR5ToR6Migrator : BaseFhirMigrator
+{
+    public override FhirVersion FromVersion =&gt; FhirVersion.R5;
+    public override FhirVersion ToVersion =&gt; FhirVersion.R6;
+    
+    protected override JsonDocument MigrateInternal(JsonDocument source)
+    {
+        var root = source.RootElement;
+        // ... 在此實現您的轉換邏輯 ...
+        return ConvertPatient(root);
+    }
+}
+</code></pre>
+<hr>
+<h2 id="擴展開發">擴展開發</h2>
+<h3 id="自定義資源類型">自定義資源類型</h3>
+<p>您可以透過繼承現有的資源類型來建立自己的擴充資源。</p>
+<pre><code class="lang-csharp">[ResourceType(&quot;CustomPatient&quot;)]
+public class CustomPatient : Patient
+{
+    [Element(&quot;customField&quot;, Order = 10)]
+    [FhirElement(&quot;customField&quot;, InSummary = true)]
+    public FhirString CustomField { get; set; }
+
+    public override IDeepCopyable DeepCopy()
+    {
+        var dest = new CustomPatient();
+        base.CopyTo(dest);
+        if (CustomField != null) dest.CustomField = (FhirString)CustomField.DeepCopy();
+        return dest;
+    }
+}
+</code></pre>
+<h3 id="自定義驗證器">自定義驗證器</h3>
+<p>您可以實現自己的驗證器，加入客製化的業務規則驗證。</p>
+<pre><code class="lang-csharp">public class CustomFhirValidator : IFhirValidator
+{
+    public async Task&lt;IValidationResult&gt; ValidateResourceAsync&lt;T&gt;(T resource) where T : IFhirResource
+    {
+        var issues = new List&lt;IValidationIssue&gt;();
+        // ... 在此實現您的驗證邏輯 ...
+        return new ValidationResult { IsValid = !issues.Any(), Issues = issues };
+    }
+}
+</code></pre>
+<hr>
+<h2 id="故障排除">故障排除</h2>
+<h3 id="常見問題及解決方案">常見問題及解決方案</h3>
+<h4 id="1-序列化反序列化錯誤">1. 序列化/反序列化錯誤</h4>
+<p><strong>問題</strong>: <code>Deserialization failed: Unexpected token when parsing...</code>
+<strong>解決方案</strong>:</p>
+<ul>
+<li>檢查來源的 JSON/XML 格式是否正確。</li>
+<li>確保 <code>resourceType</code> 屬性與您要反序列化的 C# 類型匹配。</li>
+</ul>
+<h4 id="2-驗證失敗">2. 驗證失敗</h4>
+<p><strong>問題</strong>: <code>Validate()</code> 回傳 <code>IsValid = false</code>。
+<strong>解決方案</strong>:</p>
+<ul>
+<li>仔細檢查 <code>validationResult.Issues</code> 中的詳細資訊，它會指出哪個欄位不符合規範。</li>
+<li>對照 FHIR 官方文件，確認欄位的基數 (Cardinality) 和資料類型是否正確。</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/sjvann/FHIR-SDK/blob/master/Documentation/docs/Advanced-User-Manual.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

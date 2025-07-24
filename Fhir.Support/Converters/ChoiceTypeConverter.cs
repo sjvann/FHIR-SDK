@@ -49,8 +49,8 @@ public class ChoiceTypeConverter<T1, T2> : JsonConverter<OneOf<T1, T2>>
     public override void Write(Utf8JsonWriter writer, OneOf<T1, T2> value, JsonSerializerOptions options)
     {
         value.Switch(
-            t1 => WriteValue(writer, t1, typeof(T1), options),
-            t2 => WriteValue(writer, t2, typeof(T2), options)
+            t1 => WriteValue(writer, t1!, typeof(T1), options),
+            t2 => WriteValue(writer, t2!, typeof(T2), options)
         );
     }
 
@@ -60,6 +60,7 @@ public class ChoiceTypeConverter<T1, T2> : JsonConverter<OneOf<T1, T2>>
         {
             var propertyName = _baseName + suffix;
             writer.WritePropertyName(propertyName);
+
             JsonSerializer.Serialize(writer, value, type, options);
         }
     }
@@ -111,9 +112,9 @@ public class ChoiceTypeConverter<T1, T2, T3> : JsonConverter<OneOf<T1, T2, T3>>
     public override void Write(Utf8JsonWriter writer, OneOf<T1, T2, T3> value, JsonSerializerOptions options)
     {
         value.Switch(
-            t1 => WriteValue(writer, t1, typeof(T1), options),
-            t2 => WriteValue(writer, t2, typeof(T2), options),
-            t3 => WriteValue(writer, t3, typeof(T3), options)
+            t1 => WriteValue(writer, t1!, typeof(T1), options),
+            t2 => WriteValue(writer, t2!, typeof(T2), options),
+            t3 => WriteValue(writer, t3!, typeof(T3), options)
         );
     }
 
@@ -123,6 +124,7 @@ public class ChoiceTypeConverter<T1, T2, T3> : JsonConverter<OneOf<T1, T2, T3>>
         {
             var propertyName = _baseName + suffix;
             writer.WritePropertyName(propertyName);
+
             JsonSerializer.Serialize(writer, value, type, options);
         }
     }

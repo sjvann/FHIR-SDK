@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Fhir.Support\Fhir.Support.csproj" />
-    <ProjectReference Include="..\Core\Fhir.Models.csproj" />
+    <ProjectReference Include="..\Fhir.Models\Fhir.Models.csproj" />
   </ItemGroup>
 
 </Project>

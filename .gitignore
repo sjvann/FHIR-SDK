@@ -361,3 +361,41 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# FHIR Definitions (large files, exclude from git)
+Definitions/*/definitions.json.zip
+Definitions/*/extracted/
+
+# Keep version info and metadata
+!Definitions/*/metadata/*.json
+
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+# IDE files
+.vs/
+.vscode/
+*.sln.docstates
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

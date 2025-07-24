@@ -4,12 +4,13 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Fhir.Support</RootNamespace>
+    <AssemblyName>Fhir.Support</AssemblyName>
+    <CharacterSet>utf8</CharacterSet>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="OneOf" Version="3.0.271" />
   </ItemGroup>
-
-
 
 </Project>

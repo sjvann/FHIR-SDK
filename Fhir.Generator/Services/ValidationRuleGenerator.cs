@@ -99,6 +99,10 @@ public class ValidationRuleGenerator
         var valueSet = valueSetElement.GetString();
         var strength = strengthElement.GetString();
         
+        // 檢查 null 值
+        if (valueSet == null || strength == null)
+            return null;
+        
         // 只對 required 和 extensible 綁定生成驗證
         if (strength != "required" && strength != "extensible")
             return null;

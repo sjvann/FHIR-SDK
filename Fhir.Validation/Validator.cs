@@ -6,8 +6,9 @@ using System.Collections.Generic;
 namespace Fhir.Validation;
 
 /// <summary>
-/// 提供 FHIR 资源对象的验证功能。
-/// 此验证器是版本无关的，它依赖于 <see cref="FhirContext"/> 来取得特定版本的模型和 Profile 约束信息。
+/// Provides functionality to validate FHIR resource objects against their definitional constraints.
+/// This validator is version-aware and relies on an <see cref="IFhirContext"/>
+/// to access version-specific model information and profile constraints.
 /// </summary>
 public class Validator : IFhirValidator
 {
@@ -23,10 +24,13 @@ public class Validator : IFhirValidator
     }
 
     /// <summary>
-    /// 验证一个 FHIR 资源对象是否符合其 Profile 中定义的约束。
+    /// Validates a FHIR resource object against its base specification and any associated profiles.
     /// </summary>
-    /// <param name="resource">要验证的 FHIR 资源对象。</param>
-    /// <returns>一个包含所有验证问题的列表。如果列表为空，表示验证通过。</returns>
+    /// <param name="resource">The FHIR resource instance to validate.</param>
+    /// <returns>
+    /// A list of <see cref="ValidationIssue"/> objects.
+    /// If the list is empty, the validation was successful.
+    /// </returns>
     public List<ValidationIssue> Validate(IResource resource)
     {
         var issues = new List<ValidationIssue>();

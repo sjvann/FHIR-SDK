@@ -9,7 +9,9 @@ using System.Xml.Linq;
 namespace Fhir.Serialization.Xml;
 
 /// <summary>
-/// 提供將強型別 FHIR 物件序列化為 XML 字串的功能。
+/// A FHIR serializer for converting strongly-typed FHIR objects into their XML string representation.
+/// This serializer is version-aware and relies on the provided <see cref="IFhirContext"/> to function,
+/// though serialization logic is generally consistent across FHIR versions.
 /// </summary>
 public class XmlSerializer : IFhirSerializer
 {
@@ -26,22 +28,45 @@ public class XmlSerializer : IFhirSerializer
     }
 
     /// <inheritdoc/>
+    /// <typeparam name="T">The type of the FHIR resource.</typeparam>
+    /// <param name="resource">The resource instance to serialize.</param>
+    /// <returns>An XML string representing the FHIR resource.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the resource is null.</exception>
     public string SerializeToString<T>(T resource) where T : IResource
     {
+        if (resource == null)
+            throw new ArgumentNullException(nameof(resource));
+
         var doc = SerializeToXDocument(resource);
         return doc.ToString();
     }
 
     /// <inheritdoc/>
+    /// <typeparam name="T">The type of the FHIR resource.</typeparam>
+    /// <param name="resource">The resource instance to serialize.</param>
+    /// <returns>An XML string representing the FHIR resource.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the resource is null.</exception>
     public byte[] SerializeToBytes<T>(T resource) where T : IResource
     {
+        if (resource == null)
+            throw new ArgumentNullException(nameof(resource));
+
         var xmlString = SerializeToString(resource);
         return System.Text.Encoding.UTF8.GetBytes(xmlString);
     }
 
     /// <inheritdoc/>
+    /// <typeparam name="T">The type of the FHIR resource.</typeparam>
+    /// <param name="resource">The resource instance to serialize.</param>
+    /// <param name="stream">The stream to write the serialized XML to.</param>
+    /// <exception cref="ArgumentNullException">Thrown if the resource or stream is null.</exception>
     public void SerializeToStream<T>(T resource, Stream stream) where T : IResource
     {
+        if (resource == null)
+            throw new ArgumentNullException(nameof(resource));
+        if (stream == null)
+            throw new ArgumentNullException(nameof(stream));
+
         var doc = SerializeToXDocument(resource);
         doc.Save(stream);
     }
@@ -182,7 +207,9 @@ public class XmlSerializer : IFhirSerializer
 }
 
 /// <summary>
-/// 提供將 FHIR XML 字串反序列化為強型別 FHIR 物件的功能。
+/// A FHIR parser for deserializing XML content into strongly-typed FHIR objects.
+/// This parser is version-aware and relies on an <see cref="IFhirContext"/>
+/// to determine which version-specific models to use for deserialization.
 /// </summary>
 public class XmlParser : IFhirParser
 {
@@ -199,8 +226,18 @@ public class XmlParser : IFhirParser
     }
 
     /// <inheritdoc/>
+    /// <typeparam name="T">The expected base type of the resource (e.g., Resource, Patient, etc.).</typeparam>
+    /// <param name="xml">The XML string representing the FHIR resource.</param>
+    /// <returns>A strongly-typed object representing the parsed FHIR resource.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the input XML string is null or empty.</exception>
+    /// <exception cref="System.Xml.XmlException">Thrown if the input string is not valid XML.</exception>
+    /// <exception cref="TypeLoadException">Thrown if the resource type specified in the XML root element cannot be found in the model assembly provided by the <see cref="IFhirContext"/>.</exception>
+    /// <exception cref="InvalidCastException">Thrown if the parsed resource cannot be cast to the specified type <typeparamref name="T"/>.</exception>
     public T Parse<T>(string xml) where T : IResource
     {
+        if (string.IsNullOrEmpty(xml))
+            throw new ArgumentNullException(nameof(xml));
+
         var doc = XDocument.Parse(xml);
         var root = doc.Root!;
         

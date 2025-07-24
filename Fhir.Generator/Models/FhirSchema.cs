@@ -40,6 +40,12 @@ public class PropertyDefinition
     public bool IsOneOfChoiceType { get; set; }
     public string ChoiceBaseName { get; set; } = string.Empty;
     public Dictionary<string, string> ChoiceTypeMapping { get; set; } = new();
+    
+    // 指示是否需要 override 關鍵字來覆寫基底類別成員
+    public bool NeedsNewKeyword { get; set; }
+    
+    // Reference 類型的目標限制
+    public List<string> TargetProfiles { get; set; } = new();
 }
 
 public class ValueSetDefinition
@@ -95,3 +101,4 @@ public enum ValidationRuleType
     Constraint,
     TypeValidation
 }
+

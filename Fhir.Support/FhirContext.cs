@@ -19,6 +19,7 @@ namespace Fhir.Support
         /// Initializes a new instance of the <see cref="FhirContext"/> class for a specific FHIR version.
         /// </summary>
         /// <param name="version">The FHIR version to use.</param>
+        /// <exception cref="TypeLoadException">Thrown if the required model assembly (e.g., Fhir.Models.R5.dll) cannot be found. This typically means the corresponding NuGet package is not referenced.</exception>
         public FhirContext(Versioning.FhirVersion version)
         {
             Version = version;

@@ -8,7 +8,9 @@ using System.Text.Json;
 namespace Fhir.Serialization.Json;
 
 /// <summary>
-/// 提供將 FHIR JSON 字串反序列化為強型別 FHIR 物件的功能。
+/// A FHIR parser for deserializing JSON content into strongly-typed FHIR objects.
+/// This parser is version-aware and relies on an <see cref="IFhirContext"/>
+/// to determine which version-specific models to use for deserialization.
 /// </summary>
 public class JsonParser : IFhirParser
 {
@@ -24,8 +26,18 @@ public class JsonParser : IFhirParser
     }
 
     /// <inheritdoc/>
+    /// <typeparam name="T">The expected base type of the resource (e.g., Resource, Patient, etc.).</typeparam>
+    /// <param name="json">The JSON string representing the FHIR resource.</param>
+    /// <returns>A strongly-typed object representing the parsed FHIR resource.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the input JSON string is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown if the input string is not valid JSON.</exception>
+    /// <exception cref="TypeLoadException">Thrown if the resource type specified in the JSON (e.g., "Patient") cannot be found in the model assembly provided by the <see cref="IFhirContext"/>.</exception>
+    /// <exception cref="InvalidCastException">Thrown if the parsed resource cannot be cast to the specified type <typeparamref name="T"/>.</exception>
     public T Parse<T>(string json) where T : IResource
     {
+        if (string.IsNullOrEmpty(json))
+            throw new ArgumentNullException(nameof(json));
+
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         

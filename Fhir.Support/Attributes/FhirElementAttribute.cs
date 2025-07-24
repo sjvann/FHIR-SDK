@@ -9,6 +9,14 @@ public sealed class FhirElementAttribute : Attribute
     /// <summary>
     /// 初始化 <see cref="FhirElementAttribute"/> 的新實例。
     /// </summary>
+    public FhirElementAttribute()
+    {
+        Name = string.Empty;
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="FhirElementAttribute"/> 的新實例。
+    /// </summary>
     /// <param name="name">FHIR 元素的名稱。</param>
     /// <param name="order">FHIR 元素的順序。</param>
     public FhirElementAttribute(string name, int order)
@@ -18,14 +26,23 @@ public sealed class FhirElementAttribute : Attribute
     }
 
     /// <summary>
+    /// 初始化 <see cref="FhirElementAttribute"/> 的新實例。
+    /// </summary>
+    /// <param name="name">FHIR 元素的名稱。</param>
+    public FhirElementAttribute(string name)
+    {
+        Name = name;
+    }
+
+    /// <summary>
     /// 取得 FHIR 元素的名稱 (例如 "birthDate")。
     /// </summary>
-    public string Name { get; }
+    public string Name { get; set; }
 
     /// <summary>
     /// 取得 FHIR 元素在資源中的順序。
     /// </summary>
-    public int Order { get; }
+    public int Order { get; set; }
 
     /// <summary>
     /// 取得或設定一個值，表示此元素是否為列表（基數 > 1）。

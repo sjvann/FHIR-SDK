@@ -83,11 +83,19 @@ public class EnhancedTypeMapper
 
         string baseType;
 
-        // 處理 Reference 型別的泛型
-        if (cleanType == "Reference" && targetProfiles?.Count > 0)
+        // 處理 Reference 型別
+        if (cleanType == "Reference")
         {
-            var targetType = ExtractResourceTypeFromProfile(targetProfiles.First());
-            baseType = $"Reference<{targetType}>";
+            // FHIR Reference 設計：
+            // 1. 單一資源類型：可以考慮使用泛型 Reference<T>（未來功能）
+            // 2. 多資源類型：必須使用基礎 Reference，執行時透過 type 欄位判斷
+            // 3. 無限制：使用基礎 Reference
+
+            // 目前統一使用基礎 Reference 類型，因為：
+            // - 支援所有情境（單一、多重、無限制）
+            // - 執行時可透過 Reference.type 欄位得知實際資源類型
+            // - 符合 FHIR 標準的驗證概念
+            baseType = "Reference";
         }
         // 基本型別
         else if (_primitiveTypeMap.TryGetValue(cleanType, out var primitiveType))
@@ -123,11 +131,11 @@ public class EnhancedTypeMapper
 
         string baseType;
 
-        // 處理 Reference 型別的泛型
-        if (cleanType == "Reference" && targetProfiles?.Count > 0)
+        // 處理 Reference 型別
+        if (cleanType == "Reference")
         {
-            var targetType = ExtractResourceTypeFromProfile(targetProfiles.First());
-            baseType = $"Reference<{targetType}>";
+            // 統一使用基礎 Reference 類型，支援所有 FHIR Reference 情境
+            baseType = "Reference";
         }
         // 基本型別
         else if (_primitiveTypeMap.TryGetValue(cleanType, out var primitiveType))
@@ -200,11 +208,18 @@ public class EnhancedTypeMapper
     /// <returns>是否為值型別</returns>
     private bool IsValueType(string typeName)
     {
-        // FHIR 基礎型別都是值型別
-        return _primitiveTypeMap.ContainsValue(typeName) ||
-               typeName.StartsWith("Fhir") ||
-               typeName == "int" || typeName == "bool" || typeName == "decimal" ||
-               typeName == "DateTime" || typeName == "TimeSpan";
+        // FHIR 型別都是參考型別，不是值型別
+        if (typeName.StartsWith("Fhir") || _primitiveTypeMap.ContainsValue(typeName))
+        {
+            return false; // FHIR 型別都是參考型別
+        }
+        
+        // 真正的 C# 值型別
+        return typeName == "int" || typeName == "bool" || typeName == "decimal" ||
+               typeName == "DateTime" || typeName == "TimeSpan" ||
+               typeName == "uint" || typeName == "long" || typeName == "ulong" ||
+               typeName == "float" || typeName == "double" || typeName == "char" ||
+               typeName == "byte" || typeName == "sbyte" || typeName == "short" || typeName == "ushort";
     }
 
     /// <summary>
