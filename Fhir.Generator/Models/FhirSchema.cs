@@ -32,6 +32,7 @@ public class PropertyDefinition
     public int MinCardinality { get; set; }
     public string MaxCardinality { get; set; } = "1";
     public bool IsArray => MaxCardinality == "*" || (int.TryParse(MaxCardinality, out var max) && max > 1);
+    public bool IsRequired => MinCardinality > 0;
     public bool IsChoiceType { get; set; }
     public List<string> ChoiceTypes { get; set; } = new();
     public int Order { get; set; }
@@ -54,6 +55,7 @@ public class ValueSetDefinition
     public string Url { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public List<ValueSetConcept> Concepts { get; set; } = new();
+    public List<string> Values { get; set; } = new(); // 簡化的值列表
 }
 
 public class ValueSetConcept

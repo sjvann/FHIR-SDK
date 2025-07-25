@@ -1,0 +1,100 @@
+<Project>
+
+  <!-- FHIR R4 自動 Global Using 設定 -->
+  <ItemGroup>
+    
+    <!-- 最常用的 Resources (前 50 個) -->
+    <Using Include="Fhir.R4.Models.Resources.Patient" Alias="Patient" />
+    <Using Include="Fhir.R4.Models.Resources.Observation" Alias="Observation" />
+    <Using Include="Fhir.R4.Models.Resources.Practitioner" Alias="Practitioner" />
+    <Using Include="Fhir.R4.Models.Resources.Organization" Alias="Organization" />
+    <Using Include="Fhir.R4.Models.Resources.Encounter" Alias="Encounter" />
+    <Using Include="Fhir.R4.Models.Resources.Condition" Alias="Condition" />
+    <Using Include="Fhir.R4.Models.Resources.Procedure" Alias="Procedure" />
+    <Using Include="Fhir.R4.Models.Resources.MedicationRequest" Alias="MedicationRequest" />
+    <Using Include="Fhir.R4.Models.Resources.AllergyIntolerance" Alias="AllergyIntolerance" />
+    <Using Include="Fhir.R4.Models.Resources.DiagnosticReport" Alias="DiagnosticReport" />
+    <Using Include="Fhir.R4.Models.Resources.Medication" Alias="Medication" />
+    <Using Include="Fhir.R4.Models.Resources.MedicationAdministration" Alias="MedicationAdministration" />
+    <Using Include="Fhir.R4.Models.Resources.MedicationDispense" Alias="MedicationDispense" />
+    <Using Include="Fhir.R4.Models.Resources.MedicationStatement" Alias="MedicationStatement" />
+    <Using Include="Fhir.R4.Models.Resources.Immunization" Alias="Immunization" />
+    <Using Include="Fhir.R4.Models.Resources.CarePlan" Alias="CarePlan" />
+    <Using Include="Fhir.R4.Models.Resources.CareTeam" Alias="CareTeam" />
+    <Using Include="Fhir.R4.Models.Resources.Goal" Alias="Goal" />
+    <Using Include="Fhir.R4.Models.Resources.ServiceRequest" Alias="ServiceRequest" />
+    <Using Include="Fhir.R4.Models.Resources.Appointment" Alias="Appointment" />
+    <Using Include="Fhir.R4.Models.Resources.AppointmentResponse" Alias="AppointmentResponse" />
+    <Using Include="Fhir.R4.Models.Resources.Schedule" Alias="Schedule" />
+    <Using Include="Fhir.R4.Models.Resources.Slot" Alias="Slot" />
+    <Using Include="Fhir.R4.Models.Resources.Location" Alias="Location" />
+    <Using Include="Fhir.R4.Models.Resources.HealthcareService" Alias="HealthcareService" />
+    <Using Include="Fhir.R4.Models.Resources.PractitionerRole" Alias="PractitionerRole" />
+    <Using Include="Fhir.R4.Models.Resources.RelatedPerson" Alias="RelatedPerson" />
+    <Using Include="Fhir.R4.Models.Resources.Person" Alias="Person" />
+    <Using Include="Fhir.R4.Models.Resources.Group" Alias="Group" />
+    <Using Include="Fhir.R4.Models.Resources.Device" Alias="Device" />
+    <Using Include="Fhir.R4.Models.Resources.DeviceRequest" Alias="DeviceRequest" />
+    <Using Include="Fhir.R4.Models.Resources.DeviceUseStatement" Alias="DeviceUseStatement" />
+    <Using Include="Fhir.R4.Models.Resources.Specimen" Alias="Specimen" />
+    <Using Include="Fhir.R4.Models.Resources.ImagingStudy" Alias="ImagingStudy" />
+    <Using Include="Fhir.R4.Models.Resources.Media" Alias="Media" />
+    <Using Include="Fhir.R4.Models.Resources.DocumentReference" Alias="DocumentReference" />
+    <Using Include="Fhir.R4.Models.Resources.Composition" Alias="Composition" />
+    <Using Include="Fhir.R4.Models.Resources.Bundle" Alias="Bundle" />
+    <Using Include="Fhir.R4.Models.Resources.MessageHeader" Alias="MessageHeader" />
+    <Using Include="Fhir.R4.Models.Resources.OperationOutcome" Alias="OperationOutcome" />
+    <Using Include="Fhir.R4.Models.Resources.Provenance" Alias="Provenance" />
+    <Using Include="Fhir.R4.Models.Resources.AuditEvent" Alias="AuditEvent" />
+    <Using Include="Fhir.R4.Models.Resources.Consent" Alias="Consent" />
+    <Using Include="Fhir.R4.Models.Resources.Contract" Alias="Contract" />
+    <Using Include="Fhir.R4.Models.Resources.RiskAssessment" Alias="RiskAssessment" />
+    <Using Include="Fhir.R4.Models.Resources.DetectedIssue" Alias="DetectedIssue" />
+    <Using Include="Fhir.R4.Models.Resources.Flag" Alias="Flag" />
+    <Using Include="Fhir.R4.Models.Resources.EpisodeOfCare" Alias="EpisodeOfCare" />
+    <Using Include="Fhir.R4.Models.Resources.FamilyMemberHistory" Alias="FamilyMemberHistory" />
+    <Using Include="Fhir.R4.Models.Resources.ClinicalImpression" Alias="ClinicalImpression" />
+
+    <!-- 常用的 DataTypes -->
+    <Using Include="Fhir.R4.Models.DataTypes.HumanName" Alias="HumanName" />
+    <Using Include="Fhir.R4.Models.DataTypes.Address" Alias="Address" />
+    <Using Include="Fhir.R4.Models.DataTypes.ContactPoint" Alias="ContactPoint" />
+    <Using Include="Fhir.R4.Models.DataTypes.CodeableConcept" Alias="CodeableConcept" />
+    <Using Include="Fhir.R4.Models.DataTypes.Coding" Alias="Coding" />
+    <Using Include="Fhir.R4.Models.DataTypes.Identifier" Alias="Identifier" />
+    <Using Include="Fhir.R4.Models.DataTypes.Reference" Alias="Reference" />
+    <Using Include="Fhir.R4.Models.DataTypes.Quantity" Alias="Quantity" />
+    <Using Include="Fhir.R4.Models.DataTypes.Range" Alias="Range" />
+    <Using Include="Fhir.R4.Models.DataTypes.Ratio" Alias="Ratio" />
+    <Using Include="Fhir.R4.Models.DataTypes.Period" Alias="Period" />
+    <Using Include="Fhir.R4.Models.DataTypes.Timing" Alias="Timing" />
+    <Using Include="Fhir.R4.Models.DataTypes.Duration" Alias="Duration" />
+    <Using Include="Fhir.R4.Models.DataTypes.Age" Alias="Age" />
+    <Using Include="Fhir.R4.Models.DataTypes.Count" Alias="Count" />
+    <Using Include="Fhir.R4.Models.DataTypes.Distance" Alias="Distance" />
+    <Using Include="Fhir.R4.Models.DataTypes.Money" Alias="Money" />
+    <Using Include="Fhir.R4.Models.DataTypes.Attachment" Alias="Attachment" />
+    <Using Include="Fhir.R4.Models.DataTypes.Annotation" Alias="Annotation" />
+    <Using Include="Fhir.R4.Models.DataTypes.Signature" Alias="Signature" />
+    <Using Include="Fhir.R4.Models.DataTypes.SampledData" Alias="SampledData" />
+    <Using Include="Fhir.R4.Models.DataTypes.Extension" Alias="Extension" />
+    <Using Include="Fhir.R4.Models.DataTypes.Narrative" Alias="Narrative" />
+    <Using Include="Fhir.R4.Models.DataTypes.Meta" Alias="Meta" />
+    <Using Include="Fhir.R4.Models.DataTypes.Dosage" Alias="Dosage" />
+    <Using Include="Fhir.R4.Models.DataTypes.RelatedArtifact" Alias="RelatedArtifact" />
+    <Using Include="Fhir.R4.Models.DataTypes.ContactDetail" Alias="ContactDetail" />
+    <Using Include="Fhir.R4.Models.DataTypes.Contributor" Alias="Contributor" />
+    <Using Include="Fhir.R4.Models.DataTypes.DataRequirement" Alias="DataRequirement" />
+    <Using Include="Fhir.R4.Models.DataTypes.Expression" Alias="Expression" />
+    <Using Include="Fhir.R4.Models.DataTypes.ParameterDefinition" Alias="ParameterDefinition" />
+    <Using Include="Fhir.R4.Models.DataTypes.TriggerDefinition" Alias="TriggerDefinition" />
+    <Using Include="Fhir.R4.Models.DataTypes.UsageContext" Alias="UsageContext" />
+
+    <!-- 共用命名空間 -->
+    <Using Include="Fhir.Abstractions" />
+    <Using Include="Fhir.Core" />
+    <Using Include="System.ComponentModel.DataAnnotations" />
+    
+  </ItemGroup>
+
+</Project>

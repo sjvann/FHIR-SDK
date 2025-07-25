@@ -7,6 +7,8 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <!-- High-performance templating engine for code generation -->
     <PackageReference Include="Scriban" Version="5.10.0" />
+    <!-- JSON and compression support -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
   <!-- ===== Embedded Resources & Content ===== -->

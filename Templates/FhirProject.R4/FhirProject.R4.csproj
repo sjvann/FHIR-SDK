@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    
+    <!-- FHIR 版本設定 -->
+    <FhirVersion>R4</FhirVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- FHIR R4 套件 -->
+    <PackageReference Include="Fhir.Abstractions" Version="1.0.0" />
+    <PackageReference Include="Fhir.Core" Version="1.0.0" />
+    <PackageReference Include="Fhir.R4.Models" Version="4.0.1" />
+  </ItemGroup>
+
+  <!-- 自動匯入 FHIR R4 Global Usings -->
+  <Import Project="$(MSBuildThisFileDirectory)FhirR4.targets" />
+
+</Project>

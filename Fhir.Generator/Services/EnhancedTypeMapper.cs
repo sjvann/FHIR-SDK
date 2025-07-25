@@ -75,6 +75,14 @@ public class EnhancedTypeMapper
         ["Extension"] = "Extension",
         ["Meta"] = "Meta"
     };
+
+    // 抽象型別映射 - 需要具體實例時使用 Impl 類別
+    private readonly Dictionary<string, string> _abstractTypeToImplMap = new()
+    {
+        ["Quantity"] = "QuantityImpl",
+        ["Reference"] = "ReferenceImpl"
+        // 根據需要添加其他抽象型別
+    };
     
     public string MapFhirTypeToCSharp(string fhirType, bool isArray = false, List<string>? targetProfiles = null)
     {
