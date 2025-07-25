@@ -2,13 +2,35 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <CharacterSet>utf8</CharacterSet>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- NuGet 套件資訊 -->
+    <PackageId>Fhir.R4.Models</PackageId>
+    <Version>4.0.1</Version>
+    <Authors>FHIR SDK Team</Authors>
+    <Description>FHIR R4 Resource Models - Generated from official FHIR R4 definitions</Description>
+    <PackageTags>FHIR;R4;Healthcare;HL7;Models</PackageTags>
+    <PackageProjectUrl>https://github.com/your-org/FHIR-SDK</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/your-org/FHIR-SDK</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    
+    <!-- 文件生成 -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- 參照共用介面和基礎框架 -->
+    <ProjectReference Include="..\Fhir.Abstractions\Fhir.Abstractions.csproj" />
     <ProjectReference Include="..\Fhir.Support\Fhir.Support.csproj" />
   </ItemGroup>
 
-</Project> 
+  <ItemGroup>
+    <!-- 驗證支援 -->
+    <PackageReference Include="OneOf" Version="3.0.271" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>
