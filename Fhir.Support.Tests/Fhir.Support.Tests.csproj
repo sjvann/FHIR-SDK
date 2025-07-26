@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Fhir.Support\Fhir.Support.csproj" />
+    <ProjectReference Include="..\Fhir.Core\Fhir.Core.csproj" />
+    <ProjectReference Include="..\Fhir.R4.Models\Fhir.R4.Models.csproj" />
   </ItemGroup>
 
 </Project> 

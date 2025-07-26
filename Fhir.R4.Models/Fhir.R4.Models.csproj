@@ -22,9 +22,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 參照共用介面和基礎框架 -->
-    <ProjectReference Include="..\Fhir.Abstractions\Fhir.Abstractions.csproj" />
-    <ProjectReference Include="..\Fhir.Support\Fhir.Support.csproj" />
+    <!-- 參照合併後的核心框架 -->
+    <ProjectReference Include="..\Fhir.Core\Fhir.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

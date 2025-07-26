@@ -25,7 +25,7 @@ public class Extension : Base
     /// Required: Yes
     /// </summary>
     [JsonPropertyName("url")]
-    public string Url { get; set; } = string.Empty;
+    public FhirUri? Url { get; set; }
     
     /// <summary>
     /// Value of extension - must be one of a constrained set of the data types.
@@ -152,16 +152,16 @@ public class Extension : Base
     public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         // URL 是必要的
-        if (string.IsNullOrEmpty(Url))
+        if (Url?.Value == null)
         {
             yield return new ValidationResult("Extension.url is required");
         }
         else
         {
             // URL 格式驗證
-            if (!Uri.IsWellFormedUriString(Url, UriKind.Absolute) && !Url.StartsWith("#"))
+            if (!Uri.IsWellFormedUriString(Url.Value, UriKind.Absolute) && !Url.Value.StartsWith("#"))
             {
-                yield return new ValidationResult($"Extension.url '{Url}' must be a valid URI or start with '#'");
+                yield return new ValidationResult($"Extension.url '{Url.Value}' must be a valid URI or start with '#'");
             }
         }
         

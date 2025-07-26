@@ -1,4 +1,4 @@
-namespace Fhir.Core;
+namespace Fhir.Core.Version;
 
 /// <summary>
 /// FHIR 版本管理

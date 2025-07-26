@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Fhir.R4.Models.DataTypes;
+using Fhir.R4.Models.DataTypes.ComplexTypes;
 
 namespace Fhir.R4.Models.Base;
 
@@ -168,15 +169,15 @@ public abstract class DomainResource : Resource
     /// <summary>
     /// 取得指定 URL 的 extension
     /// </summary>
-    public Extension? GetExtension(string url)
+    public Extension? GetExtension(FhirUri url)
     {
-        return Extension?.FirstOrDefault(ext => ext.Url == url);
+        return Extension?.FirstOrDefault(ext => ext.Url?.Value == url.Value);
     }
     
     /// <summary>
     /// 添加 extension
     /// </summary>
-    public void AddExtension(string url, object? value)
+    public void AddExtension(FhirUri url, object? value)
     {
         Extension ??= new List<Extension>();
         var extension = new Extension { Url = url };
@@ -184,17 +185,17 @@ public abstract class DomainResource : Resource
         // 處理不同型別的值
         switch (value)
         {
-            case string stringValue:
-                extension.ValueString = stringValue;
+            case FhirString stringValue:
+                extension.ValueString = stringValue.Value;
                 break;
-            case int intValue:
-                extension.ValueInteger = intValue;
+            case FhirInteger intValue:
+                extension.ValueInteger = intValue.Value;
                 break;
-            case bool boolValue:
-                extension.ValueBoolean = boolValue;
+            case FhirBoolean boolValue:
+                extension.ValueBoolean = boolValue.Value;
                 break;
-            case decimal decimalValue:
-                extension.ValueDecimal = decimalValue;
+            case FhirDecimal decimalValue:
+                extension.ValueDecimal = decimalValue.Value;
                 break;
             default:
                 extension.Value = value;
@@ -276,64 +277,7 @@ public abstract class DomainResource : Resource
     }
 }
 
-/// <summary>
-/// Base definition for the few data elements that are present in all resources.
-/// 資源的 metadata 資訊
-/// </summary>
-/// <remarks>
-/// FHIR R4 Meta DataType
-/// The metadata about a resource.
-/// </remarks>
-public class Meta : Element
-{
-    /// <summary>
-    /// Version specific identifier.
-    /// FHIR Path: Meta.versionId
-    /// Cardinality: 0..1
-    /// </summary>
-    [JsonPropertyName("versionId")]
-    public string? VersionId { get; set; }
-    
-    /// <summary>
-    /// When the resource version last changed.
-    /// FHIR Path: Meta.lastUpdated
-    /// Cardinality: 0..1
-    /// </summary>
-    [JsonPropertyName("lastUpdated")]
-    public string? LastUpdated { get; set; }
-    
-    /// <summary>
-    /// Identifies where the resource comes from.
-    /// FHIR Path: Meta.source
-    /// Cardinality: 0..1
-    /// </summary>
-    [JsonPropertyName("source")]
-    public string? Source { get; set; }
-    
-    /// <summary>
-    /// Profiles this resource claims to conform to.
-    /// FHIR Path: Meta.profile
-    /// Cardinality: 0..*
-    /// </summary>
-    [JsonPropertyName("profile")]
-    public List<string>? Profile { get; set; }
-    
-    /// <summary>
-    /// Security Labels applied to this resource.
-    /// FHIR Path: Meta.security
-    /// Cardinality: 0..*
-    /// </summary>
-    [JsonPropertyName("security")]
-    public List<Coding>? Security { get; set; }
-    
-    /// <summary>
-    /// Tags applied to this resource.
-    /// FHIR Path: Meta.tag
-    /// Cardinality: 0..*
-    /// </summary>
-    [JsonPropertyName("tag")]
-    public List<Coding>? Tag { get; set; }
-}
+
 
 /// <summary>
 /// A human-readable summary of the resource conveying the essential clinical and business information.
@@ -352,7 +296,7 @@ public class Narrative : Element
     /// Allowed values: generated, extensions, additional, empty
     /// </summary>
     [JsonPropertyName("status")]
-    public string Status { get; set; } = string.Empty;
+    public FhirCode Status { get; set; } = new FhirCode();
     
     /// <summary>
     /// Limited xhtml content.
@@ -361,7 +305,7 @@ public class Narrative : Element
     /// Required: Yes
     /// </summary>
     [JsonPropertyName("div")]
-    public string Div { get; set; } = string.Empty;
+    public FhirString Div { get; set; } = new FhirString();
     
     public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -369,21 +313,21 @@ public class Narrative : Element
             yield return result;
             
         // Status 是必要的
-        if (string.IsNullOrEmpty(Status))
+        if (Status?.Value == null)
         {
             yield return new ValidationResult("Narrative.status is required");
         }
         else
         {
             var validStatuses = new[] { "generated", "extensions", "additional", "empty" };
-            if (!validStatuses.Contains(Status))
+            if (!validStatuses.Contains(Status.Value))
             {
-                yield return new ValidationResult($"Narrative.status '{Status}' is not valid. Must be one of: {string.Join(", ", validStatuses)}");
+                yield return new ValidationResult($"Narrative.status '{Status.Value}' is not valid. Must be one of: {string.Join(", ", validStatuses)}");
             }
         }
-        
+
         // Div 是必要的
-        if (string.IsNullOrEmpty(Div))
+        if (Div?.Value == null)
         {
             yield return new ValidationResult("Narrative.div is required");
         }

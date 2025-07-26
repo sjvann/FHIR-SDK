@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.Abstractions.Resources;
+using Fhir.Core.Abstractions.Resources;
 using Fhir.R4.Models.Base;
 using Fhir.R4.Models.DataTypes;
 

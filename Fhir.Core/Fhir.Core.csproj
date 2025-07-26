@@ -10,8 +10,8 @@
     <PackageId>Fhir.Core</PackageId>
     <Version>1.0.0</Version>
     <Authors>FHIR SDK Team</Authors>
-    <Description>FHIR Core - Version management and common utilities</Description>
-    <PackageTags>FHIR;Core;Version;Management;Healthcare;HL7</PackageTags>
+    <Description>FHIR Core - Common abstractions, base classes, and utilities for all FHIR versions</Description>
+    <PackageTags>FHIR;Core;Abstractions;Base;Framework;Healthcare;HL7</PackageTags>
     <PackageProjectUrl>https://github.com/your-org/FHIR-SDK</PackageProjectUrl>
     <RepositoryUrl>https://github.com/your-org/FHIR-SDK</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -22,7 +22,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Fhir.Abstractions\Fhir.Abstractions.csproj" />
+    <PackageReference Include="OneOf" Version="3.0.271" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

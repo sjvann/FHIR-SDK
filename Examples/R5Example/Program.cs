@@ -1,4 +1,4 @@
-using Fhir.Support.Base;
+using Fhir.Core;
 using Fhir.R5.Models.Resources;
 using Fhir.R5.Models.DataTypes;
 

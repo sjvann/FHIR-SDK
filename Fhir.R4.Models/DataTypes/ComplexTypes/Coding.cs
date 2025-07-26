@@ -18,7 +18,7 @@ public class Coding : DataType
     /// Cardinality: 0..1
     /// </summary>
     [JsonPropertyName("system")]
-    public string? System { get; set; }
+    public FhirUri? System { get; set; }
     
     /// <summary>
     /// Version of the system - if relevant.
@@ -26,7 +26,7 @@ public class Coding : DataType
     /// Cardinality: 0..1
     /// </summary>
     [JsonPropertyName("version")]
-    public string? Version { get; set; }
+    public FhirString? Version { get; set; }
     
     /// <summary>
     /// Symbol in syntax defined by the system.
@@ -34,7 +34,7 @@ public class Coding : DataType
     /// Cardinality: 0..1
     /// </summary>
     [JsonPropertyName("code")]
-    public string? Code { get; set; }
+    public FhirCode? Code { get; set; }
     
     /// <summary>
     /// Representation defined by the system.
@@ -42,7 +42,7 @@ public class Coding : DataType
     /// Cardinality: 0..1
     /// </summary>
     [JsonPropertyName("display")]
-    public string? Display { get; set; }
+    public FhirString? Display { get; set; }
     
     /// <summary>
     /// If this coding was chosen directly by the user.
@@ -50,7 +50,7 @@ public class Coding : DataType
     /// Cardinality: 0..1
     /// </summary>
     [JsonPropertyName("userSelected")]
-    public bool? UserSelected { get; set; }
+    public FhirBoolean? UserSelected { get; set; }
     
     /// <summary>
     /// Validates the Coding according to FHIR R4 rules.
@@ -63,15 +63,15 @@ public class Coding : DataType
             yield return result;
             
         // 如果有 system，通常也應該有 code
-        if (!string.IsNullOrEmpty(System) && string.IsNullOrEmpty(Code))
+        if (System?.Value != null && Code?.Value == null)
         {
             yield return new ValidationResult("Coding with system should typically have a code");
         }
-        
+
         // 驗證 system 是否為有效的 URI
-        if (!string.IsNullOrEmpty(System) && !Uri.IsWellFormedUriString(System, UriKind.Absolute))
+        if (System?.Value != null && !Uri.IsWellFormedUriString(System.Value, UriKind.Absolute))
         {
-            yield return new ValidationResult($"Coding.system '{System}' must be a valid URI");
+            yield return new ValidationResult($"Coding.system '{System.Value}' must be a valid URI");
         }
     }
 }

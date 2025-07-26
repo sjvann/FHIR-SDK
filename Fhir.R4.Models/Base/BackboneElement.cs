@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Fhir.R4.Models.DataTypes;
 
 namespace Fhir.R4.Models.Base;
 
@@ -30,15 +31,15 @@ public abstract class BackboneElement : Element
     /// <summary>
     /// 取得指定 URL 的 modifier extension
     /// </summary>
-    public Extension? GetModifierExtension(string url)
+    public Extension? GetModifierExtension(FhirUri url)
     {
-        return ModifierExtension?.FirstOrDefault(ext => ext.Url == url);
+        return ModifierExtension?.FirstOrDefault(ext => ext.Url?.Value == url.Value);
     }
     
     /// <summary>
     /// 添加 modifier extension
     /// </summary>
-    public void AddModifierExtension(string url, object? value)
+    public void AddModifierExtension(FhirUri url, object? value)
     {
         ModifierExtension ??= new List<Extension>();
         var extension = new Extension { Url = url };
@@ -46,17 +47,17 @@ public abstract class BackboneElement : Element
         // 處理不同型別的值
         switch (value)
         {
-            case string stringValue:
-                extension.ValueString = stringValue;
+            case FhirString stringValue:
+                extension.ValueString = stringValue.Value;
                 break;
-            case int intValue:
-                extension.ValueInteger = intValue;
+            case FhirInteger intValue:
+                extension.ValueInteger = intValue.Value;
                 break;
-            case bool boolValue:
-                extension.ValueBoolean = boolValue;
+            case FhirBoolean boolValue:
+                extension.ValueBoolean = boolValue.Value;
                 break;
-            case decimal decimalValue:
-                extension.ValueDecimal = decimalValue;
+            case FhirDecimal decimalValue:
+                extension.ValueDecimal = decimalValue.Value;
                 break;
             default:
                 extension.Value = value;
