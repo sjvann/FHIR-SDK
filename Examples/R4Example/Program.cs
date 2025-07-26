@@ -1,10 +1,10 @@
-using Fhir.Abstractions.Resources;
-using Fhir.Core;
-using Fhir.R4.Models.Resources;
-
 // 全域別名 - 實現無縫切換的關鍵
 global using Patient = Fhir.R4.Models.Resources.Patient;
 global using Observation = Fhir.R4.Models.Resources.Observation;
+
+using Fhir.Abstractions.Resources;
+using Fhir.Core;
+using Fhir.R4.Models.Resources;
 
 namespace R4Example;
 
@@ -33,9 +33,9 @@ class Program
         Console.WriteLine($"✅ R4 Patient: {r4Patient.Id}");
         Console.WriteLine($"   類型: {r4Patient.GetType().FullName}");
 
-        Console.WriteLine("\n🔧 方法 2: 使用介面 (版本無關)");
-        // 使用介面 - 這是無縫切換的關鍵
-        IPatient interfacePatient = new Patient
+        Console.WriteLine("\n🔧 方法 2: 使用泛型 Resource (版本無關)");
+        // 使用 IResource - 這是無縫切換的關鍵
+        var interfacePatient = new Patient
         {
             Id = "interface-patient-001",
             Active = true,
@@ -43,8 +43,8 @@ class Program
             BirthDate = "1985-05-15"
         };
 
-        Console.WriteLine($"✅ Interface Patient: {interfacePatient.Id}");
-        Console.WriteLine($"   介面類型: {typeof(IPatient).FullName}");
+        Console.WriteLine($"✅ Generic Patient: {interfacePatient.Id}");
+        Console.WriteLine($"   Resource Type: {interfacePatient.ResourceType}");
         Console.WriteLine($"   實作類型: {interfacePatient.GetType().FullName}");
 
         Console.WriteLine("\n🔧 方法 3: 使用全域別名 (推薦)");

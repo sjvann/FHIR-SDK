@@ -180,8 +180,11 @@ public class ChoiceType<T1, T2> : IChoiceType
         }
     }
     
+    /// <summary>
+    /// 第二個型別的值
+    /// </summary>
     [JsonIgnore]
-    public T2? Value2 
+    public T2? Value2
     { 
         get => _value2;
         set 
@@ -191,15 +194,21 @@ public class ChoiceType<T1, T2> : IChoiceType
         }
     }
     
+    /// <summary>
+    /// 當前設定的值（可能是 T1 或 T2）
+    /// </summary>
     [JsonIgnore]
-    public object? Value 
+    public object? Value
     { 
         get => Value1 ?? (object?)Value2;
         set => SetValue(value);
     }
     
+    /// <summary>
+    /// 當前值的型別名稱
+    /// </summary>
     [JsonIgnore]
-    public string? ValueTypeName 
+    public string? ValueTypeName
     {
         get
         {
@@ -210,8 +219,14 @@ public class ChoiceType<T1, T2> : IChoiceType
     }
     
     [JsonIgnore]
+    /// <summary>
+    /// 是否有設定值
+    /// </summary>
     public bool HasValue => Value1 != null || Value2 != null;
     
+    /// <summary>
+    /// 清除當前設定的值
+    /// </summary>
     public void ClearValue()
     {
         Value1 = null;

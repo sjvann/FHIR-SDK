@@ -732,55 +732,7 @@ public class FhirCompliantTypeMapper
         };
     }
 
-    /// <summary>
-    /// 映射 Choice Type 到強型別泛型 ChoiceType
-    /// </summary>
-    /// <param name="allowedTypes">允許的型別列表</param>
-    /// <param name="isArray">是否為陣列（Choice Type 通常不是陣列）</param>
-    /// <returns>強型別的 ChoiceType 型別字串</returns>
-    public string MapChoiceType(string[] allowedTypes, bool isArray = false)
-    {
-        if (allowedTypes == null || allowedTypes.Length == 0)
-        {
-            return isArray ? "List<object>?" : "object?";
-        }
 
-        // 將 FHIR 型別名稱轉換為 C# 型別名稱
-        var csharpTypes = allowedTypes.Select(MapFhirTypeToCSharpTypeName).ToArray();
-
-        var choiceType = csharpTypes.Length switch
-        {
-            1 => $"ChoiceType<{csharpTypes[0]}>",
-            2 => $"ChoiceType<{csharpTypes[0]}, {csharpTypes[1]}>",
-            3 => $"ChoiceType<{csharpTypes[0]}, {csharpTypes[1]}, {csharpTypes[2]}>",
-            4 => $"ChoiceType<{csharpTypes[0]}, {csharpTypes[1]}, {csharpTypes[2]}, {csharpTypes[3]}>",
-            _ => "object"  // 超過 4 個型別時使用 object
-        };
-
-        return isArray ? $"List<{choiceType}>?" : $"{choiceType}?";
-    }
-
-    /// <summary>
-    /// 將 FHIR 型別名稱轉換為 C# 型別名稱（用於 Choice Type）
-    /// </summary>
-    private string MapFhirTypeToCSharpTypeName(string fhirType)
-    {
-        // 檢查是否為 Primitive Type
-        if (IsPrimitiveType(fhirType))
-        {
-            return "Fhir" + char.ToUpperInvariant(fhirType[0]) + fhirType.Substring(1);
-        }
-
-        // 檢查是否為 Complex Type
-        var mapping = GetTypeMapping(fhirType);
-        if (mapping != null)
-        {
-            return mapping.CSharpType;
-        }
-
-        // 預設使用原名稱
-        return fhirType;
-    }
 
     /// <summary>
     /// 從 Choice Type 屬性名稱中提取基礎名稱
