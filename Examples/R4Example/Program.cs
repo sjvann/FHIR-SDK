@@ -2,8 +2,7 @@
 global using Patient = Fhir.R4.Models.Resources.Patient;
 global using Observation = Fhir.R4.Models.Resources.Observation;
 
-using Fhir.Abstractions.Resources;
-using Fhir.Core;
+using Fhir.Core.Version;
 using Fhir.R4.Models.Resources;
 
 namespace R4Example;

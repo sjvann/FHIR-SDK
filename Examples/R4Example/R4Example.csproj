@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <!-- 使用 R4 模型 -->
-    <ProjectReference Include="..\..\Fhir.Abstractions\Fhir.Abstractions.csproj" />
     <ProjectReference Include="..\..\Fhir.Core\Fhir.Core.csproj" />
     <ProjectReference Include="..\..\Fhir.R4.Models\Fhir.R4.Models.csproj" />
   </ItemGroup>
