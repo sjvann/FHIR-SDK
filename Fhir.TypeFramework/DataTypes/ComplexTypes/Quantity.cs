@@ -1,0 +1,207 @@
+using Fhir.TypeFramework.Abstractions;
+using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Fhir.TypeFramework.DataTypes;
+
+/// <summary>
+/// Quantity - 數量型別
+/// 用於在 FHIR 資源中表示數量
+/// </summary>
+/// <remarks>
+/// FHIR R5 Quantity (Complex Type)
+/// A measured amount (or an amount that can potentially be measured).
+/// 
+/// Structure:
+/// - value: decimal (0..1) - Numerical value (with implicit precision)
+/// - comparator: code (0..1) - &lt; | &lt;= | &gt;= | &gt; - how to understand the value
+/// - unit: string (0..1) - Unit representation
+/// - system: uri (0..1) - System that defines coded unit form
+/// - code: code (0..1) - Coded form of the unit
+/// - id: string (0..1) - inherited from Element
+/// - extension: Extension[] (0..*) - inherited from Element
+/// </remarks>
+public class Quantity : Element, IExtensibleTypeFramework
+{
+    /// <summary>
+    /// 數值（具有隱含精度）
+    /// FHIR Path: Quantity.value
+    /// Cardinality: 0..1
+    /// Type: decimal
+    /// </summary>
+    [JsonPropertyName("value")]
+    public FhirDecimal? Value { get; set; }
+
+    /// <summary>
+    /// 比較器 - 如何理解值
+    /// FHIR Path: Quantity.comparator
+    /// Cardinality: 0..1
+    /// Type: code
+    /// </summary>
+    [JsonPropertyName("comparator")]
+    public FhirCode? Comparator { get; set; }
+
+    /// <summary>
+    /// 單位表示
+    /// FHIR Path: Quantity.unit
+    /// Cardinality: 0..1
+    /// Type: string
+    /// </summary>
+    [JsonPropertyName("unit")]
+    public FhirString? Unit { get; set; }
+
+    /// <summary>
+    /// 定義編碼單位形式的系統
+    /// FHIR Path: Quantity.system
+    /// Cardinality: 0..1
+    /// Type: uri
+    /// </summary>
+    [JsonPropertyName("system")]
+    public FhirUri? System { get; set; }
+
+    /// <summary>
+    /// 單位的編碼形式
+    /// FHIR Path: Quantity.code
+    /// Cardinality: 0..1
+    /// Type: code
+    /// </summary>
+    [JsonPropertyName("code")]
+    public FhirCode? Code { get; set; }
+
+    /// <summary>
+    /// 檢查是否有值
+    /// </summary>
+    /// <returns>如果存在值則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasValue => Value?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有比較器
+    /// </summary>
+    /// <returns>如果存在比較器則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasComparator => !string.IsNullOrEmpty(Comparator?.Value);
+
+    /// <summary>
+    /// 檢查是否有單位
+    /// </summary>
+    /// <returns>如果存在單位則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasUnit => !string.IsNullOrEmpty(Unit?.Value) || !string.IsNullOrEmpty(Code?.Value);
+
+    /// <summary>
+    /// 取得顯示文字
+    /// </summary>
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
+    {
+        get
+        {
+            var parts = new List<string>();
+            
+            if (HasComparator)
+            {
+                parts.Add(Comparator?.Value);
+            }
+            
+            if (HasValue)
+            {
+                parts.Add(Value?.Value.ToString());
+            }
+            
+            if (HasUnit)
+            {
+                parts.Add(Unit?.Value ?? Code?.Value);
+            }
+            
+            return parts.Count > 0 ? string.Join(" ", parts) : null;
+        }
+    }
+
+    /// <summary>
+    /// 建立物件的深層複本
+    /// </summary>
+    /// <returns>Quantity 的深層複本</returns>
+    public override Base DeepCopy()
+    {
+        var copy = new Quantity
+        {
+            Id = Id,
+            Value = Value?.DeepCopy() as FhirDecimal,
+            Comparator = Comparator?.DeepCopy() as FhirCode,
+            Unit = Unit?.DeepCopy() as FhirString,
+            System = System?.DeepCopy() as FhirUri,
+            Code = Code?.DeepCopy() as FhirCode
+        };
+
+        if (Extension != null)
+        {
+            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+        }
+
+        return copy;
+    }
+
+    /// <summary>
+    /// 判斷與另一個 Quantity 物件是否相等
+    /// </summary>
+    /// <param name="other">要比較的物件</param>
+    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
+    public override bool IsExactly(Base other)
+    {
+        if (other is not Quantity otherQuantity)
+            return false;
+
+        return base.IsExactly(other) &&
+               Equals(Value, otherQuantity.Value) &&
+               Equals(Comparator, otherQuantity.Comparator) &&
+               Equals(Unit, otherQuantity.Unit) &&
+               Equals(System, otherQuantity.System) &&
+               Equals(Code, otherQuantity.Code);
+    }
+
+    /// <summary>
+    /// 驗證 Quantity 是否符合 FHIR 規範
+    /// </summary>
+    /// <param name="validationContext">驗證上下文</param>
+    /// <returns>驗證結果集合</returns>
+    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        // 驗證比較器值（如果提供）
+        if (!string.IsNullOrEmpty(Comparator?.Value))
+        {
+            var validComparators = new[] { "<", "<=", ">=", ">" };
+            if (!validComparators.Contains(Comparator.Value))
+            {
+                yield return new ValidationResult($"Quantity comparator must be one of: {string.Join(", ", validComparators)}");
+            }
+        }
+
+        // 驗證系統 URL 格式（如果提供）
+        if (!string.IsNullOrEmpty(System?.Value))
+        {
+            if (!Uri.IsWellFormedUriString(System.Value, UriKind.Absolute))
+            {
+                yield return new ValidationResult("Quantity system must be a well-formed absolute URI");
+            }
+        }
+
+        // 驗證編碼（如果提供）
+        if (!string.IsNullOrEmpty(Code?.Value))
+        {
+            if (Code.Value.Contains(' '))
+            {
+                yield return new ValidationResult("Quantity code cannot contain spaces");
+            }
+        }
+
+        // 呼叫基礎驗證
+        foreach (var result in base.Validate(validationContext))
+        {
+            yield return result;
+        }
+    }
+} 

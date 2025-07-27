@@ -19,5 +19,5 @@ var humanName = new HumanName();
 
 ### 版本資訊
 - 當前版本: R4
-- 生成時間: 2025-07-24 13:33:06 UTC
+- 生成時間: 2025-07-26 12:25:44 UTC
 - Global Using 檔案: GlobalUsings.g.cs

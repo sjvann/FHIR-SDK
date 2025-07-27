@@ -24,17 +24,72 @@ public class SimpleGenerator
     {
         var sb = new StringBuilder();
         
-        sb.AppendLine($"// Auto-generated for FHIR {version}");
+        sb.AppendLine($"// Auto-generated for FHIR {version} - Based on existing architecture");
         sb.AppendLine("using System.ComponentModel.DataAnnotations;");
         sb.AppendLine("using System.Text.Json.Serialization;");
-        sb.AppendLine("using Fhir.Support.Base;");
+        sb.AppendLine($"using Fhir.{version}.Models.Base;");
         sb.AppendLine();
-        sb.AppendLine($"namespace Fhir.Models.{version};");
+        sb.AppendLine($"namespace Fhir.{version}.Models.DataTypes;");
         sb.AppendLine();
         sb.AppendLine($"/// <summary>");
         sb.AppendLine($"/// {info.Description}");
         sb.AppendLine($"/// </summary>");
-        sb.AppendLine($"public class {info.ClassName} : SimplePrimitiveType<{info.NativeType}>");
+        sb.AppendLine($"/// <remarks>");
+        sb.AppendLine($"/// FHIR {version} {info.ClassName} PrimitiveType");
+        sb.AppendLine($"/// {info.Description}");
+        sb.AppendLine($"/// </remarks>");
+        sb.AppendLine($"public class {info.ClassName} : Element");
+        sb.AppendLine("{");
+        sb.AppendLine($"    private {info.NativeType}? _value;");
+        sb.AppendLine();
+        sb.AppendLine($"    /// <summary>");
+        sb.AppendLine($"    /// The actual {info.ClassName.ToLower()} value.");
+        sb.AppendLine($"    /// </summary>");
+        sb.AppendLine($"    [JsonPropertyName(\"value\")]");
+        sb.AppendLine($"    public {info.NativeType}? Value");
+        sb.AppendLine($"    {{");
+        sb.AppendLine($"        get => _value;");
+        sb.AppendLine($"        set => _value = value;");
+        sb.AppendLine($"    }}");
+        sb.AppendLine();
+        sb.AppendLine($"    /// <summary>");
+        sb.AppendLine($"    /// Initializes a new instance of the {info.ClassName} class.");
+        sb.AppendLine($"    /// </summary>");
+        sb.AppendLine($"    public {info.ClassName}() {{ }}");
+        sb.AppendLine();
+        sb.AppendLine($"    /// <summary>");
+        sb.AppendLine($"    /// Initializes a new instance of the {info.ClassName} class with a value.");
+        sb.AppendLine($"    /// </summary>");
+        sb.AppendLine($"    /// <param name=\"value\">The initial value</param>");
+        sb.AppendLine($"    public {info.ClassName}({info.NativeType}? value)");
+        sb.AppendLine($"    {{");
+        sb.AppendLine($"        Value = value;");
+        sb.AppendLine($"    }}");
+        sb.AppendLine();
+        sb.AppendLine($"    /// <summary>");
+        sb.AppendLine($"    /// Implicit conversion from {info.NativeType} to {info.ClassName}");
+        sb.AppendLine($"    /// </summary>");
+        sb.AppendLine($"    public static implicit operator {info.ClassName}?({info.NativeType}? value)");
+        sb.AppendLine($"    {{");
+        sb.AppendLine($"        return value == null ? null : new {info.ClassName}(value);");
+        sb.AppendLine($"    }}");
+        sb.AppendLine();
+        sb.AppendLine($"    /// <summary>");
+        sb.AppendLine($"    /// Implicit conversion from {info.ClassName} to {info.NativeType}");
+        sb.AppendLine($"    /// </summary>");
+        sb.AppendLine($"    public static implicit operator {info.NativeType}?({info.ClassName}? fhir{info.ClassName})");
+        sb.AppendLine($"    {{");
+        sb.AppendLine($"        return fhir{info.ClassName}?.Value;");
+        sb.AppendLine($"    }}");
+        sb.AppendLine();
+        sb.AppendLine($"    /// <summary>");
+        sb.AppendLine($"    /// Returns the string representation of the value");
+        sb.AppendLine($"    /// </summary>");
+        sb.AppendLine($"    public override string ToString()");
+        sb.AppendLine($"    {{");
+        sb.AppendLine($"        return Value?.ToString() ?? string.Empty;");
+        sb.AppendLine($"    }}");
+        sb.AppendLine();
         sb.AppendLine("{");
         sb.AppendLine($"    /// <summary>");
         sb.AppendLine($"    /// 建立新的 {info.ClassName} 實例");
@@ -126,51 +181,45 @@ public class SimpleGenerator
     {
         var sb = new StringBuilder();
         
-        sb.AppendLine($"// Auto-generated for FHIR {version}");
+        sb.AppendLine($"// Auto-generated for FHIR {version} - Based on existing architecture");
         sb.AppendLine("using System.ComponentModel.DataAnnotations;");
         sb.AppendLine("using System.Text.Json.Serialization;");
-        sb.AppendLine("using Fhir.Support.Base;");
+        sb.AppendLine($"using Fhir.{version}.Models.Base;");
+        sb.AppendLine($"using Fhir.{version}.Models.DataTypes;");
         sb.AppendLine();
-        sb.AppendLine($"namespace Fhir.Models.{version};");
+        sb.AppendLine($"namespace Fhir.{version}.Models.Resources;");
         sb.AppendLine();
         sb.AppendLine($"/// <summary>");
         sb.AppendLine($"/// {info.Description}");
         sb.AppendLine($"/// </summary>");
-        sb.AppendLine($"public class {info.ClassName} : SimpleDomainResource");
+        sb.AppendLine($"/// <remarks>");
+        sb.AppendLine($"/// FHIR {version} {info.ClassName} DomainResource");
+        sb.AppendLine($"/// {info.Description}");
+        sb.AppendLine($"/// </remarks>");
+        sb.AppendLine($"public class {info.ClassName} : DomainResource");
         sb.AppendLine("{");
+        sb.AppendLine($"    [JsonPropertyName(\"resourceType\")]");
+        sb.AppendLine($"    public override string ResourceType => \"{info.ClassName}\";");
+        sb.AppendLine();
 
         // 生成屬性
         foreach (var property in info.Properties)
         {
-            var propertyType = GetSimplePropertyType(property.Type, property.Name);
+            var propertyType = GetFhirCompliantPropertyType(property.Type, property.Name);
             var description = CleanDescription(property.Description);
-            
+            var fhirPath = $"{info.ClassName}.{GetJsonPropertyName(property.Name)}";
+            var cardinality = GetCardinality(property);
+
             sb.AppendLine($"    /// <summary>");
             sb.AppendLine($"    /// {description}");
+            sb.AppendLine($"    /// FHIR Path: {fhirPath}");
+            sb.AppendLine($"    /// Cardinality: {cardinality}");
             sb.AppendLine($"    /// </summary>");
             sb.AppendLine($"    [JsonPropertyName(\"{GetJsonPropertyName(property.Name)}\")]");
             sb.AppendLine($"    public {propertyType} {property.Name} {{ get; set; }}");
             sb.AppendLine();
         }
-
-        sb.AppendLine($"    /// <summary>");
-        sb.AppendLine($"    /// 資源類型");
-        sb.AppendLine($"    /// </summary>");
-        sb.AppendLine($"    public override string ResourceType => \"{info.ResourceType}\";");
-        sb.AppendLine();
-        sb.AppendLine($"    /// <summary>");
-        sb.AppendLine($"    /// 驗證此實例");
-        sb.AppendLine($"    /// </summary>");
-        sb.AppendLine($"    /// <param name=\"validationContext\">驗證上下文</param>");
-        sb.AppendLine($"    /// <returns>驗證結果</returns>");
-        sb.AppendLine($"    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)");
-        sb.AppendLine($"    {{");
-        sb.AppendLine($"        foreach (var result in base.Validate(validationContext))");
-        sb.AppendLine($"            yield return result;");
-        sb.AppendLine();
-        sb.AppendLine($"        // 自訂驗證邏輯");
-        sb.AppendLine($"        // 子類別可以覆寫此方法來添加特定的驗證邏輯");
-        sb.AppendLine($"    }}");
+        // 驗證邏輯由 SDK 主架構提供，Generator 只生成基本結構
         sb.AppendLine("}");
 
         return sb.ToString();
@@ -294,4 +343,102 @@ public class SimpleGenerator
 
         return description.Trim();
     }
-} 
+
+    /// <summary>
+    /// 取得正確的 FHIR 架構屬性型別 (使用正確的 FHIR Primitive Types)
+    /// </summary>
+    private string GetFhirCompliantPropertyType(string fhirType, string propertyName)
+    {
+        // 使用正確的 FHIR Primitive Types (不是 Patient.cs 的錯誤實作)
+        return fhirType switch
+        {
+            // FHIR Primitive Types - 正確的架構
+            "string" => "FhirString?",
+            "code" => "FhirCode?",
+            "uri" => "FhirUri?",
+            "url" => "FhirUrl?",
+            "canonical" => "FhirCanonical?",
+            "date" => "FhirDate?",
+            "dateTime" => "FhirDateTime?",
+            "instant" => "FhirInstant?",
+            "time" => "FhirTime?",
+            "id" => "FhirId?",
+            "oid" => "FhirOid?",
+            "uuid" => "FhirUuid?",
+            "base64Binary" => "FhirBase64Binary?",
+            "markdown" => "FhirMarkdown?",
+            "boolean" => "FhirBoolean?",
+            "integer" => "FhirInteger?",
+            "decimal" => "FhirDecimal?",
+            "positiveInt" => "FhirPositiveInt?",
+            "unsignedInt" => "FhirUnsignedInt?",
+
+            // 複雜類型
+            "Identifier" => "List<Identifier>?",
+            "HumanName" => "List<HumanName>?",
+            "ContactPoint" => "List<ContactPoint>?",
+            "Address" => "List<Address>?",
+            "CodeableConcept" => "CodeableConcept?",
+            "Coding" => "List<Coding>?",
+            "Reference" => "Reference?",
+            "Period" => "Period?",
+            "Quantity" => "Quantity?",
+            "Range" => "Range?",
+            "Ratio" => "Ratio?",
+            "Attachment" => "Attachment?",
+            "Annotation" => "List<Annotation>?",
+
+            // Default to the type name with nullable
+            _ => $"{fhirType}?"
+        };
+    }
+
+    /// <summary>
+    /// 取得屬性的 Cardinality 資訊
+    /// </summary>
+    private string GetCardinality(PropertyDefinition property)
+    {
+        // 根據屬性類型推斷 cardinality
+        if (property.Type.Contains("List<"))
+        {
+            return property.IsRequired ? "1..*" : "0..*";
+        }
+        else
+        {
+            return property.IsRequired ? "1..1" : "0..1";
+        }
+    }
+
+    // 移除複雜的驗證邏輯生成 - 這些由 SDK 主架構處理
+    // Generator 只專注於生成正確的類別結構
+
+    // 所有驗證邏輯都移除 - 由 SDK 主架構處理
+
+
+
+    /// <summary>
+    /// 提取 List<T> 中的內部類型
+    /// </summary>
+    private string ExtractInnerType(string type)
+    {
+        if (type.StartsWith("List<") && type.EndsWith(">"))
+        {
+            return type.Substring(5, type.Length - 6).TrimEnd('?');
+        }
+        return type;
+    }
+
+    /// <summary>
+    /// 判斷是否為複雜類型
+    /// </summary>
+    private bool IsComplexType(string type)
+    {
+        var primitiveTypes = new[] { "string", "int", "bool", "decimal", "DateTime" };
+        var fhirPrimitiveTypes = new[] { "FhirString", "FhirBoolean", "FhirInteger", "FhirDecimal", "FhirDateTime", "FhirDate", "FhirTime", "FhirInstant", "FhirUri", "FhirUrl", "FhirCode" };
+
+        var cleanType = type.TrimEnd('?');
+        return !primitiveTypes.Contains(cleanType) && !fhirPrimitiveTypes.Contains(cleanType);
+    }
+
+    // 移除所有驗證輔助方法 - 由 SDK 主架構處理
+}

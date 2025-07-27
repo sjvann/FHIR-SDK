@@ -1,111 +1,201 @@
-# FHIR .NET SDK - 強型別 FHIR 開發工具包
+# FHIR .NET SDK
 
-[![.NET 9](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
-[![FHIR R5](https://img.shields.io/badge/FHIR-R5-green.svg)](https://hl7.org/fhir/R5/)
-[![R6 Ready](https://img.shields.io/badge/FHIR-R6%20Ready-orange.svg)](https://hl7.org/fhir/R6/)
-[![NuGet](https://img.shields.io/nuget/v/Fhir.SDK.svg)](https://www.nuget.org/packages/Fhir.SDK/)
+一個高效能、強型別的 FHIR 開發函式庫，專為 .NET 平台設計。
 
-## 概述
+## 🚀 專案特色
 
-FHIR .NET SDK 是一個為 .NET 開發者設計的高性能、強型別的 FHIR 開發函式庫。它旨在提供一個清晰、版本化的架構，讓開發者可以輕鬆地在應用程式中處理不同版本的 FHIR 資料。
+- **強型別核心**：每個 FHIR 版本都有獨立的強型別 C# 類別庫
+- **版本管理**：版本特定的核心定義與通用功能模組分離
+- **程式碼生成**：CLI 工具自動從官方 FHIR 定義檔案生成版本特定的核心專案
+- **介面優先設計**：使用介面定義基本行為，確保可測試性、可擴展性和鬆耦合
+- **循環依賴解決**：使用介面解決循環依賴問題
+- **FHIR R5 完全支援**：完整的 FHIR R5 Type Framework 實作
 
-本 SDK 的核心理念是**版本特定的核心定義**與**通用的功能模組**分離。開發者只需在使用時宣告所要使用的 FHIR 版本，SDK 內部即可自動處理對應的強型別物件、序列化和驗證規則。
-
-## 🚀 核心特性
-
-- **多版本並行支援**：在同一個應用程式中無縫使用 FHIR R5 或未來的 R6 版本。
-- **強型別核心**：每個 FHIR 版本都有其獨立的、強型別的 C# 類別庫 (例如 `Fhir.R5.Core`)。
-- **通用功能模組**：提供共用的序列化 (JSON/XML) 和驗證功能，這些功能會根據您所選的 FHIR 版本自動調整。
-- **CLI 工具驅動的版本擴充**：當新的 FHIR 版本發布時，可透過 CLI 工具讀取官方定義檔，自動生成對應版本的核心專案。
-
-## 📦 專案結構
+## 📁 專案結構
 
 ```
 FHIR-SDK/
-├── Fhir.Models/
-│   ├── R5/                   # FHIR R5 的核心強型別定義
-│   │   └── Fhir.R5.Core.csproj
-│   └── Base/                   # FHIR 通用核心
-│       └── Fhir.Models.csproj
-├── Fhir.Serialization.Json/  # 通用的 JSON 序列化模組
-├── Fhir.Serialization.Xml/   # 通用的 XML 序列化模組
-├── Fhir.Validation/          # 通用的驗證模組
-├── Fhir.Support/             # 共用的輔助函式庫
-├── Fhir.Generator/           # 用於生成新版本核心的 CLI 工具
-├── docs/                     # 專案文件
-├── Fhir.Tests/               # 單元測試
-└── FHIR Solution.sln         # Visual Studio 方案檔
+├── Fhir.Core/                    # 核心功能模組
+├── Fhir.Generator/               # 程式碼生成工具
+├── Fhir.R4.Models/              # FHIR R4 模型
+├── Fhir.TypeFramework/          # FHIR R5 Type Framework ⭐
+├── Fhir.TypeFramework.Extensions/ # 使用者體驗增強
+└── Examples/                    # 使用範例
 ```
 
-## 🛠️ 快速開始
+## 🏗️ FHIR Type Framework
 
-### 1. 建立並設定 FHIR 上下文
-在您的應用程式中，首先需要建立一個 `IFhirContext` 的實例，來決定您想要使用的 FHIR 版本。
+### 完整的 FHIR R5 Type Framework 實作
 
-```csharp
-using Fhir.Support;
-using Fhir.Support.Versioning;
-
-// 建立一個 R5 版本的上下文
-IFhirContext fhirContext = new FhirContext(FhirVersion.R5);
+```
+Base (基礎類別) ← 對應 FHIR R5 的 BaseElement
+├── Element (元素)
+    ├── DataType (資料型別)
+    │   ├── PrimitiveType (原始類型)
+    │   │   ├── FhirString, FhirId, FhirUri, FhirCode, FhirBoolean, etc.
+    │   │   └── 所有 FHIR Primitive Types
+    │   ├── Resource (資源)
+    │   │   └── DomainResource (領域資源)
+    │   │       ├── CanonicalResource (規範資源)
+    │   │       └── MetadataResource (元資料資源)
+    │   └── BackboneType (骨幹型別)
+    └── BackboneElement (骨幹元素)
 ```
 
-### 2. 使用 SDK
-將您建立的上下文實例傳遞給 SDK 的功能模組 (如序列化、驗證)。
+### 核心功能
 
-```csharp
-using Fhir.Models.R5; 
-using Fhir.Serialization.Json;
-using Fhir.Serialization.Xml;
+- ✅ **強型別安全**：所有 FHIR 型別都有對應的強型別 C# 類別
+- ✅ **FHIR 規範遵循**：完全符合 FHIR R5 規範
+- ✅ **擴展機制**：支援 FHIR 擴展機制
+- ✅ **驗證機制**：內建 FHIR 規範驗證
+- ✅ **深層複製**：支援物件的深層複製
+- ✅ **相等性比較**：正確的物件相等性比較
+- ✅ **Choice Types**：強型別的 [x] 屬性實作
+- ✅ **JSON 序列化**：完整的 FHIR JSON 序列化支援
 
-// 將上下文注入到 Parser 中
-var parser = new JsonParser(fhirContext); 
-Patient patient = parser.Parse<Patient>(jsonContent);
+## 🚀 快速開始
 
-// 驗證也會使用 R5 的規則
-// var validator = new FhirValidator(fhirContext); // 範例
-// var validationResult = validator.Validate(patient); 
-
-// 序列化同樣遵循 R5 規範
-// var serializer = new XmlSerializer(fhirContext); // 範例
-// string xmlContent = serializer.SerializeToString(patient);
-```
-
-### 3. 未來擴充到 R6
-當 HL7 發布 R6 版本時，您可以使用 CLI 工具來擴充 SDK：
+### 安裝
 
 ```bash
-# 透過 CLI 工具生成 R6 的核心專案
-dotnet fhir-generator --version R6 --definition-file r6-definitions.zip
+# 克隆專案
+git clone https://github.com/your-username/FHIR-SDK.git
+cd FHIR-SDK
+
+# 建置專案
+dotnet build
 ```
 
-執行後，您的專案結構會變為：
+### 基本使用
+
+```csharp
+using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.DataTypes;
+using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+
+// 建立一個簡單的資源
+var patient = new Patient
+{
+    Id = "patient-123",
+    Name = new HumanName
+    {
+        Family = "張",
+        Given = new List<FhirString> { "三" }
+    },
+    BirthDate = new FhirDate("1990-01-01"),
+    Gender = new FhirCode("male")
+};
+
+// 添加擴展
+patient.AddExtension("http://example.com/custom", new FhirString("custom-value"));
+
+// 驗證資源
+var validationResults = patient.Validate(new ValidationContext(patient));
 ```
-FHIR-SDK/
-├── Fhir.Models/
-│   ├── R5/
-│   └── R6/
-├── Fhir.Serialization.Json/  # 通用的 JSON 序列化模組
-├── Fhir.Serialization.Xml/   # 通用的 XML 序列化模組
-├── Fhir.Validation/          # 通用的驗證模組
-├── Fhir.Support/             # 共用的輔助函式庫
-├── Fhir.Generator/           # 用於生成新版本核心的 CLI 工具
-├── docs/                     # 專案文件
-├── Fhir.Tests/               # 單元測試
-└── FHIR Solution.sln         # Visual Studio 方案檔
+
+### Choice Types 使用
+
+```csharp
+// 使用強型別的 Choice Type
+var extension = new Extension
+{
+    Url = "http://example.com/extension",
+    Value = new ExtensionValueChoice()
+};
+
+// 設定值（支援 IntelliSense）
+extension.Value.SetStringValue("Hello World");
+// 或
+extension.Value.SetIntegerValue(42);
+// 或
+extension.Value.SetBooleanValue(true);
 ```
-接著，您只需將建立上下文的程式碼改為 `new FhirContext(FhirVersion.R6)`，即可在應用程式中使用 R6 的強型別物件和規則。
 
 ## 📚 文件
 
-- **[快速入門指南](docs/Quick-Start-Guide.md)** - 學習如何設定和使用 SDK。
-- **[架構說明](docs/Architecture.md)** - 深入了解 SDK 的設計理念。
-- **[CLI 工具指南](docs/Cli-Guide.md)** - 學習如何使用 CLI 工具擴充新的 FHIR 版本。
+- [FHIR R5 Type Framework 實作文件](Fhir.TypeFramework/README_FHIR_R5_TypeFramework_Implementation.md)
+- [Choice Type 最佳解決方案](Fhir.TypeFramework/README_ChoiceType_Best_Solution.md)
+- [FHIR Primitive Types 設計](Fhir.TypeFramework/README_FHIR_Primitive_Design.md)
+- [使用者體驗增強](Fhir.TypeFramework.Extensions/README.md)
+
+## 🔧 開發
+
+### 建置專案
+
+```bash
+# 建置所有專案
+dotnet build
+
+# 建置特定專案
+dotnet build Fhir.TypeFramework/Fhir.TypeFramework.csproj
+```
+
+### 執行測試
+
+```bash
+# 執行所有測試
+dotnet test
+
+# 執行特定測試專案
+dotnet test Fhir.TypeFramework.Tests/
+```
+
+### 程式碼生成
+
+```bash
+# 生成 FHIR R4 模型
+dotnet run --project Fhir.Generator/Fhir.Generator.csproj -- --version R4 --output Fhir.R4.Models
+```
+
+## 📊 符合性檢查
+
+### ✅ FHIR R5 規範符合性
+
+- [x] 正確的類別層次結構
+- [x] 正確的屬性定義和基數
+- [x] 正確的 FHIR Path 映射
+- [x] 正確的資料型別使用
+- [x] 正確的擴展機制
+- [x] 正確的驗證邏輯
+- [x] 正確的序列化支援
+
+### ✅ 技術特性
+
+- [x] 強型別安全
+- [x] 完整的 IntelliSense 支援
+- [x] 編譯時錯誤檢查
+- [x] 執行時驗證
+- [x] 深層複製支援
+- [x] 相等性比較
+- [x] JSON 序列化
+- [x] 擴展機制
 
 ## 🤝 貢獻
 
-我們歡迎任何形式的貢獻！請參考 [CONTRIBUTING.md](CONTRIBUTING.md) 以了解如何參與。
+我們歡迎所有形式的貢獻！請參閱 [貢獻指南](CONTRIBUTING.md) 了解詳細資訊。
+
+### 貢獻步驟
+
+1. Fork 專案
+2. 創建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交變更 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 開啟 Pull Request
 
 ## 📄 授權
 
-此專案使用 MIT 授權 - 詳見 [LICENSE](LICENSE) 檔案。
+本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
+
+## 📞 聯絡資訊
+
+- 專案首頁：[https://github.com/your-username/FHIR-SDK](https://github.com/your-username/FHIR-SDK)
+- 問題回報：[https://github.com/your-username/FHIR-SDK/issues](https://github.com/your-username/FHIR-SDK/issues)
+- 討論區：[https://github.com/your-username/FHIR-SDK/discussions](https://github.com/your-username/FHIR-SDK/discussions)
+
+## 🙏 致謝
+
+感謝所有為這個專案做出貢獻的開發者！
+
+---
+
+**注意**：本專案正在積極開發中，API 可能會有所變更。
