@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -7,18 +7,18 @@ using System.Text.Json.Serialization;
 namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// Address - 地址型別
-/// 用於在 FHIR 資源中表示郵政地址
+/// FHIR Address complex type.
+/// An address expressed using postal conventions.
 /// </summary>
 /// <remarks>
 /// FHIR R5 Address (Complex Type)
-/// An address expressed using postal conventions (as opposed to GPS or other location definition formats).
+/// An address expressed using postal conventions.
 /// 
 /// Structure:
-/// - use: code (0..1) - home | work | temp | old | billing - purpose of this address
+/// - use: code (0..1) - home | work | temp | old | billing
 /// - type: code (0..1) - postal | physical | both
 /// - text: string (0..1) - Text representation of the address
-/// - line: string[] (0..*) - Street name, number, direction &amp; P.O. Box etc.
+/// - line: string[] (0..*) - Street name, number, direction & P.O. Box etc.
 /// - city: string (0..1) - Name of city, town etc.
 /// - district: string (0..1) - District name (aka county)
 /// - state: string (0..1) - Sub-unit of country (abbreviations ok)
@@ -28,275 +28,242 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Address : Element, IExtensibleTypeFramework
+public class Address : UnifiedComplexTypeBase<Address>
 {
     /// <summary>
-    /// 地址的使用目的
-    /// FHIR Path: Address.use
-    /// Cardinality: 0..1
-    /// Type: code
+    /// Gets or sets the use.
+    /// home | work | temp | old | billing.
     /// </summary>
     [JsonPropertyName("use")]
     public FhirCode? Use { get; set; }
 
     /// <summary>
-    /// 地址類型
-    /// FHIR Path: Address.type
-    /// Cardinality: 0..1
-    /// Type: code
+    /// Gets or sets the type.
+    /// postal | physical | both.
     /// </summary>
     [JsonPropertyName("type")]
     public FhirCode? Type { get; set; }
 
     /// <summary>
-    /// 地址的文字表示
-    /// FHIR Path: Address.text
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the text.
+    /// Text representation of the address.
     /// </summary>
     [JsonPropertyName("text")]
     public FhirString? Text { get; set; }
 
     /// <summary>
-    /// 街道名稱、號碼、方向及郵政信箱等
-    /// FHIR Path: Address.line
-    /// Cardinality: 0..*
-    /// Type: string[]
+    /// Gets or sets the line.
+    /// Street name, number, direction & P.O. Box etc.
     /// </summary>
     [JsonPropertyName("line")]
     public IList<FhirString>? Line { get; set; }
 
     /// <summary>
-    /// 城市、城鎮等名稱
-    /// FHIR Path: Address.city
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the city.
+    /// Name of city, town etc.
     /// </summary>
     [JsonPropertyName("city")]
     public FhirString? City { get; set; }
 
     /// <summary>
-    /// 區域名稱（也稱為郡）
-    /// FHIR Path: Address.district
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the district.
+    /// District name (aka county).
     /// </summary>
     [JsonPropertyName("district")]
     public FhirString? District { get; set; }
 
     /// <summary>
-    /// 國家子單位（可以使用縮寫）
-    /// FHIR Path: Address.state
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the state.
+    /// Sub-unit of country (abbreviations ok).
     /// </summary>
     [JsonPropertyName("state")]
     public FhirString? State { get; set; }
 
     /// <summary>
-    /// 區域郵遞區號
-    /// FHIR Path: Address.postalCode
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the postal code.
+    /// Postal code for area.
     /// </summary>
     [JsonPropertyName("postalCode")]
     public FhirString? PostalCode { get; set; }
 
     /// <summary>
-    /// 國家（例如可以是 ISO 3166 2 或 3 字母代碼）
-    /// FHIR Path: Address.country
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the country.
+    /// Country (e.g. can be ISO 3166 2 or 3 letter code).
     /// </summary>
     [JsonPropertyName("country")]
     public FhirString? Country { get; set; }
 
     /// <summary>
-    /// 地址使用期間
-    /// FHIR Path: Address.period
-    /// Cardinality: 0..1
-    /// Type: Period
+    /// Gets or sets the period.
+    /// Time period when address was/is in use.
     /// </summary>
     [JsonPropertyName("period")]
     public Period? Period { get; set; }
 
     /// <summary>
-    /// 檢查是否有文字
+    /// Gets the full address as text.
     /// </summary>
-    /// <returns>如果存在文字則為 true，否則為 false</returns>
+    /// <returns>The full address text.</returns>
     [JsonIgnore]
-    public bool HasText => !string.IsNullOrEmpty(Text?.Value);
+    public string? FullAddress => Text?.Value ?? BuildFullAddress();
 
     /// <summary>
-    /// 檢查是否有地址行
+    /// Builds the full address from components.
     /// </summary>
-    /// <returns>如果存在地址行則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasLine => Line?.Any() == true;
-
-    /// <summary>
-    /// 檢查是否有城市
-    /// </summary>
-    /// <returns>如果存在城市則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasCity => !string.IsNullOrEmpty(City?.Value);
-
-    /// <summary>
-    /// 檢查是否有郵遞區號
-    /// </summary>
-    /// <returns>如果存在郵遞區號則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasPostalCode => !string.IsNullOrEmpty(PostalCode?.Value);
-
-    /// <summary>
-    /// 取得顯示文字
-    /// </summary>
-    /// <returns>顯示文字</returns>
-    [JsonIgnore]
-    public string? DisplayText
+    /// <returns>The built full address.</returns>
+    private string? BuildFullAddress()
     {
-        get
+        var parts = new List<string>();
+        
+        if (Line?.Any() == true)
         {
-            if (HasText)
-            {
-                return Text?.Value;
-            }
-
-            var parts = new List<string>();
-
-            if (HasLine)
-            {
-                parts.AddRange(Line!.Select(l => l.Value));
-            }
-
-            if (HasCity)
-            {
-                parts.Add(City?.Value);
-            }
-
-            if (!string.IsNullOrEmpty(District?.Value))
-            {
-                parts.Add(District?.Value);
-            }
-
-            if (!string.IsNullOrEmpty(State?.Value))
-            {
-                parts.Add(State?.Value);
-            }
-
-            if (HasPostalCode)
-            {
-                parts.Add(PostalCode?.Value);
-            }
-
-            if (!string.IsNullOrEmpty(Country?.Value))
-            {
-                parts.Add(Country?.Value);
-            }
-
-            return parts.Count > 0 ? string.Join(", ", parts) : null;
+            parts.AddRange(Line.Select(l => l.Value));
         }
+        
+        if (!string.IsNullOrEmpty(City?.Value))
+        {
+            parts.Add(City.Value);
+        }
+        
+        if (!string.IsNullOrEmpty(District?.Value))
+        {
+            parts.Add(District.Value);
+        }
+        
+        if (!string.IsNullOrEmpty(State?.Value))
+        {
+            parts.Add(State.Value);
+        }
+        
+        if (!string.IsNullOrEmpty(PostalCode?.Value))
+        {
+            parts.Add(PostalCode.Value);
+        }
+        
+        if (!string.IsNullOrEmpty(Country?.Value))
+        {
+            parts.Add(Country.Value);
+        }
+        
+        return string.Join(", ", parts.Where(p => !string.IsNullOrEmpty(p)));
     }
 
     /// <summary>
-    /// 建立物件的深層複本
+    /// Copies fields to target.
     /// </summary>
-    /// <returns>Address 的深層複本</returns>
-    public override Base DeepCopy()
+    /// <param name="target">The target object.</param>
+    protected override void CopyFieldsTo(Address target)
     {
-        var copy = new Address
-        {
-            Id = Id,
-            Use = Use?.DeepCopy() as FhirCode,
-            Type = Type?.DeepCopy() as FhirCode,
-            Text = Text?.DeepCopy() as FhirString,
-            City = City?.DeepCopy() as FhirString,
-            District = District?.DeepCopy() as FhirString,
-            State = State?.DeepCopy() as FhirString,
-            PostalCode = PostalCode?.DeepCopy() as FhirString,
-            Country = Country?.DeepCopy() as FhirString,
-            Period = Period?.DeepCopy() as Period
-        };
+        target.Use = (FhirCode?)Use?.DeepCopy();
+        target.Type = (FhirCode?)Type?.DeepCopy();
+        target.Text = (FhirString?)Text?.DeepCopy();
+        target.Line = Line?.Select(l => (FhirString)l.DeepCopy()).ToList();
+        target.City = (FhirString?)City?.DeepCopy();
+        target.District = (FhirString?)District?.DeepCopy();
+        target.State = (FhirString?)State?.DeepCopy();
+        target.PostalCode = (FhirString?)PostalCode?.DeepCopy();
+        target.Country = (FhirString?)Country?.DeepCopy();
+        target.Period = (Period?)Period?.DeepCopy();
+    }
 
+    /// <summary>
+    /// Compares if fields are exactly equal.
+    /// </summary>
+    /// <param name="other">The other object to compare.</param>
+    /// <returns>True if fields are exactly equal; otherwise, false.</returns>
+    protected override bool FieldsAreExactly(Address other)
+    {
+        return Equals(Use, other.Use)
+            && Equals(Type, other.Type)
+            && Equals(Text, other.Text)
+            && (Line?.SequenceEqual(other.Line ?? new List<FhirString>(), new DeepEqualityComparer<FhirString>()) ?? other.Line == null)
+            && Equals(City, other.City)
+            && Equals(District, other.District)
+            && Equals(State, other.State)
+            && Equals(PostalCode, other.PostalCode)
+            && Equals(Country, other.Country)
+            && Equals(Period, other.Period);
+    }
+
+    /// <summary>
+    /// Validates fields.
+    /// </summary>
+    /// <param name="validationContext">The validation context.</param>
+    /// <returns>Validation result collection.</returns>
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        if (Use != null)
+        {
+            foreach (var v in Use.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        if (Type != null)
+        {
+            foreach (var v in Type.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        if (Text != null)
+        {
+            foreach (var v in Text.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
         if (Line != null)
         {
-            copy.Line = Line.Select(l => l.DeepCopy() as FhirString).ToList();
-        }
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
-    }
-
-    /// <summary>
-    /// 判斷與另一個 Address 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
-    {
-        if (other is not Address otherAddress)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Use, otherAddress.Use) &&
-               Equals(Type, otherAddress.Type) &&
-               Equals(Text, otherAddress.Text) &&
-               Equals(City, otherAddress.City) &&
-               Equals(District, otherAddress.District) &&
-               Equals(State, otherAddress.State) &&
-               Equals(PostalCode, otherAddress.PostalCode) &&
-               Equals(Country, otherAddress.Country) &&
-               Equals(Period, otherAddress.Period) &&
-               Line?.Count == otherAddress.Line?.Count &&
-               (Line?.Zip(otherAddress.Line ?? new List<FhirString>(), 
-                         (a, b) => a.IsExactly(b)).All(x => x) ?? true);
-    }
-
-    /// <summary>
-    /// 驗證 Address 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 驗證 use 值（如果提供）
-        if (!string.IsNullOrEmpty(Use?.Value))
-        {
-            var validUses = new[] { "home", "work", "temp", "old", "billing" };
-            if (!validUses.Contains(Use.Value))
+            foreach (var l in Line)
             {
-                yield return new ValidationResult($"Address use must be one of: {string.Join(", ", validUses)}");
+                foreach (var v in l.Validate(validationContext))
+                {
+                    yield return v;
+                }
             }
         }
-
-        // 驗證 type 值（如果提供）
-        if (!string.IsNullOrEmpty(Type?.Value))
+        if (City != null)
         {
-            var validTypes = new[] { "postal", "physical", "both" };
-            if (!validTypes.Contains(Type.Value))
+            foreach (var v in City.Validate(validationContext))
             {
-                yield return new ValidationResult($"Address type must be one of: {string.Join(", ", validTypes)}");
+                yield return v;
             }
         }
-
-        // 驗證期間（如果提供）
+        if (District != null)
+        {
+            foreach (var v in District.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        if (State != null)
+        {
+            foreach (var v in State.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        if (PostalCode != null)
+        {
+            foreach (var v in PostalCode.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        if (Country != null)
+        {
+            foreach (var v in Country.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
         if (Period != null)
         {
-            var periodValidationContext = new ValidationContext(Period);
-            foreach (var periodResult in Period.Validate(periodValidationContext))
+            foreach (var v in Period.Validate(validationContext))
             {
-                yield return periodResult;
+                yield return v;
             }
-        }
-
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
         }
     }
 } 

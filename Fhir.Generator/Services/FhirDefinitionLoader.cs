@@ -330,7 +330,33 @@ public class FhirDefinitionLoader
             return null; // 跳過根元素
         }
         
-        var propertyName = path.Split('.').Last();
+        var pathParts = path.Split('.');
+        var propertyName = pathParts.Last();
+        
+        // 只處理頂層屬性（路徑只有兩部分，如 Patient.name）
+        // 或者處理 BackboneElement 的頂層屬性（如 Patient.contact.name）
+        if (pathParts.Length != 2 && pathParts.Length != 3)
+        {
+            return null; // 跳過深層巢狀屬性
+        }
+        
+        // 如果是 BackboneElement 的屬性，需要特殊處理
+        if (pathParts.Length == 3)
+        {
+            // 檢查是否為 BackboneElement 的屬性
+            var backboneElementName = pathParts[1];
+            if (IsBackboneElement(backboneElementName))
+            {
+                // 這是 BackboneElement 的屬性，不應該出現在主資源中
+                return null;
+            }
+        }
+        
+        // 處理 Choice Type (例如 deceased[x])
+        if (propertyName.Contains("[x]"))
+        {
+            return null; // 跳過 Choice Type，它們會由具體的屬性處理
+        }
         
         var property = new PropertyDefinition
         {
@@ -352,13 +378,74 @@ public class FhirDefinitionLoader
         // 解析類型
         if (element.TryGetProperty("type", out var types) && types.ValueKind == JsonValueKind.Array)
         {
-            var firstType = types.EnumerateArray().FirstOrDefault();
-            if (firstType.TryGetProperty("code", out var typeCode))
+            var typeList = new List<string>();
+            foreach (var type in types.EnumerateArray())
             {
-                property.Type = typeCode.GetString() ?? "string";
+                if (type.TryGetProperty("code", out var typeCode))
+                {
+                    var typeName = typeCode.GetString();
+                    if (!string.IsNullOrEmpty(typeName))
+                    {
+                        typeList.Add(typeName);
+                    }
+                }
+            }
+            
+            if (typeList.Count > 0)
+            {
+                property.Type = typeList.First();
+                if (typeList.Count > 1)
+                {
+                    property.IsChoiceType = true;
+                    property.ChoiceTypes = typeList;
+                }
+            }
+            else
+            {
+                property.Type = "string";
+            }
+        }
+        
+        // 處理 Reference 的目標限制
+        if (element.TryGetProperty("type", out var refTypes) && refTypes.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var type in refTypes.EnumerateArray())
+            {
+                if (type.TryGetProperty("targetProfile", out var targetProfiles) && 
+                    targetProfiles.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var profile in targetProfiles.EnumerateArray())
+                    {
+                        var profileUrl = profile.GetString();
+                        if (!string.IsNullOrEmpty(profileUrl))
+                        {
+                            property.TargetProfiles.Add(profileUrl);
+                        }
+                    }
+                }
             }
         }
         
         return property;
+    }
+    
+    /// <summary>
+    /// 檢查是否為 BackboneElement
+    /// </summary>
+    private bool IsBackboneElement(string elementName)
+    {
+        // 常見的 BackboneElement 名稱
+        var backboneElementNames = new[]
+        {
+            "contact", "communication", "link", "component", "referenceRange",
+            "entry", "parameter", "action", "trigger", "condition", "input",
+            "output", "participant", "performer", "detail", "supportingInfo",
+            "insurance", "item", "adjudication", "total", "payment", "note",
+            "benefitBalance", "benefit", "diagnosis", "procedure", "item",
+            "explanation", "coverage", "careTeam", "information", "diagnosis",
+            "procedure", "item", "adjudication", "total", "payment", "note"
+        };
+        
+        return backboneElementNames.Contains(elementName.ToLowerInvariant());
     }
 }

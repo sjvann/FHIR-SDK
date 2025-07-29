@@ -40,14 +40,41 @@ public class FhirCodeGenerator
             await GenerateResourceAsync(resource, resourcesDir, fhirVersion);
         }
         
-        // 生成 DataTypes
-        Console.WriteLine($"🔧 Generating {schema.DataTypes.Count} data types...");
-        foreach (var dataType in schema.DataTypes.Values)
+        // 生成 DataTypes (跳過基礎型別，使用 Fhir.TypeFramework 中的定義)
+        var primitiveTypes = new HashSet<string> { "string", "boolean", "integer", "decimal", "date", "dateTime", "time", "instant", "uri", "url", "canonical", "code", "id", "oid", "uuid", "markdown", "unsignedInt", "positiveInt", "base64Binary", "xhtml" };
+        
+        var complexTypes = schema.DataTypes.Values.Where(dt => !primitiveTypes.Contains(dt.Name)).ToList();
+        Console.WriteLine($"🔧 Generating {complexTypes.Count} complex data types...");
+        foreach (var dataType in complexTypes)
         {
             await GenerateDataTypeAsync(dataType, dataTypesDir, fhirVersion);
         }
         
         Console.WriteLine($"✅ Code generation completed!");
+    }
+
+    /// <summary>
+    /// 只生成 Resources
+    /// </summary>
+    /// <param name="schema">FHIR Schema</param>
+    /// <param name="outputDir">輸出目錄</param>
+    /// <param name="fhirVersion">FHIR 版本</param>
+    public async Task GenerateResourcesOnlyAsync(FhirSchema schema, string outputDir, string fhirVersion)
+    {
+        Console.WriteLine($"⚡ Generating {fhirVersion} resources to: {outputDir}");
+        
+        // 建立目錄結構
+        var resourcesDir = Path.Combine(outputDir, "Resources");
+        Directory.CreateDirectory(resourcesDir);
+        
+        // 生成 Resources
+        Console.WriteLine($"📄 Generating {schema.Resources.Count} resources...");
+        foreach (var resource in schema.Resources.Values)
+        {
+            await GenerateResourceAsync(resource, resourcesDir, fhirVersion);
+        }
+        
+        Console.WriteLine($"✅ Resource generation completed!");
     }
     
     /// <summary>
@@ -113,8 +140,8 @@ public class FhirCodeGenerator
         // Using 語句
         sb.AppendLine("using System.ComponentModel.DataAnnotations;");
         sb.AppendLine("using System.Text.Json.Serialization;");
-        sb.AppendLine("using Fhir.Abstractions;");
-        sb.AppendLine("using Fhir.Support.Base;");
+        sb.AppendLine($"using Fhir.{fhirVersion}.Models.Base;");
+        sb.AppendLine("using Fhir.TypeFramework.DataTypes;");
         sb.AppendLine();
         
         // 命名空間
@@ -127,7 +154,7 @@ public class FhirCodeGenerator
         sb.AppendLine("/// </summary>");
         
         // 類別定義
-        sb.AppendLine($"public class {resource.Name} : IDomainResource");
+        sb.AppendLine($"public class {resource.Name} : DomainResource");
         sb.AppendLine("{");
         
         // ResourceType 屬性
@@ -135,11 +162,8 @@ public class FhirCodeGenerator
         sb.AppendLine("    /// Resource type name");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    [JsonPropertyName(\"resourceType\")]");
-        sb.AppendLine($"    public string ResourceType => \"{resource.Name}\";");
+        sb.AppendLine($"    public override string ResourceType => \"{resource.Name}\";");
         sb.AppendLine();
-        
-        // 基本屬性
-        GenerateBaseProperties(sb);
         
         // 生成屬性
         foreach (var property in resource.Properties.Where(p => !IsBaseProperty(p.Name)))
@@ -242,7 +266,13 @@ public class FhirCodeGenerator
     private void GenerateProperty(StringBuilder sb, PropertyDefinition property, string fhirVersion)
     {
         var propertyName = ToPascalCase(property.Name);
-        var propertyType = _typeMapper.MapFhirTypeToCSharp(property.Type, property.IsArray, null);
+        
+        // 使用基數資訊來決定型別
+        var propertyType = _typeMapper.MapFhirTypeToCSharpWithCardinality(
+            property.Type, 
+            property.MinCardinality, 
+            property.MaxCardinality, 
+            property.TargetProfiles);
 
         // 處理屬性名稱與類型名稱衝突
         if (propertyName.Equals(property.Type, StringComparison.OrdinalIgnoreCase))
@@ -257,7 +287,7 @@ public class FhirCodeGenerator
         sb.AppendLine($"    /// {cleanDescription}");
         sb.AppendLine("    /// </summary>");
 
-        if (property.IsRequired)
+        if (property.MinCardinality > 0)
         {
             sb.AppendLine("    [Required]");
         }

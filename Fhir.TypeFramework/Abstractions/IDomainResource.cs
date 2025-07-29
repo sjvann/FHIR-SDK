@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Fhir.TypeFramework.DataTypes;
 using Fhir.TypeFramework.DataTypes.ComplexTypes;
+using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 namespace Fhir.TypeFramework.Abstractions;
 
@@ -49,25 +51,25 @@ public interface IResource
     /// Logical id of this artifact
     /// </summary>
     /// <returns>資源的邏輯 ID</returns>
-    string? Id { get; set; }
+    FhirId? Id { get; set; }
 
     /// <summary>
     /// Metadata about the resource
     /// </summary>
     /// <returns>資源的元資料</returns>
-    object? Meta { get; set; }
+    Meta? Meta { get; set; }
 
     /// <summary>
     /// A set of rules under which this content was created
     /// </summary>
     /// <returns>內容建立時遵循的規則</returns>
-    string? ImplicitRules { get; set; }
+    FhirUri? ImplicitRules { get; set; }
 
     /// <summary>
     /// Language of the resource content
     /// </summary>
     /// <returns>資源內容的語言</returns>
-    string? Language { get; set; }
+    FhirCode? Language { get; set; }
 
     /// <summary>
     /// The type of the resource

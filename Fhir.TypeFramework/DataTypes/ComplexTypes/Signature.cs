@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -25,7 +25,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Signature : Element, IExtensibleTypeFramework
+public class Signature : UnifiedComplexTypeBase<Signature>
 {
     /// <summary>
     /// 實體簽署物件的原因指示
@@ -82,7 +82,7 @@ public class Signature : Element, IExtensibleTypeFramework
     public FhirCode? SigFormat { get; set; }
 
     /// <summary>
-    /// 實際簽名內容（XML DigSig、JWT、圖片等）
+    /// 實際的簽名內容（XML DigSig、JWT、圖片等）
     /// FHIR Path: Signature.data
     /// Cardinality: 0..1
     /// Type: base64Binary
@@ -119,11 +119,32 @@ public class Signature : Element, IExtensibleTypeFramework
     public bool HasOnBehalfOf => OnBehalfOf != null;
 
     /// <summary>
+    /// 檢查是否有目標格式
+    /// </summary>
+    /// <returns>如果存在目標格式則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasTargetFormat => !string.IsNullOrEmpty(TargetFormat?.Value);
+
+    /// <summary>
+    /// 檢查是否有簽名格式
+    /// </summary>
+    /// <returns>如果存在簽名格式則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasSigFormat => !string.IsNullOrEmpty(SigFormat?.Value);
+
+    /// <summary>
     /// 檢查是否有資料
     /// </summary>
     /// <returns>如果存在資料則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasData => Data?.Value != null && Data.Value.Length > 0;
+    public bool HasData => Data != null;
+
+    /// <summary>
+    /// 檢查簽名是否有效
+    /// </summary>
+    /// <returns>如果簽名有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => HasWho && HasWhen;
 
     /// <summary>
     /// 取得顯示文字
@@ -135,126 +156,111 @@ public class Signature : Element, IExtensibleTypeFramework
         get
         {
             var parts = new List<string>();
-
+            
             if (HasWho)
             {
                 parts.Add($"Signed by: {Who?.DisplayText}");
             }
-
+            
             if (HasWhen)
             {
-                parts.Add($"at {When?.Value:yyyy-MM-dd HH:mm:ss}");
+                parts.Add($"at {When?.Value}");
             }
-
-            if (HasType)
+            
+            if (HasOnBehalfOf)
             {
-                var typeNames = Type!.Select(t => t.DisplayText).Where(t => !string.IsNullOrEmpty(t));
-                if (typeNames.Any())
-                {
-                    parts.Add($"Type: {string.Join(", ", typeNames)}");
-                }
+                parts.Add($"on behalf of: {OnBehalfOf?.DisplayText}");
             }
-
-            return parts.Count > 0 ? string.Join(" ", parts) : null;
+            
+            return parts.Any() ? string.Join(" ", parts) : "Digital Signature";
         }
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Signature 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override void CopyFieldsTo(Signature target)
     {
-        var copy = new Signature
-        {
-            Id = Id,
-            When = When?.DeepCopy() as FhirInstant,
-            Who = Who?.DeepCopy() as Reference,
-            OnBehalfOf = OnBehalfOf?.DeepCopy() as Reference,
-            TargetFormat = TargetFormat?.DeepCopy() as FhirCode,
-            SigFormat = SigFormat?.DeepCopy() as FhirCode,
-            Data = Data?.DeepCopy() as FhirBase64Binary
-        };
-
-        if (Type != null)
-        {
-            copy.Type = Type.Select(t => t.DeepCopy() as Coding).ToList();
-        }
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        target.Type = Type?.Select(t => t.DeepCopy() as Coding).ToList();
+        target.When = When?.DeepCopy() as FhirInstant;
+        target.Who = Who?.DeepCopy() as Reference;
+        target.OnBehalfOf = OnBehalfOf?.DeepCopy() as Reference;
+        target.TargetFormat = TargetFormat?.DeepCopy() as FhirCode;
+        target.SigFormat = SigFormat?.DeepCopy() as FhirCode;
+        target.Data = Data?.DeepCopy() as FhirBase64Binary;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Signature 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override bool FieldsAreExactly(Signature other)
     {
-        if (other is not Signature otherSignature)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(When, otherSignature.When) &&
-               Equals(Who, otherSignature.Who) &&
-               Equals(OnBehalfOf, otherSignature.OnBehalfOf) &&
-               Equals(TargetFormat, otherSignature.TargetFormat) &&
-               Equals(SigFormat, otherSignature.SigFormat) &&
-               Equals(Data, otherSignature.Data) &&
-               Type?.Count == otherSignature.Type?.Count &&
-               (Type?.Zip(otherSignature.Type ?? new List<Coding>(), 
-                         (a, b) => a.IsExactly(b)).All(x => x) ?? true);
+        return DeepEqualityComparer.AreEqual(Type, other.Type) &&
+               DeepEqualityComparer.AreEqual(When, other.When) &&
+               DeepEqualityComparer.AreEqual(Who, other.Who) &&
+               DeepEqualityComparer.AreEqual(OnBehalfOf, other.OnBehalfOf) &&
+               DeepEqualityComparer.AreEqual(TargetFormat, other.TargetFormat) &&
+               DeepEqualityComparer.AreEqual(SigFormat, other.SigFormat) &&
+               DeepEqualityComparer.AreEqual(Data, other.Data);
     }
 
-    /// <summary>
-    /// 驗證 Signature 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        // 驗證類型（如果提供）
+        var results = new List<ValidationResult>();
+
+        // 驗證 Type
         if (Type != null)
         {
             foreach (var type in Type)
             {
-                var typeValidationContext = new ValidationContext(type);
-                foreach (var typeResult in type.Validate(typeValidationContext))
+                if (type != null)
                 {
-                    yield return typeResult;
+                    results.AddRange(type.Validate(validationContext));
                 }
             }
         }
 
-        // 驗證簽署者（如果提供）
+        // 驗證 When
+        if (When != null)
+        {
+            results.AddRange(When.Validate(validationContext));
+        }
+
+        // 驗證 Who
         if (Who != null)
         {
-            var whoValidationContext = new ValidationContext(Who);
-            foreach (var whoResult in Who.Validate(whoValidationContext))
-            {
-                yield return whoResult;
-            }
+            results.AddRange(Who.Validate(validationContext));
         }
 
-        // 驗證代表當事人（如果提供）
+        // 驗證 OnBehalfOf
         if (OnBehalfOf != null)
         {
-            var onBehalfOfValidationContext = new ValidationContext(OnBehalfOf);
-            foreach (var onBehalfOfResult in OnBehalfOf.Validate(onBehalfOfValidationContext))
-            {
-                yield return onBehalfOfResult;
-            }
+            results.AddRange(OnBehalfOf.Validate(validationContext));
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        // 驗證 TargetFormat
+        if (TargetFormat != null)
         {
-            yield return result;
+            results.AddRange(TargetFormat.Validate(validationContext));
         }
+
+        // 驗證 SigFormat
+        if (SigFormat != null)
+        {
+            results.AddRange(SigFormat.Validate(validationContext));
+        }
+
+        // 驗證 Data
+        if (Data != null)
+        {
+            results.AddRange(Data.Validate(validationContext));
+        }
+
+        // 驗證簽名邏輯
+        if (!HasWho)
+        {
+            results.Add(new ValidationResult("Signature must have a who reference"));
+        }
+
+        if (!HasWhen)
+        {
+            results.Add(new ValidationResult("Signature must have a when timestamp"));
+        }
+
+        return results;
     }
 } 

@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -7,13 +7,12 @@ using System.Text.Json.Serialization;
 namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// Meta - 資源元資料
-/// 用於描述 FHIR 資源的元資料資訊
+/// Meta - 元資料型別
+/// 用於在 FHIR 資源中表示元資料資訊
 /// </summary>
 /// <remarks>
 /// FHIR R5 Meta (Complex Type)
-/// The metadata about a resource. This is content that is maintained by the infrastructure.
-/// Changes to the content might not always be associated with version changes to the resource.
+/// Metadata about a resource.
 /// 
 /// Structure:
 /// - versionId: id (0..1) - Version specific identifier
@@ -25,7 +24,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Meta : Element, IExtensibleTypeFramework
+public class Meta : UnifiedComplexTypeBase<Meta>
 {
     /// <summary>
     /// 版本特定識別碼
@@ -37,7 +36,7 @@ public class Meta : Element, IExtensibleTypeFramework
     public FhirId? VersionId { get; set; }
 
     /// <summary>
-    /// 資源版本最後更新時間
+    /// 資源版本最後變更的時間
     /// FHIR Path: Meta.lastUpdated
     /// Cardinality: 0..1
     /// Type: instant
@@ -55,13 +54,13 @@ public class Meta : Element, IExtensibleTypeFramework
     public FhirUri? Source { get; set; }
 
     /// <summary>
-    /// 此資源聲明符合的配置文件
+    /// 此資源聲稱符合的配置檔案
     /// FHIR Path: Meta.profile
     /// Cardinality: 0..*
     /// Type: canonical[]
     /// </summary>
     [JsonPropertyName("profile")]
-    public List<FhirCanonical>? Profile { get; set; }
+    public IList<FhirCanonical>? Profile { get; set; }
 
     /// <summary>
     /// 應用於此資源的安全標籤
@@ -70,7 +69,7 @@ public class Meta : Element, IExtensibleTypeFramework
     /// Type: Coding[]
     /// </summary>
     [JsonPropertyName("security")]
-    public List<Coding>? Security { get; set; }
+    public IList<Coding>? Security { get; set; }
 
     /// <summary>
     /// 應用於此資源的標籤
@@ -79,12 +78,33 @@ public class Meta : Element, IExtensibleTypeFramework
     /// Type: Coding[]
     /// </summary>
     [JsonPropertyName("tag")]
-    public List<Coding>? Tag { get; set; }
+    public IList<Coding>? Tag { get; set; }
 
     /// <summary>
-    /// 檢查是否有配置文件
+    /// 檢查是否有版本識別碼
     /// </summary>
-    /// <returns>如果存在配置文件則為 true，否則為 false</returns>
+    /// <returns>如果存在版本識別碼則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasVersionId => !string.IsNullOrEmpty(VersionId?.Value);
+
+    /// <summary>
+    /// 檢查是否有最後更新時間
+    /// </summary>
+    /// <returns>如果存在最後更新時間則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasLastUpdated => LastUpdated?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有來源
+    /// </summary>
+    /// <returns>如果存在來源則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasSource => !string.IsNullOrEmpty(Source?.Value);
+
+    /// <summary>
+    /// 檢查是否有配置檔案
+    /// </summary>
+    /// <returns>如果存在配置檔案則為 true，否則為 false</returns>
     [JsonIgnore]
     public bool HasProfile => Profile?.Any() == true;
 
@@ -103,166 +123,120 @@ public class Meta : Element, IExtensibleTypeFramework
     public bool HasTag => Tag?.Any() == true;
 
     /// <summary>
-    /// 添加配置文件
+    /// 檢查元資料是否有效
     /// </summary>
-    /// <param name="profile">配置文件 URL</param>
-    public void AddProfile(string profile)
-    {
-        Profile ??= new List<FhirCanonical>();
-        Profile.Add(new FhirCanonical(profile));
-    }
+    /// <returns>如果元資料有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => true; // Meta 總是有效的
 
     /// <summary>
-    /// 添加安全標籤
+    /// 取得顯示文字
     /// </summary>
-    /// <param name="coding">安全標籤</param>
-    public void AddSecurity(Coding coding)
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
     {
-        Security ??= new List<Coding>();
-        Security.Add(coding);
+        get
+        {
+            var parts = new List<string>();
+            
+            if (HasVersionId)
+            {
+                parts.Add($"v{VersionId?.Value}");
+            }
+            
+            if (HasLastUpdated)
+            {
+                parts.Add($"updated {LastUpdated?.Value}");
+            }
+            
+            if (HasSource)
+            {
+                parts.Add($"from {Source?.Value}");
+            }
+            
+            return parts.Any() ? string.Join(" ", parts) : "Meta";
+        }
     }
 
-    /// <summary>
-    /// 添加標籤
-    /// </summary>
-    /// <param name="coding">標籤</param>
-    public void AddTag(Coding coding)
+    protected override void CopyFieldsTo(Meta target)
     {
-        Tag ??= new List<Coding>();
-        Tag.Add(coding);
+        target.VersionId = VersionId?.DeepCopy() as FhirId;
+        target.LastUpdated = LastUpdated?.DeepCopy() as FhirInstant;
+        target.Source = Source?.DeepCopy() as FhirUri;
+        target.Profile = Profile?.Select(p => p.DeepCopy() as FhirCanonical).ToList();
+        target.Security = Security?.Select(s => s.DeepCopy() as Coding).ToList();
+        target.Tag = Tag?.Select(t => t.DeepCopy() as Coding).ToList();
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Meta 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override bool FieldsAreExactly(Meta other)
     {
-        var copy = new Meta
-        {
-            Id = Id,
-            VersionId = VersionId,
-            LastUpdated = LastUpdated,
-            Source = Source
-        };
-
-        if (Profile != null)
-        {
-            copy.Profile = Profile.Select(p => p.DeepCopy() as FhirCanonical).ToList();
-        }
-
-        if (Security != null)
-        {
-            copy.Security = Security.Select(s => s.DeepCopy() as Coding).ToList();
-        }
-
-        if (Tag != null)
-        {
-            copy.Tag = Tag.Select(t => t.DeepCopy() as Coding).ToList();
-        }
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        return DeepEqualityComparer.AreEqual(VersionId, other.VersionId) &&
+               DeepEqualityComparer.AreEqual(LastUpdated, other.LastUpdated) &&
+               DeepEqualityComparer.AreEqual(Source, other.Source) &&
+               DeepEqualityComparer.AreEqual(Profile, other.Profile) &&
+               DeepEqualityComparer.AreEqual(Security, other.Security) &&
+               DeepEqualityComparer.AreEqual(Tag, other.Tag);
     }
 
-    /// <summary>
-    /// 判斷與另一個 Meta 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        if (other is not Meta otherMeta)
-            return false;
+        var results = new List<ValidationResult>();
 
-        return base.IsExactly(other) &&
-               Equals(VersionId, otherMeta.VersionId) &&
-               Equals(LastUpdated, otherMeta.LastUpdated) &&
-               Equals(Source, otherMeta.Source) &&
-               Profile?.Count == otherMeta.Profile?.Count &&
-               Security?.Count == otherMeta.Security?.Count &&
-               Tag?.Count == otherMeta.Tag?.Count;
-    }
-
-    /// <summary>
-    /// 驗證 Meta 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 驗證 VersionId 格式
-        if (!string.IsNullOrEmpty(VersionId) && !IsValidVersionId(VersionId))
+        // 驗證 VersionId
+        if (VersionId != null)
         {
-            yield return new ValidationResult("Meta.versionId must be a valid ID format");
+            results.AddRange(VersionId.Validate(validationContext));
         }
 
-        // 驗證 Source URI 格式
-        if (!string.IsNullOrEmpty(Source) && !Uri.IsWellFormedUriString(Source, UriKind.Absolute))
+        // 驗證 LastUpdated
+        if (LastUpdated != null)
         {
-            yield return new ValidationResult("Meta.source must be a valid absolute URI");
+            results.AddRange(LastUpdated.Validate(validationContext));
         }
 
-        // 驗證 Profile URLs
+        // 驗證 Source
+        if (Source != null)
+        {
+            results.AddRange(Source.Validate(validationContext));
+        }
+
+        // 驗證 Profile
         if (Profile != null)
         {
             foreach (var profile in Profile)
             {
-                if (!string.IsNullOrEmpty(profile) && !Uri.IsWellFormedUriString(profile, UriKind.Absolute))
+                if (profile != null)
                 {
-                    yield return new ValidationResult($"Meta.profile '{profile}' must be a valid absolute URI");
+                    results.AddRange(profile.Validate(validationContext));
                 }
             }
         }
 
-        // 驗證 Security Codings
+        // 驗證 Security
         if (Security != null)
         {
             foreach (var security in Security)
             {
-                var securityValidationContext = new ValidationContext(security);
-                foreach (var result in security.Validate(securityValidationContext))
+                if (security != null)
                 {
-                    yield return result;
+                    results.AddRange(security.Validate(validationContext));
                 }
             }
         }
 
-        // 驗證 Tag Codings
+        // 驗證 Tag
         if (Tag != null)
         {
             foreach (var tag in Tag)
             {
-                var tagValidationContext = new ValidationContext(tag);
-                foreach (var result in tag.Validate(tagValidationContext))
+                if (tag != null)
                 {
-                    yield return result;
+                    results.AddRange(tag.Validate(validationContext));
                 }
             }
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
-    }
-
-    /// <summary>
-    /// 驗證 VersionId 格式
-    /// </summary>
-    /// <param name="versionId">要驗證的版本 ID</param>
-    /// <returns>如果格式正確則為 true，否則為 false</returns>
-    private bool IsValidVersionId(string versionId)
-    {
-        if (string.IsNullOrEmpty(versionId) || versionId.Length > 64)
-            return false;
-            
-        // Version ID 只能包含字母、數字、連字號和點
-        return versionId.All(c => char.IsLetterOrDigit(c) || c == '-' || c == '.');
+        return results;
     }
 } 

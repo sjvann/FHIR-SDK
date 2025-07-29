@@ -1,93 +1,110 @@
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.TypeFramework.Base;
 
-namespace Fhir.TypeFramework.DataTypes;
+namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
-/// FHIR boolean primitive type.
-/// true | false
+/// 布林型別
+/// 代表規範中的 boolean 型別，為 true/false 值
 /// </summary>
 /// <remarks>
-/// FHIR R5 boolean PrimitiveType
-/// Note that 0 and 1 are not valid values in FHIR.
+/// 這個型別提供：
+/// - 布林值的儲存和驗證
+/// - 隱含轉換支援
+/// - Extension 功能
+/// - 深層複製和相等性比較
 /// 
-/// JSON Representation:
-/// - Simple: "active" : true
-/// - Full: "active" : true, "_active" : { "id" : "a1", "extension" : [...] }
+/// 使用範例：
+/// <code>
+/// var fhirBoolean = new FhirBoolean(true);
+/// var value = fhirBoolean.Value; // true
+/// </code>
+/// 
+/// 驗證規則：
+/// - 支援 true 和 false 值
+/// - 支援 Extension
+/// 
+/// JSON 表示：
+/// - 簡化格式："active" : true
+/// - 完整格式："active" : true, "_active" : { "id" : "a1", "extension" : [...] }
 /// </remarks>
-public class FhirBoolean : PrimitiveTypeBase<bool>
+public class FhirBoolean : UnifiedPrimitiveTypeBase<bool>
 {
+    /// <summary>
+    /// Gets or sets the boolean value.
+    /// </summary>
+    [JsonIgnore]
+    public bool? BooleanValue { get => Value; set => Value = value; }
+
     /// <summary>
     /// Initializes a new instance of the FhirBoolean class.
     /// </summary>
     public FhirBoolean() { }
-    
+
     /// <summary>
     /// Initializes a new instance of the FhirBoolean class with the specified value.
     /// </summary>
     /// <param name="value">The boolean value.</param>
-    public FhirBoolean(bool value)
-    {
-        Value = value;
-    }
-    
+    public FhirBoolean(bool? value) : base(value) { }
+
     /// <summary>
     /// Implicitly converts a bool to a FhirBoolean.
     /// </summary>
     /// <param name="value">The bool value to convert.</param>
-    /// <returns>A FhirBoolean instance.</returns>
-    public static implicit operator FhirBoolean(bool value)
+    /// <returns>A FhirBoolean instance, or null if the value is null.</returns>
+    public static implicit operator FhirBoolean?(bool? value)
     {
-        return new FhirBoolean(value);
+        return CreateFromValue<FhirBoolean>(value);
     }
-    
+
     /// <summary>
     /// Implicitly converts a FhirBoolean to a bool.
     /// </summary>
     /// <param name="fhirBoolean">The FhirBoolean to convert.</param>
-    /// <returns>The bool value.</returns>
-    public static implicit operator bool(FhirBoolean fhirBoolean)
+    /// <returns>The bool value, or null if the FhirBoolean is null.</returns>
+    public static implicit operator bool?(FhirBoolean? fhirBoolean)
     {
-        return fhirBoolean.Value ?? false;
+        return GetValue<FhirBoolean>(fhirBoolean);
     }
-    
+
     /// <summary>
-    /// 從字串解析值
+    /// Parses a boolean value from string.
     /// </summary>
-    public override bool? ParseValue(string value)
+    /// <param name="value">The string to parse.</param>
+    /// <returns>The parsed boolean value.</returns>
+    protected override bool? ParseValueFromString(string value)
     {
-        if (bool.TryParse(value, out bool result))
-            return result;
-        return null;
-    }
-    
-    /// <summary>
-    /// 將值轉換為字串
-    /// </summary>
-    public override string? ValueToString(bool? value)
-    {
-        return value?.ToString().ToLower();
-    }
-    
-    /// <summary>
-    /// 驗證值是否符合 FHIR 規範
-    /// </summary>
-    public override bool IsValidValue(bool? value)
-    {
-        // FHIR boolean 只接受 true 或 false，不接受 0 或 1
-        return true; // bool 型別本身就是有效的
-    }
-    
-    /// <summary>
-    /// 驗證 FhirBoolean 是否符合 FHIR R5 規範
-    /// </summary>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        if (string.IsNullOrEmpty(value)) return null;
+        
+        return value.ToLowerInvariant() switch
         {
-            yield return result;
-        }
+            "true" or "1" or "yes" or "on" => true,
+            "false" or "0" or "no" or "off" => false,
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Converts a boolean value to string.
+    /// </summary>
+    /// <param name="value">The value to convert.</param>
+    /// <returns>The string representation.</returns>
+    protected override string? ValueToString(bool? value)
+    {
+        return value?.ToString().ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Validates the boolean value according to FHIR specifications.
+    /// </summary>
+    /// <param name="value">The boolean value to validate.</param>
+    /// <returns>True if the value is valid; otherwise, false.</returns>
+    protected override bool ValidateValue(bool value)
+    {
+        return true; // 布林值沒有額外驗證規則
     }
 }
+
+

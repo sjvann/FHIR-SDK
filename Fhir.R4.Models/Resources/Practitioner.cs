@@ -4,51 +4,27 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.Abstractions;
-using Fhir.Support.Base;
+using Fhir.R4.Models.Base;
+using Fhir.TypeFramework.DataTypes;
 
 namespace Fhir.R4.Models.Resources;
 
 /// <summary>
 /// A person who is directly or indirectly involved in the provisioning of healthcare.
 /// </summary>
-public class Practitioner : IDomainResource
+public class Practitioner : DomainResource
 {
     /// <summary>
     /// Resource type name
     /// </summary>
     [JsonPropertyName("resourceType")]
-    public string ResourceType => "Practitioner";
-
-    /// <summary>
-    /// Logical id of this artifact
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// A human-readable narrative
-    /// </summary>
-    [JsonPropertyName("text")]
-    public object? Text { get; set; }
-
-    /// <summary>
-    /// Additional content defined by implementations
-    /// </summary>
-    [JsonPropertyName("extension")]
-    public IList<object>? Extension { get; set; }
-
-    /// <summary>
-    /// Extensions that cannot be ignored
-    /// </summary>
-    [JsonPropertyName("modifierExtension")]
-    public IList<object>? ModifierExtension { get; set; }
+    public override string ResourceType => "Practitioner";
 
     /// <summary>
     /// An identifier for the person as this agent
     /// </summary>
     [JsonPropertyName("identifier")]
-    public List<Identifier> IdentifierValue { get; set; }
+    public List<Identifier>? IdentifierValue { get; set; }
 
     /// <summary>
     /// Whether this practitioner&apos;s record is in active use
@@ -60,19 +36,19 @@ public class Practitioner : IDomainResource
     /// The name(s) associated with the practitioner
     /// </summary>
     [JsonPropertyName("name")]
-    public List<HumanName> Name { get; set; }
+    public List<HumanName>? Name { get; set; }
 
     /// <summary>
     /// A contact detail for the practitioner (that apply to all roles)
     /// </summary>
     [JsonPropertyName("telecom")]
-    public List<ContactPoint> Telecom { get; set; }
+    public List<ContactPoint>? Telecom { get; set; }
 
     /// <summary>
     /// Address(es) of the practitioner that are not role specific (typically home address)
     /// </summary>
     [JsonPropertyName("address")]
-    public List<Address> AddressValue { get; set; }
+    public List<Address>? AddressValue { get; set; }
 
     /// <summary>
     /// male | female | other | unknown
@@ -90,19 +66,19 @@ public class Practitioner : IDomainResource
     /// Image of the person
     /// </summary>
     [JsonPropertyName("photo")]
-    public List<Attachment> Photo { get; set; }
+    public List<Attachment>? Photo { get; set; }
 
     /// <summary>
     /// Certification, licenses, or training pertaining to the provision of care
     /// </summary>
     [JsonPropertyName("qualification")]
-    public List<BackboneElement> Qualification { get; set; }
+    public List<BackboneElement>? Qualification { get; set; }
 
     /// <summary>
     /// An identifier for this qualification for the practitioner
     /// </summary>
     [JsonPropertyName("identifier")]
-    public List<Identifier> IdentifierValue { get; set; }
+    public List<Identifier>? IdentifierValue { get; set; }
 
     /// <summary>
     /// Coded representation of the qualification
@@ -127,7 +103,7 @@ public class Practitioner : IDomainResource
     /// A language the practitioner can use in patient communication
     /// </summary>
     [JsonPropertyName("communication")]
-    public List<CodeableConcept> Communication { get; set; }
+    public List<CodeableConcept>? Communication { get; set; }
 
     /// <summary>
     /// Validates this instance according to FHIR rules

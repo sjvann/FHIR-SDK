@@ -4,51 +4,27 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.Abstractions;
-using Fhir.Support.Base;
+using Fhir.R4.Models.Base;
+using Fhir.TypeFramework.DataTypes;
 
 namespace Fhir.R4.Models.Resources;
 
 /// <summary>
 /// A formally or informally recognized grouping of people or organizations formed for the purpose of achieving some form of collective action.  Includes companies, institutions, corporations, departments, community groups, healthcare practice groups, payer/insurer, etc.
 /// </summary>
-public class Organization : IDomainResource
+public class Organization : DomainResource
 {
     /// <summary>
     /// Resource type name
     /// </summary>
     [JsonPropertyName("resourceType")]
-    public string ResourceType => "Organization";
-
-    /// <summary>
-    /// Logical id of this artifact
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// A human-readable narrative
-    /// </summary>
-    [JsonPropertyName("text")]
-    public object? Text { get; set; }
-
-    /// <summary>
-    /// Additional content defined by implementations
-    /// </summary>
-    [JsonPropertyName("extension")]
-    public IList<object>? Extension { get; set; }
-
-    /// <summary>
-    /// Extensions that cannot be ignored
-    /// </summary>
-    [JsonPropertyName("modifierExtension")]
-    public IList<object>? ModifierExtension { get; set; }
+    public override string ResourceType => "Organization";
 
     /// <summary>
     /// Identifies this organization  across multiple systems
     /// </summary>
     [JsonPropertyName("identifier")]
-    public List<Identifier> IdentifierValue { get; set; }
+    public List<Identifier>? IdentifierValue { get; set; }
 
     /// <summary>
     /// Whether the organization&apos;s record is still in active use
@@ -60,7 +36,7 @@ public class Organization : IDomainResource
     /// Kind of organization
     /// </summary>
     [JsonPropertyName("type")]
-    public List<CodeableConcept> Type { get; set; }
+    public List<CodeableConcept>? Type { get; set; }
 
     /// <summary>
     /// Name used for the organization
@@ -72,19 +48,19 @@ public class Organization : IDomainResource
     /// A list of alternate names that the organization is known as, or was known as in the past
     /// </summary>
     [JsonPropertyName("alias")]
-    public List<FhirString> Alias { get; set; }
+    public List<FhirString>? Alias { get; set; }
 
     /// <summary>
     /// A contact detail for the organization
     /// </summary>
     [JsonPropertyName("telecom")]
-    public List<ContactPoint> Telecom { get; set; }
+    public List<ContactPoint>? Telecom { get; set; }
 
     /// <summary>
     /// An address for the organization
     /// </summary>
     [JsonPropertyName("address")]
-    public List<Address> AddressValue { get; set; }
+    public List<Address>? AddressValue { get; set; }
 
     /// <summary>
     /// The organization of which this organization forms a part
@@ -96,37 +72,13 @@ public class Organization : IDomainResource
     /// Contact for the organization for a certain purpose
     /// </summary>
     [JsonPropertyName("contact")]
-    public List<BackboneElement> Contact { get; set; }
-
-    /// <summary>
-    /// The type of contact
-    /// </summary>
-    [JsonPropertyName("purpose")]
-    public CodeableConcept Purpose { get; set; }
-
-    /// <summary>
-    /// A name associated with the contact
-    /// </summary>
-    [JsonPropertyName("name")]
-    public HumanName Name { get; set; }
-
-    /// <summary>
-    /// Contact details (telephone, email, etc.)  for a contact
-    /// </summary>
-    [JsonPropertyName("telecom")]
-    public List<ContactPoint> Telecom { get; set; }
-
-    /// <summary>
-    /// Visiting or postal addresses for the contact
-    /// </summary>
-    [JsonPropertyName("address")]
-    public Address AddressValue { get; set; }
+    public List<BackboneElement>? Contact { get; set; }
 
     /// <summary>
     /// Technical endpoints providing access to services operated for the organization
     /// </summary>
     [JsonPropertyName("endpoint")]
-    public List<Reference> Endpoint { get; set; }
+    public List<Reference>? Endpoint { get; set; }
 
     /// <summary>
     /// Validates this instance according to FHIR rules

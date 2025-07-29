@@ -1,42 +1,29 @@
-using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
-using System.ComponentModel.DataAnnotations;
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
+using System.Text.Json.Serialization;
 
 namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
-/// FHIR Primitive Type: oid
+/// FHIR oid primitive type.
+/// An OID represented as a URI.
 /// </summary>
-public class FhirOid : PrimitiveTypeBase<string>
+/// <remarks>
+/// FHIR R5 oid PrimitiveType
+/// An OID represented as a URI.
+/// </remarks>
+public class FhirOid : UnifiedPrimitiveTypeBase<string>
 {
-    public FhirOid() { }
+    [JsonIgnore]
+    public string? OidValue { get => Value; set => Value = value; }
 
+    public FhirOid() { }
     public FhirOid(string? value) : base(value) { }
 
-    public static implicit operator FhirOid(string? value) => new(value);
-    public static implicit operator string?(FhirOid fhirValue) => fhirValue?.Value;
+    public static implicit operator FhirOid?(string? value) => CreateFromString<FhirOid>(value);
+    public static implicit operator string?(FhirOid? fhirOid) => GetStringValue<FhirOid>(fhirOid);
 
-    public override string? ParseValue(string? value)
-    {
-        return value;
-    }
-
-    public override string? ValueToString(string? value)
-    {
-        return value;
-    }
-
-    public override bool IsValidValue(string? value)
-    {
-        if (string.IsNullOrEmpty(value)) return true;
-        return value.Length <= 1048576; // 1MB limit
-    }
-
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (!string.IsNullOrEmpty(Value) && Value.Length > 1048576)
-        {
-            yield return new ValidationResult("Oid value cannot exceed 1MB");
-        }
-    }
-} 
+    protected override string? ParseValueFromString(string value) => value;
+    protected override string? ValueToString(string? value) => value;
+    protected override bool ValidateValue(string value) => ValidationFramework.ValidateOid(value);
+}

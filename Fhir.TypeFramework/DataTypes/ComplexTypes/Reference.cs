@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -22,7 +22,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Reference : Element, IExtensibleTypeFramework
+public class Reference : UnifiedComplexTypeBase<Reference>
 {
     /// <summary>
     /// 字面參考 - 相對、內部或絕對 URL
@@ -31,7 +31,7 @@ public class Reference : Element, IExtensibleTypeFramework
     /// Type: string
     /// </summary>
     [JsonPropertyName("reference")]
-    public FhirString? Reference { get; set; }
+    public FhirString? ReferenceId { get; set; }
 
     /// <summary>
     /// 參考的資源型別
@@ -65,90 +65,114 @@ public class Reference : Element, IExtensibleTypeFramework
     /// </summary>
     /// <returns>如果存在參考則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasReference => !string.IsNullOrEmpty(Reference?.Value) || Identifier != null;
+    public bool HasReference => !string.IsNullOrEmpty(ReferenceId?.Value);
 
     /// <summary>
-    /// 取得參考的顯示文字
+    /// 檢查是否有型別
     /// </summary>
-    /// <returns>參考的顯示文字</returns>
+    /// <returns>如果存在型別則為 true，否則為 false</returns>
     [JsonIgnore]
-    public string? DisplayText => Display?.Value ?? Reference?.Value ?? Identifier?.Value;
+    public bool HasType => !string.IsNullOrEmpty(Type?.Value);
 
     /// <summary>
-    /// 建立物件的深層複本
+    /// 檢查是否有識別碼
     /// </summary>
-    /// <returns>Reference 的深層複本</returns>
-    public override Base DeepCopy()
+    /// <returns>如果存在識別碼則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasIdentifier => Identifier != null;
+
+    /// <summary>
+    /// 檢查是否有顯示文字
+    /// </summary>
+    /// <returns>如果存在顯示文字則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasDisplay => !string.IsNullOrEmpty(Display?.Value);
+
+    /// <summary>
+    /// 檢查參考是否有效
+    /// </summary>
+    /// <returns>如果參考有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => HasReference || HasIdentifier;
+
+    /// <summary>
+    /// 取得顯示文字
+    /// </summary>
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
     {
-        var copy = new Reference
+        get
         {
-            Id = Id,
-            Reference = Reference?.DeepCopy() as FhirString,
-            Type = Type?.DeepCopy() as FhirUri,
-            Identifier = Identifier?.DeepCopy() as Identifier,
-            Display = Display?.DeepCopy() as FhirString
-        };
+            if (HasDisplay)
+            {
+                return Display?.Value;
+            }
 
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            if (HasReference)
+            {
+                return ReferenceId?.Value;
+            }
+
+            if (HasIdentifier)
+            {
+                return Identifier?.DisplayText;
+            }
+
+            return null;
         }
-
-        return copy;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Reference 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override void CopyFieldsTo(Reference target)
     {
-        if (other is not Reference otherReference)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Reference, otherReference.Reference) &&
-               Equals(Type, otherReference.Type) &&
-               Equals(Identifier, otherReference.Identifier) &&
-               Equals(Display, otherReference.Display);
+        target.ReferenceId = ReferenceId?.DeepCopy() as FhirString;
+        target.Type = Type?.DeepCopy() as FhirUri;
+        target.Identifier = Identifier?.DeepCopy() as Identifier;
+        target.Display = Display?.DeepCopy() as FhirString;
     }
 
-    /// <summary>
-    /// 驗證 Reference 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override bool FieldsAreExactly(Reference other)
     {
-        // 驗證必須有參考或識別碼
-        if (string.IsNullOrEmpty(Reference?.Value) && Identifier == null)
+        return DeepEqualityComparer.AreEqual(ReferenceId, other.ReferenceId) &&
+               DeepEqualityComparer.AreEqual(Type, other.Type) &&
+               DeepEqualityComparer.AreEqual(Identifier, other.Identifier) &&
+               DeepEqualityComparer.AreEqual(Display, other.Display);
+    }
+
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        var results = new List<ValidationResult>();
+
+        // 驗證 ReferenceId
+        if (ReferenceId != null)
         {
-            yield return new ValidationResult("Reference must have either reference or identifier");
+            results.AddRange(ReferenceId.Validate(validationContext));
         }
 
-        // 驗證參考 URL 格式（如果提供）
-        if (!string.IsNullOrEmpty(Reference?.Value))
+        // 驗證 Type
+        if (Type != null)
         {
-            if (!Uri.IsWellFormedUriString(Reference.Value, UriKind.RelativeOrAbsolute))
-            {
-                yield return new ValidationResult("Reference URL must be a well-formed URI");
-            }
+            results.AddRange(Type.Validate(validationContext));
         }
 
-        // 驗證型別 URL 格式（如果提供）
-        if (!string.IsNullOrEmpty(Type?.Value))
+        // 驗證 Identifier
+        if (Identifier != null)
         {
-            if (!Uri.IsWellFormedUriString(Type.Value, UriKind.Absolute))
-            {
-                yield return new ValidationResult("Reference type must be a well-formed absolute URI");
-            }
+            results.AddRange(Identifier.Validate(validationContext));
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        // 驗證 Display
+        if (Display != null)
         {
-            yield return result;
+            results.AddRange(Display.Validate(validationContext));
         }
+
+        // 驗證參考邏輯
+        if (!HasReference && !HasIdentifier)
+        {
+            results.Add(new ValidationResult("Reference must have either reference or identifier"));
+        }
+
+        return results;
     }
 } 

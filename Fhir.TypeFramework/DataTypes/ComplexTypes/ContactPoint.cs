@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -7,217 +7,141 @@ using System.Text.Json.Serialization;
 namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// ContactPoint - 聯絡點型別
-/// 用於在 FHIR 資源中表示聯絡點（如電話、電子郵件、URL）
+/// FHIR ContactPoint complex type.
+/// Details for all kinds of technology mediated contact points for a person or organization.
 /// </summary>
 /// <remarks>
 /// FHIR R5 ContactPoint (Complex Type)
-/// Details for all kinds of technology mediated contact points for a person or organization,
-/// including telephone, email, etc.
+/// Details for all kinds of technology mediated contact points for a person or organization.
 /// 
 /// Structure:
 /// - system: code (0..1) - phone | fax | email | pager | url | sms | other
 /// - value: string (0..1) - The actual contact point details
-/// - use: code (0..1) - home | work | temp | old | mobile - purpose of this contact point
+/// - use: code (0..1) - home | work | temp | old | mobile
 /// - rank: positiveInt (0..1) - Specify preferred order of use (1 = highest)
 /// - period: Period (0..1) - Time period when the contact point was/is in use
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class ContactPoint : Element, IExtensibleTypeFramework
+public class ContactPoint : UnifiedComplexTypeBase<ContactPoint>
 {
     /// <summary>
-    /// 聯絡點系統
-    /// FHIR Path: ContactPoint.system
-    /// Cardinality: 0..1
-    /// Type: code
+    /// Gets or sets the system.
+    /// phone | fax | email | pager | url | sms | other.
     /// </summary>
     [JsonPropertyName("system")]
     public FhirCode? System { get; set; }
 
     /// <summary>
-    /// 實際聯絡點詳細資訊
-    /// FHIR Path: ContactPoint.value
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the value.
+    /// The actual contact point details.
     /// </summary>
     [JsonPropertyName("value")]
     public FhirString? Value { get; set; }
 
     /// <summary>
-    /// 聯絡點的使用目的
-    /// FHIR Path: ContactPoint.use
-    /// Cardinality: 0..1
-    /// Type: code
+    /// Gets or sets the use.
+    /// home | work | temp | old | mobile.
     /// </summary>
     [JsonPropertyName("use")]
     public FhirCode? Use { get; set; }
 
     /// <summary>
-    /// 指定使用優先順序（1 = 最高）
-    /// FHIR Path: ContactPoint.rank
-    /// Cardinality: 0..1
-    /// Type: positiveInt
+    /// Gets or sets the rank.
+    /// Specify preferred order of use (1 = highest).
     /// </summary>
     [JsonPropertyName("rank")]
     public FhirPositiveInt? Rank { get; set; }
 
     /// <summary>
-    /// 聯絡點使用期間
-    /// FHIR Path: ContactPoint.period
-    /// Cardinality: 0..1
-    /// Type: Period
+    /// Gets or sets the period.
+    /// Time period when the contact point was/is in use.
     /// </summary>
     [JsonPropertyName("period")]
     public Period? Period { get; set; }
 
     /// <summary>
-    /// 檢查是否有系統
+    /// Gets the contact point value.
     /// </summary>
-    /// <returns>如果存在系統則為 true，否則為 false</returns>
+    /// <returns>The contact point value.</returns>
     [JsonIgnore]
-    public bool HasSystem => !string.IsNullOrEmpty(System?.Value);
+    public string? ContactValue => Value?.Value;
 
     /// <summary>
-    /// 檢查是否有值
+    /// Gets the contact point system.
     /// </summary>
-    /// <returns>如果存在值則為 true，否則為 false</returns>
+    /// <returns>The contact point system.</returns>
     [JsonIgnore]
-    public bool HasValue => !string.IsNullOrEmpty(Value?.Value);
+    public string? ContactSystem => System?.Value;
 
     /// <summary>
-    /// 檢查是否有使用目的
+    /// Copies fields to target.
     /// </summary>
-    /// <returns>如果存在使用目的則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasUse => !string.IsNullOrEmpty(Use?.Value);
-
-    /// <summary>
-    /// 檢查是否有排名
-    /// </summary>
-    /// <returns>如果存在排名則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasRank => Rank?.Value != null;
-
-    /// <summary>
-    /// 取得顯示文字
-    /// </summary>
-    /// <returns>顯示文字</returns>
-    [JsonIgnore]
-    public string? DisplayText
+    /// <param name="target">The target object.</param>
+    protected override void CopyFieldsTo(ContactPoint target)
     {
-        get
-        {
-            var parts = new List<string>();
-
-            if (HasSystem)
-            {
-                parts.Add(System?.Value);
-            }
-
-            if (HasValue)
-            {
-                parts.Add(Value?.Value);
-            }
-
-            if (HasUse)
-            {
-                parts.Add($"({Use?.Value})");
-            }
-
-            return parts.Count > 0 ? string.Join(": ", parts) : null;
-        }
+        target.System = (FhirCode?)System?.DeepCopy();
+        target.Value = (FhirString?)Value?.DeepCopy();
+        target.Use = (FhirCode?)Use?.DeepCopy();
+        target.Rank = (FhirPositiveInt?)Rank?.DeepCopy();
+        target.Period = (Period?)Period?.DeepCopy();
     }
 
     /// <summary>
-    /// 建立物件的深層複本
+    /// Compares if fields are exactly equal.
     /// </summary>
-    /// <returns>ContactPoint 的深層複本</returns>
-    public override Base DeepCopy()
+    /// <param name="other">The other object to compare.</param>
+    /// <returns>True if fields are exactly equal; otherwise, false.</returns>
+    protected override bool FieldsAreExactly(ContactPoint other)
     {
-        var copy = new ContactPoint
-        {
-            Id = Id,
-            System = System?.DeepCopy() as FhirCode,
-            Value = Value?.DeepCopy() as FhirString,
-            Use = Use?.DeepCopy() as FhirCode,
-            Rank = Rank?.DeepCopy() as FhirPositiveInt,
-            Period = Period?.DeepCopy() as Period
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        return Equals(System, other.System)
+            && Equals(Value, other.Value)
+            && Equals(Use, other.Use)
+            && Equals(Rank, other.Rank)
+            && Equals(Period, other.Period);
     }
 
     /// <summary>
-    /// 判斷與另一個 ContactPoint 物件是否相等
+    /// Validates fields.
     /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    /// <param name="validationContext">The validation context.</param>
+    /// <returns>Validation result collection.</returns>
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        if (other is not ContactPoint otherContactPoint)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(System, otherContactPoint.System) &&
-               Equals(Value, otherContactPoint.Value) &&
-               Equals(Use, otherContactPoint.Use) &&
-               Equals(Rank, otherContactPoint.Rank) &&
-               Equals(Period, otherContactPoint.Period);
-    }
-
-    /// <summary>
-    /// 驗證 ContactPoint 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 驗證 system 值（如果提供）
-        if (!string.IsNullOrEmpty(System?.Value))
+        if (System != null)
         {
-            var validSystems = new[] { "phone", "fax", "email", "pager", "url", "sms", "other" };
-            if (!validSystems.Contains(System.Value))
+            foreach (var v in System.Validate(validationContext))
             {
-                yield return new ValidationResult($"ContactPoint system must be one of: {string.Join(", ", validSystems)}");
+                yield return v;
             }
         }
-
-        // 驗證 use 值（如果提供）
-        if (!string.IsNullOrEmpty(Use?.Value))
+        if (Value != null)
         {
-            var validUses = new[] { "home", "work", "temp", "old", "mobile" };
-            if (!validUses.Contains(Use.Value))
+            foreach (var v in Value.Validate(validationContext))
             {
-                yield return new ValidationResult($"ContactPoint use must be one of: {string.Join(", ", validUses)}");
+                yield return v;
             }
         }
-
-        // 驗證排名值（如果提供）
-        if (Rank?.Value != null && Rank.Value <= 0)
+        if (Use != null)
         {
-            yield return new ValidationResult("ContactPoint rank must be a positive integer");
+            foreach (var v in Use.Validate(validationContext))
+            {
+                yield return v;
+            }
         }
-
-        // 驗證期間（如果提供）
+        if (Rank != null)
+        {
+            foreach (var v in Rank.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
         if (Period != null)
         {
-            var periodValidationContext = new ValidationContext(Period);
-            foreach (var periodResult in Period.Validate(periodValidationContext))
+            foreach (var v in Period.Validate(validationContext))
             {
-                yield return periodResult;
+                yield return v;
             }
-        }
-
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
         }
     }
 } 

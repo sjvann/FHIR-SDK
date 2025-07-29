@@ -1,42 +1,29 @@
-using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
-using System.ComponentModel.DataAnnotations;
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
+using System.Text.Json.Serialization;
 
 namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
-/// FHIR Primitive Type: markdown
+/// FHIR markdown primitive type.
+/// A string that may contain markdown syntax for optional processing by a markdown presentation engine.
 /// </summary>
-public class FhirMarkdown : PrimitiveTypeBase<string>
+/// <remarks>
+/// FHIR R5 markdown PrimitiveType
+/// A string that may contain markdown syntax for optional processing by a markdown presentation engine.
+/// </remarks>
+public class FhirMarkdown : UnifiedPrimitiveTypeBase<string>
 {
-    public FhirMarkdown() { }
+    [JsonIgnore]
+    public string? MarkdownValue { get => Value; set => Value = value; }
 
+    public FhirMarkdown() { }
     public FhirMarkdown(string? value) : base(value) { }
 
-    public static implicit operator FhirMarkdown(string? value) => new(value);
-    public static implicit operator string?(FhirMarkdown fhirValue) => fhirValue?.Value;
+    public static implicit operator FhirMarkdown?(string? value) => CreateFromString<FhirMarkdown>(value);
+    public static implicit operator string?(FhirMarkdown? fhirMarkdown) => GetStringValue<FhirMarkdown>(fhirMarkdown);
 
-    public override string? ParseValue(string? value)
-    {
-        return value;
-    }
-
-    public override string? ValueToString(string? value)
-    {
-        return value;
-    }
-
-    public override bool IsValidValue(string? value)
-    {
-        if (string.IsNullOrEmpty(value)) return true;
-        return value.Length <= 1048576; // 1MB limit
-    }
-
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (!string.IsNullOrEmpty(Value) && Value.Length > 1048576)
-        {
-            yield return new ValidationResult("Markdown value cannot exceed 1MB");
-        }
-    }
-} 
+    protected override string? ParseValueFromString(string value) => value;
+    protected override string? ValueToString(string? value) => value;
+    protected override bool ValidateValue(string value) => ValidationFramework.ValidateStringByteSize(value, 1024 * 1024);
+}

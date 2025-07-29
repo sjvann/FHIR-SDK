@@ -1,4 +1,4 @@
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes;
 using Fhir.TypeFramework.DataTypes.ComplexTypes;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;

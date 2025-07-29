@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -18,7 +18,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - name: string (0..1) - Name of an individual to contact
 /// - telecom: ContactPoint[] (0..*) - Contact details for individual or organization
 /// </remarks>
-public class ContactDetail : Element, IExtensibleTypeFramework
+public class ContactDetail : UnifiedComplexTypeBase<ContactDetail>
 {
     /// <summary>
     /// Name of an individual to contact
@@ -46,6 +46,49 @@ public class ContactDetail : Element, IExtensibleTypeFramework
     public bool HasTelecom => Telecom?.Any() == true;
 
     /// <summary>
+    /// 檢查是否有名稱
+    /// </summary>
+    /// <returns>如果存在名稱則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasName => !string.IsNullOrEmpty(Name?.Value);
+
+    /// <summary>
+    /// 檢查聯絡詳情是否有效
+    /// </summary>
+    /// <returns>如果聯絡詳情有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => HasName || HasTelecom;
+
+    /// <summary>
+    /// 取得顯示文字
+    /// </summary>
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
+    {
+        get
+        {
+            var parts = new List<string>();
+            
+            if (HasName)
+            {
+                parts.Add(Name?.Value);
+            }
+            
+            if (HasTelecom)
+            {
+                var telecomTexts = Telecom?.Select(t => t.DisplayText).Where(t => !string.IsNullOrEmpty(t));
+                if (telecomTexts?.Any() == true)
+                {
+                    parts.Add(string.Join(", ", telecomTexts));
+                }
+            }
+            
+            return parts.Any() ? string.Join(" - ", parts) : null;
+        }
+    }
+
+    /// <summary>
     /// 添加聯絡點
     /// </summary>
     /// <param name="contactPoint">聯絡點</param>
@@ -55,70 +98,46 @@ public class ContactDetail : Element, IExtensibleTypeFramework
         Telecom.Add(contactPoint);
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>ContactDetail 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override void CopyFieldsTo(ContactDetail target)
     {
-        var copy = new ContactDetail
-        {
-            Id = Id,
-            Name = Name
-        };
-
-        if (Telecom != null)
-        {
-            copy.Telecom = Telecom.Select(t => t.DeepCopy() as ContactPoint).ToList();
-        }
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        target.Name = Name?.DeepCopy() as FhirString;
+        target.Telecom = Telecom?.Select(t => t.DeepCopy() as ContactPoint).ToList();
     }
 
-    /// <summary>
-    /// 判斷與另一個 ContactDetail 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override bool FieldsAreExactly(ContactDetail other)
     {
-        if (other is not ContactDetail otherContact)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Name, otherContact.Name) &&
-               Telecom?.Count == otherContact.Telecom?.Count;
+        return DeepEqualityComparer.AreEqual(Name, other.Name) &&
+               DeepEqualityComparer.AreEqual(Telecom, other.Telecom);
     }
 
-    /// <summary>
-    /// 驗證 ContactDetail 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
+        var results = new List<ValidationResult>();
+
+        // 驗證 Name
+        if (Name != null)
+        {
+            results.AddRange(Name.Validate(validationContext));
+        }
+
         // 驗證 Telecom
         if (Telecom != null)
         {
             foreach (var telecom in Telecom)
             {
-                var telecomValidationContext = new ValidationContext(telecom);
-                foreach (var result in telecom.Validate(telecomValidationContext))
+                if (telecom != null)
                 {
-                    yield return result;
+                    results.AddRange(telecom.Validate(validationContext));
                 }
             }
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        // 驗證聯絡詳情邏輯
+        if (!HasName && !HasTelecom)
         {
-            yield return result;
+            results.Add(new ValidationResult("ContactDetail must have either name or telecom"));
         }
+
+        return results;
     }
 } 

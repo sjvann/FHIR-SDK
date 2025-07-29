@@ -1,22 +1,30 @@
-using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
-/// FHIR Primitive Type: id
+/// FHIR id primitive type.
+/// Any combination of letters, numerals, "-" and ".", with a length limit of 64 characters.
 /// </summary>
 /// <remarks>
 /// FHIR R5 id PrimitiveType
 /// Any combination of letters, numerals, "-" and ".", with a length limit of 64 characters.
 /// 
 /// JSON Representation:
-/// - Simple: "id" : "patient-123"
-/// - Full: "id" : "patient-123", "_id" : { "id" : "a1", "extension" : [...] }
+/// - Simple: "id" : "example-id"
+/// - Full: "id" : "example-id", "_id" : { "id" : "a1", "extension" : [...] }
 /// </remarks>
-public class FhirId : PrimitiveTypeBase<string>
+public class FhirId : UnifiedPrimitiveTypeBase<string>
 {
+    /// <summary>
+    /// Gets or sets the id value.
+    /// </summary>
+    [JsonIgnore]
+    public string? IdValue { get => Value; set => Value = value; }
+
     /// <summary>
     /// Initializes a new instance of the FhirId class.
     /// </summary>
@@ -32,63 +40,50 @@ public class FhirId : PrimitiveTypeBase<string>
     /// Implicitly converts a string to a FhirId.
     /// </summary>
     /// <param name="value">The string value to convert.</param>
-    /// <returns>A FhirId instance.</returns>
-    public static implicit operator FhirId(string? value) => new(value);
+    /// <returns>A FhirId instance, or null if the value is null.</returns>
+    public static implicit operator FhirId?(string? value)
+    {
+        return CreateFromString<FhirId>(value);
+    }
 
     /// <summary>
     /// Implicitly converts a FhirId to a string.
     /// </summary>
-    /// <param name="fhirValue">The FhirId to convert.</param>
-    /// <returns>The string value.</returns>
-    public static implicit operator string?(FhirId fhirValue) => fhirValue?.Value;
+    /// <param name="fhirId">The FhirId to convert.</param>
+    /// <returns>The string value, or null if the FhirId is null.</returns>
+    public static implicit operator string?(FhirId? fhirId)
+    {
+        return GetStringValue<FhirId>(fhirId);
+    }
 
     /// <summary>
-    /// 從字串解析值
+    /// Parses an id value from string.
     /// </summary>
-    /// <param name="value">要解析的字串</param>
-    /// <returns>解析後的值</returns>
-    public override string? ParseValue(string? value)
+    /// <param name="value">The string to parse.</param>
+    /// <returns>The parsed id value.</returns>
+    protected override string? ParseValueFromString(string value)
     {
         return value;
     }
 
     /// <summary>
-    /// 將值轉換為字串
+    /// Converts an id value to string.
     /// </summary>
-    /// <param name="value">要轉換的值</param>
-    /// <returns>值的字串表示</returns>
-    public override string? ValueToString(string? value)
+    /// <param name="value">The value to convert.</param>
+    /// <returns>The string representation.</returns>
+    protected override string? ValueToString(string? value)
     {
         return value;
     }
 
     /// <summary>
-    /// 驗證值是否符合 FHIR 規範
+    /// Validates the id value according to FHIR specifications.
     /// </summary>
-    /// <param name="value">要驗證的值</param>
-    /// <returns>如果值符合規範則為 true，否則為 false</returns>
-    public override bool IsValidValue(string? value)
+    /// <param name="value">The id value to validate.</param>
+    /// <returns>True if the value is valid; otherwise, false.</returns>
+    protected override bool ValidateValue(string value)
     {
-        if (string.IsNullOrEmpty(value)) return true;
-        return value.Length <= 64; // FHIR R5: id has a maximum length of 64 characters
+        // 使用 ValidationFramework 中的 FHIR 特定驗證規則
+        return ValidationFramework.ValidateFhirId(value);
     }
-
-    /// <summary>
-    /// 驗證 FhirId 是否符合 FHIR R5 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (!string.IsNullOrEmpty(Value) && Value.Length > 64)
-        {
-            yield return new ValidationResult("Id value cannot exceed 64 characters");
-        }
-
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
-    }
-} 
+}

@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -7,8 +7,8 @@ using System.Text.Json.Serialization;
 namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// RelatedArtifact - 相關文件
-/// 用於描述相關的文件、引用等
+/// RelatedArtifact - 相關成品型別
+/// 用於在 FHIR 資源中表示相關成品資訊
 /// </summary>
 /// <remarks>
 /// FHIR R5 RelatedArtifact (Complex Type)
@@ -22,20 +22,23 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - url: url (0..1) - Where the artifact can be accessed
 /// - document: Attachment (0..1) - The document being referenced
 /// - resource: canonical (0..1) - What artifact is being referenced
+/// - id: string (0..1) - inherited from Element
+/// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class RelatedArtifact : Element, IExtensibleTypeFramework
+public class RelatedArtifact : UnifiedComplexTypeBase<RelatedArtifact>
 {
     /// <summary>
-    /// documentation | justification | citation | predecessor | successor | derived-from | depends-on | composed-of
+    /// 相關成品的類型
     /// FHIR Path: RelatedArtifact.type
     /// Cardinality: 1..1
     /// Type: code
     /// </summary>
     [JsonPropertyName("type")]
-    public FhirCode Type { get; set; } = new();
+    [Required(ErrorMessage = "RelatedArtifact.type is required")]
+    public FhirCode? Type { get; set; }
 
     /// <summary>
-    /// Short label
+    /// 簡短標籤
     /// FHIR Path: RelatedArtifact.label
     /// Cardinality: 0..1
     /// Type: string
@@ -44,7 +47,7 @@ public class RelatedArtifact : Element, IExtensibleTypeFramework
     public FhirString? Label { get; set; }
 
     /// <summary>
-    /// Brief description of the related artifact
+    /// 相關成品的簡要描述
     /// FHIR Path: RelatedArtifact.display
     /// Cardinality: 0..1
     /// Type: string
@@ -53,7 +56,7 @@ public class RelatedArtifact : Element, IExtensibleTypeFramework
     public FhirString? Display { get; set; }
 
     /// <summary>
-    /// Bibliographic citation for the artifact
+    /// 成品的書目引用
     /// FHIR Path: RelatedArtifact.citation
     /// Cardinality: 0..1
     /// Type: markdown
@@ -62,7 +65,7 @@ public class RelatedArtifact : Element, IExtensibleTypeFramework
     public FhirMarkdown? Citation { get; set; }
 
     /// <summary>
-    /// Where the artifact can be accessed
+    /// 可以存取成品的位置
     /// FHIR Path: RelatedArtifact.url
     /// Cardinality: 0..1
     /// Type: url
@@ -71,7 +74,7 @@ public class RelatedArtifact : Element, IExtensibleTypeFramework
     public FhirUrl? Url { get; set; }
 
     /// <summary>
-    /// The document being referenced
+    /// 被引用的文件
     /// FHIR Path: RelatedArtifact.document
     /// Cardinality: 0..1
     /// Type: Attachment
@@ -80,7 +83,7 @@ public class RelatedArtifact : Element, IExtensibleTypeFramework
     public Attachment? Document { get; set; }
 
     /// <summary>
-    /// What artifact is being referenced
+    /// 被引用的成品
     /// FHIR Path: RelatedArtifact.resource
     /// Cardinality: 0..1
     /// Type: canonical
@@ -89,11 +92,39 @@ public class RelatedArtifact : Element, IExtensibleTypeFramework
     public FhirCanonical? Resource { get; set; }
 
     /// <summary>
+    /// 檢查是否有類型
+    /// </summary>
+    /// <returns>如果存在類型則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasType => !string.IsNullOrEmpty(Type?.Value);
+
+    /// <summary>
+    /// 檢查是否有標籤
+    /// </summary>
+    /// <returns>如果存在標籤則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasLabel => !string.IsNullOrEmpty(Label?.Value);
+
+    /// <summary>
+    /// 檢查是否有顯示
+    /// </summary>
+    /// <returns>如果存在顯示則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasDisplay => !string.IsNullOrEmpty(Display?.Value);
+
+    /// <summary>
+    /// 檢查是否有引用
+    /// </summary>
+    /// <returns>如果存在引用則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasCitation => !string.IsNullOrEmpty(Citation?.Value);
+
+    /// <summary>
     /// 檢查是否有 URL
     /// </summary>
     /// <returns>如果存在 URL 則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasUrl => !string.IsNullOrEmpty(Url);
+    public bool HasUrl => !string.IsNullOrEmpty(Url?.Value);
 
     /// <summary>
     /// 檢查是否有文件
@@ -103,103 +134,134 @@ public class RelatedArtifact : Element, IExtensibleTypeFramework
     public bool HasDocument => Document != null;
 
     /// <summary>
-    /// 檢查是否有資源引用
+    /// 檢查是否有資源
     /// </summary>
-    /// <returns>如果存在資源引用則為 true，否則為 false</returns>
+    /// <returns>如果存在資源則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasResource => !string.IsNullOrEmpty(Resource);
+    public bool HasResource => !string.IsNullOrEmpty(Resource?.Value);
 
     /// <summary>
-    /// 建立物件的深層複本
+    /// 檢查相關成品是否有效
     /// </summary>
-    /// <returns>RelatedArtifact 的深層複本</returns>
-    public override Base DeepCopy()
+    /// <returns>如果相關成品有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => HasType;
+
+    /// <summary>
+    /// 取得顯示文字
+    /// </summary>
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
     {
-        var copy = new RelatedArtifact
+        get
         {
-            Id = Id,
-            Type = Type,
-            Label = Label,
-            Display = Display,
-            Citation = Citation,
-            Url = Url,
-            Resource = Resource
-        };
+            if (!IsValid)
+                return null;
 
-        if (Document != null)
-        {
-            copy.Document = Document.DeepCopy() as Attachment;
+            var parts = new List<string>();
+            
+            if (HasLabel)
+            {
+                parts.Add(Label?.Value);
+            }
+            
+            if (HasDisplay)
+            {
+                parts.Add(Display?.Value);
+            }
+            
+            if (HasUrl)
+            {
+                parts.Add($"({Url?.Value})");
+            }
+            
+            return parts.Any() ? string.Join(" ", parts) : Type?.Value;
         }
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
     }
 
-    /// <summary>
-    /// 判斷與另一個 RelatedArtifact 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override void CopyFieldsTo(RelatedArtifact target)
     {
-        if (other is not RelatedArtifact otherArtifact)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Type, otherArtifact.Type) &&
-               Equals(Label, otherArtifact.Label) &&
-               Equals(Display, otherArtifact.Display) &&
-               Equals(Citation, otherArtifact.Citation) &&
-               Equals(Url, otherArtifact.Url) &&
-               Equals(Document, otherArtifact.Document) &&
-               Equals(Resource, otherArtifact.Resource);
+        target.Type = Type?.DeepCopy() as FhirCode;
+        target.Label = Label?.DeepCopy() as FhirString;
+        target.Display = Display?.DeepCopy() as FhirString;
+        target.Citation = Citation?.DeepCopy() as FhirMarkdown;
+        target.Url = Url?.DeepCopy() as FhirUrl;
+        target.Document = Document?.DeepCopy() as Attachment;
+        target.Resource = Resource?.DeepCopy() as FhirCanonical;
     }
 
-    /// <summary>
-    /// 驗證 RelatedArtifact 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override bool FieldsAreExactly(RelatedArtifact other)
     {
+        return DeepEqualityComparer.AreEqual(Type, other.Type) &&
+               DeepEqualityComparer.AreEqual(Label, other.Label) &&
+               DeepEqualityComparer.AreEqual(Display, other.Display) &&
+               DeepEqualityComparer.AreEqual(Citation, other.Citation) &&
+               DeepEqualityComparer.AreEqual(Url, other.Url) &&
+               DeepEqualityComparer.AreEqual(Document, other.Document) &&
+               DeepEqualityComparer.AreEqual(Resource, other.Resource);
+    }
+
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        var results = new List<ValidationResult>();
+
         // 驗證 Type
-        if (string.IsNullOrEmpty(Type))
+        if (Type != null)
         {
-            yield return new ValidationResult("RelatedArtifact.type is required");
+            results.AddRange(Type.Validate(validationContext));
         }
         else
         {
-            var validTypes = new[] { "documentation", "justification", "citation", "predecessor", "successor", "derived-from", "depends-on", "composed-of" };
-            if (!validTypes.Contains(Type))
-            {
-                yield return new ValidationResult($"RelatedArtifact.type '{Type}' is not a valid type");
-            }
+            results.Add(new ValidationResult("RelatedArtifact.type is required"));
         }
 
-        // 驗證 URL 格式
-        if (!string.IsNullOrEmpty(Url) && !Uri.IsWellFormedUriString(Url, UriKind.Absolute))
+        // 驗證 Label
+        if (Label != null)
         {
-            yield return new ValidationResult($"RelatedArtifact.url '{Url}' must be a valid absolute URI");
+            results.AddRange(Label.Validate(validationContext));
+        }
+
+        // 驗證 Display
+        if (Display != null)
+        {
+            results.AddRange(Display.Validate(validationContext));
+        }
+
+        // 驗證 Citation
+        if (Citation != null)
+        {
+            results.AddRange(Citation.Validate(validationContext));
+        }
+
+        // 驗證 Url
+        if (Url != null)
+        {
+            results.AddRange(Url.Validate(validationContext));
         }
 
         // 驗證 Document
         if (Document != null)
         {
-            var documentValidationContext = new ValidationContext(Document);
-            foreach (var result in Document.Validate(documentValidationContext))
+            results.AddRange(Document.Validate(validationContext));
+        }
+
+        // 驗證 Resource
+        if (Resource != null)
+        {
+            results.AddRange(Resource.Validate(validationContext));
+        }
+
+        // 驗證類型值
+        if (HasType)
+        {
+            var validTypes = new[] { "documentation", "justification", "citation", "predecessor", "successor", "derived-from", "depends-on", "composed-of" };
+            if (!validTypes.Contains(Type?.Value))
             {
-                yield return result;
+                results.Add(new ValidationResult($"RelatedArtifact.type must be one of: {string.Join(", ", validTypes)}"));
             }
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
+        return results;
     }
 } 

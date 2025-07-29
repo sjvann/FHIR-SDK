@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -25,7 +25,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class SampledData : Element, IExtensibleTypeFramework
+public class SampledData : UnifiedComplexTypeBase<SampledData>
 {
     /// <summary>
     /// 零值和單位
@@ -48,7 +48,7 @@ public class SampledData : Element, IExtensibleTypeFramework
     public FhirDecimal? Period { get; set; }
 
     /// <summary>
-    /// 乘以數據的因子
+    /// 乘以資料後加到原點
     /// FHIR Path: SampledData.factor
     /// Cardinality: 0..1
     /// Type: decimal
@@ -75,7 +75,7 @@ public class SampledData : Element, IExtensibleTypeFramework
     public FhirDecimal? UpperLimit { get; set; }
 
     /// <summary>
-    /// 每個時間點的樣本點數量
+    /// 每個時間點的樣本點數
     /// FHIR Path: SampledData.dimensions
     /// Cardinality: 1..1
     /// Type: positiveInt
@@ -85,7 +85,7 @@ public class SampledData : Element, IExtensibleTypeFramework
     public FhirPositiveInt? Dimensions { get; set; }
 
     /// <summary>
-    /// 數據字串
+    /// 十進位值，用空格分隔，或 "E" | "U" | "L"
     /// FHIR Path: SampledData.data
     /// Cardinality: 0..1
     /// Type: string
@@ -94,305 +94,174 @@ public class SampledData : Element, IExtensibleTypeFramework
     public FhirString? Data { get; set; }
 
     /// <summary>
+    /// 檢查是否有原點
+    /// </summary>
+    /// <returns>如果存在原點則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasOrigin => Origin != null;
+
+    /// <summary>
+    /// 檢查是否有週期
+    /// </summary>
+    /// <returns>如果存在週期則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasPeriod => Period?.Value != null;
+
+    /// <summary>
     /// 檢查是否有因子
     /// </summary>
     /// <returns>如果存在因子則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasFactor => Factor != null;
+    public bool HasFactor => Factor?.Value != null;
 
     /// <summary>
     /// 檢查是否有下限
     /// </summary>
     /// <returns>如果存在下限則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasLowerLimit => LowerLimit != null;
+    public bool HasLowerLimit => LowerLimit?.Value != null;
 
     /// <summary>
     /// 檢查是否有上限
     /// </summary>
     /// <returns>如果存在上限則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasUpperLimit => UpperLimit != null;
+    public bool HasUpperLimit => UpperLimit?.Value != null;
 
     /// <summary>
-    /// 檢查是否有數據
+    /// 檢查是否有維度
     /// </summary>
-    /// <returns>如果存在數據則為 true，否則為 false</returns>
+    /// <returns>如果存在維度則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasData => !string.IsNullOrEmpty(Data);
+    public bool HasDimensions => Dimensions?.Value != null;
 
     /// <summary>
-    /// 設定原點
+    /// 檢查是否有資料
     /// </summary>
-    /// <param name="origin">原點</param>
-    public void SetOrigin(SimpleQuantity origin)
-    {
-        Origin = origin;
-    }
+    /// <returns>如果存在資料則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasData => !string.IsNullOrEmpty(Data?.Value);
 
     /// <summary>
-    /// 設定週期
+    /// 檢查採樣數據是否有效
     /// </summary>
-    /// <param name="period">週期（毫秒）</param>
-    public void SetPeriod(decimal period)
-    {
-        Period = new FhirDecimal(period);
-    }
+    /// <returns>如果採樣數據有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => HasOrigin && HasPeriod && HasDimensions;
 
     /// <summary>
-    /// 設定因子
+    /// 取得顯示文字
     /// </summary>
-    /// <param name="factor">因子</param>
-    public void SetFactor(decimal factor)
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
     {
-        Factor = new FhirDecimal(factor);
-    }
-
-    /// <summary>
-    /// 設定下限
-    /// </summary>
-    /// <param name="lowerLimit">下限</param>
-    public void SetLowerLimit(decimal lowerLimit)
-    {
-        LowerLimit = new FhirDecimal(lowerLimit);
-    }
-
-    /// <summary>
-    /// 設定上限
-    /// </summary>
-    /// <param name="upperLimit">上限</param>
-    public void SetUpperLimit(decimal upperLimit)
-    {
-        UpperLimit = new FhirDecimal(upperLimit);
-    }
-
-    /// <summary>
-    /// 設定維度
-    /// </summary>
-    /// <param name="dimensions">維度</param>
-    public void SetDimensions(int dimensions)
-    {
-        Dimensions = new FhirPositiveInt(dimensions);
-    }
-
-    /// <summary>
-    /// 設定數據
-    /// </summary>
-    /// <param name="data">數據字串</param>
-    public void SetData(string data)
-    {
-        Data = new FhirString(data);
-    }
-
-    /// <summary>
-    /// 取得週期
-    /// </summary>
-    /// <returns>週期，如果不存在則返回 null</returns>
-    public decimal? GetPeriod()
-    {
-        return Period?.Value;
-    }
-
-    /// <summary>
-    /// 取得因子
-    /// </summary>
-    /// <returns>因子，如果不存在則返回 null</returns>
-    public decimal? GetFactor()
-    {
-        return Factor?.Value;
-    }
-
-    /// <summary>
-    /// 取得下限
-    /// </summary>
-    /// <returns>下限，如果不存在則返回 null</returns>
-    public decimal? GetLowerLimit()
-    {
-        return LowerLimit?.Value;
-    }
-
-    /// <summary>
-    /// 取得上限
-    /// </summary>
-    /// <returns>上限，如果不存在則返回 null</returns>
-    public decimal? GetUpperLimit()
-    {
-        return UpperLimit?.Value;
-    }
-
-    /// <summary>
-    /// 取得維度
-    /// </summary>
-    /// <returns>維度，如果不存在則返回 null</returns>
-    public int? GetDimensions()
-    {
-        return Dimensions?.Value;
-    }
-
-    /// <summary>
-    /// 取得數據
-    /// </summary>
-    /// <returns>數據字串，如果不存在則返回 null</returns>
-    public string? GetData()
-    {
-        return Data?.Value;
-    }
-
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>SampledData 的深層複本</returns>
-    public override Base DeepCopy()
-    {
-        var copy = new SampledData
+        get
         {
-            Id = Id,
-            Period = Period,
-            Factor = Factor,
-            LowerLimit = LowerLimit,
-            UpperLimit = UpperLimit,
-            Dimensions = Dimensions,
-            Data = Data
-        };
+            if (!IsValid)
+                return null;
 
+            var parts = new List<string>();
+            
+            if (HasOrigin)
+            {
+                parts.Add($"Origin: {Origin?.DisplayText}");
+            }
+            
+            if (HasPeriod)
+            {
+                parts.Add($"Period: {Period?.Value}ms");
+            }
+            
+            if (HasDimensions)
+            {
+                parts.Add($"Dimensions: {Dimensions?.Value}");
+            }
+            
+            return parts.Any() ? string.Join(", ", parts) : "SampledData";
+        }
+    }
+
+    protected override void CopyFieldsTo(SampledData target)
+    {
+        target.Origin = Origin?.DeepCopy() as SimpleQuantity;
+        target.Period = Period?.DeepCopy() as FhirDecimal;
+        target.Factor = Factor?.DeepCopy() as FhirDecimal;
+        target.LowerLimit = LowerLimit?.DeepCopy() as FhirDecimal;
+        target.UpperLimit = UpperLimit?.DeepCopy() as FhirDecimal;
+        target.Dimensions = Dimensions?.DeepCopy() as FhirPositiveInt;
+        target.Data = Data?.DeepCopy() as FhirString;
+    }
+
+    protected override bool FieldsAreExactly(SampledData other)
+    {
+        return DeepEqualityComparer.AreEqual(Origin, other.Origin) &&
+               DeepEqualityComparer.AreEqual(Period, other.Period) &&
+               DeepEqualityComparer.AreEqual(Factor, other.Factor) &&
+               DeepEqualityComparer.AreEqual(LowerLimit, other.LowerLimit) &&
+               DeepEqualityComparer.AreEqual(UpperLimit, other.UpperLimit) &&
+               DeepEqualityComparer.AreEqual(Dimensions, other.Dimensions) &&
+               DeepEqualityComparer.AreEqual(Data, other.Data);
+    }
+
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        var results = new List<ValidationResult>();
+
+        // 驗證 Origin
         if (Origin != null)
         {
-            copy.Origin = Origin.DeepCopy() as SimpleQuantity;
-        }
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
-    }
-
-    /// <summary>
-    /// 判斷與另一個 SampledData 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
-    {
-        if (other is not SampledData otherSampledData)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Origin, otherSampledData.Origin) &&
-               Equals(Period, otherSampledData.Period) &&
-               Equals(Factor, otherSampledData.Factor) &&
-               Equals(LowerLimit, otherSampledData.LowerLimit) &&
-               Equals(UpperLimit, otherSampledData.UpperLimit) &&
-               Equals(Dimensions, otherSampledData.Dimensions) &&
-               Equals(Data, otherSampledData.Data);
-    }
-
-    /// <summary>
-    /// 驗證 SampledData 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 驗證必需的原點
-        if (Origin == null)
-        {
-            yield return new ValidationResult("SampledData.origin is required");
+            results.AddRange(Origin.Validate(validationContext));
         }
         else
         {
-            var originValidationContext = new ValidationContext(Origin);
-            foreach (var result in Origin.Validate(originValidationContext))
-            {
-                yield return result;
-            }
+            results.Add(new ValidationResult("SampledData.origin is required"));
         }
 
-        // 驗證必需的週期
-        if (Period == null)
-        {
-            yield return new ValidationResult("SampledData.period is required");
-        }
-        else if (Period.Value <= 0)
-        {
-            yield return new ValidationResult("SampledData.period must be greater than zero");
-        }
-
-        // 驗證必需的維度
-        if (Dimensions == null)
-        {
-            yield return new ValidationResult("SampledData.dimensions is required");
-        }
-        else if (Dimensions.Value <= 0)
-        {
-            yield return new ValidationResult("SampledData.dimensions must be greater than zero");
-        }
-
-        // 驗證週期
+        // 驗證 Period
         if (Period != null)
         {
-            var periodValidationContext = new ValidationContext(Period);
-            foreach (var result in Period.Validate(periodValidationContext))
-            {
-                yield return result;
-            }
+            results.AddRange(Period.Validate(validationContext));
+        }
+        else
+        {
+            results.Add(new ValidationResult("SampledData.period is required"));
         }
 
-        // 驗證因子
+        // 驗證 Factor
         if (Factor != null)
         {
-            var factorValidationContext = new ValidationContext(Factor);
-            foreach (var result in Factor.Validate(factorValidationContext))
-            {
-                yield return result;
-            }
+            results.AddRange(Factor.Validate(validationContext));
         }
 
-        // 驗證下限
+        // 驗證 LowerLimit
         if (LowerLimit != null)
         {
-            var lowerLimitValidationContext = new ValidationContext(LowerLimit);
-            foreach (var result in LowerLimit.Validate(lowerLimitValidationContext))
-            {
-                yield return result;
-            }
+            results.AddRange(LowerLimit.Validate(validationContext));
         }
 
-        // 驗證上限
+        // 驗證 UpperLimit
         if (UpperLimit != null)
         {
-            var upperLimitValidationContext = new ValidationContext(UpperLimit);
-            foreach (var result in UpperLimit.Validate(upperLimitValidationContext))
-            {
-                yield return result;
-            }
+            results.AddRange(UpperLimit.Validate(validationContext));
         }
 
-        // 驗證維度
+        // 驗證 Dimensions
         if (Dimensions != null)
         {
-            var dimensionsValidationContext = new ValidationContext(Dimensions);
-            foreach (var result in Dimensions.Validate(dimensionsValidationContext))
-            {
-                yield return result;
-            }
+            results.AddRange(Dimensions.Validate(validationContext));
+        }
+        else
+        {
+            results.Add(new ValidationResult("SampledData.dimensions is required"));
         }
 
-        // 驗證數據
+        // 驗證 Data
         if (Data != null)
         {
-            var dataValidationContext = new ValidationContext(Data);
-            foreach (var result in Data.Validate(dataValidationContext))
-            {
-                yield return result;
-            }
+            results.AddRange(Data.Validate(validationContext));
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
+        return results;
     }
 } 

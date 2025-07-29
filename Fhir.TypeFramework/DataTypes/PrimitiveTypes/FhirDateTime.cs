@@ -1,8 +1,9 @@
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.TypeFramework.Base;
 
-namespace Fhir.TypeFramework.DataTypes;
+namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
 /// FHIR dateTime primitive type.
@@ -13,81 +14,83 @@ namespace Fhir.TypeFramework.DataTypes;
 /// A date, date-time or partial date (e.g. just year or year + month).
 /// 
 /// JSON Representation:
-/// - Simple: "date" : "2023-12-25T10:30:00Z"
-/// - Full: "date" : "2023-12-25T10:30:00Z", "_date" : { "id" : "a1", "extension" : [...] }
+/// - Simple: "dateTime" : "2013-06-08T10:57:34+01:00"
+/// - Full: "dateTime" : "2013-06-08T10:57:34+01:00", "_dateTime" : { "id" : "a1", "extension" : [...] }
 /// </remarks>
-public class FhirDateTime : PrimitiveTypeBase<DateTime>
+public class FhirDateTime : UnifiedPrimitiveTypeBase<DateTime>
 {
+    /// <summary>
+    /// Gets or sets the DateTime value.
+    /// </summary>
+    [JsonIgnore]
+    public DateTime? DateTimeValue { get => Value; set => Value = value; }
+
     /// <summary>
     /// Initializes a new instance of the FhirDateTime class.
     /// </summary>
     public FhirDateTime() { }
-    
+
     /// <summary>
     /// Initializes a new instance of the FhirDateTime class with the specified value.
     /// </summary>
     /// <param name="value">The DateTime value.</param>
-    public FhirDateTime(DateTime value)
-    {
-        Value = value;
-    }
-    
+    public FhirDateTime(DateTime? value) : base(value) { }
+
     /// <summary>
     /// Implicitly converts a DateTime to a FhirDateTime.
     /// </summary>
     /// <param name="value">The DateTime value to convert.</param>
-    /// <returns>A FhirDateTime instance.</returns>
-    public static implicit operator FhirDateTime(DateTime value)
+    /// <returns>A FhirDateTime instance, or null if the value is null.</returns>
+    public static implicit operator FhirDateTime?(DateTime? value)
     {
-        return new FhirDateTime(value);
+        return CreateFromValue<FhirDateTime>(value);
     }
-    
+
     /// <summary>
     /// Implicitly converts a FhirDateTime to a DateTime.
     /// </summary>
     /// <param name="fhirDateTime">The FhirDateTime to convert.</param>
-    /// <returns>The DateTime value.</returns>
-    public static implicit operator DateTime(FhirDateTime fhirDateTime)
+    /// <returns>The DateTime value, or null if the FhirDateTime is null.</returns>
+    public static implicit operator DateTime?(FhirDateTime? fhirDateTime)
     {
-        return fhirDateTime.Value ?? DateTime.MinValue;
+        return GetValue<FhirDateTime>(fhirDateTime);
     }
-    
+
     /// <summary>
-    /// 從字串解析值
+    /// Parses a DateTime value from string.
     /// </summary>
-    public override DateTime? ParseValue(string value)
+    /// <param name="value">The string to parse.</param>
+    /// <returns>The parsed DateTime value.</returns>
+    protected override DateTime? ParseValueFromString(string value)
     {
-        if (DateTime.TryParse(value, out DateTime result))
+        if (string.IsNullOrEmpty(value)) return null;
+        
+        // 嘗試解析 ISO 8601 格式
+        if (DateTime.TryParse(value, out var result))
+        {
             return result;
+        }
+        
         return null;
     }
-    
+
     /// <summary>
-    /// 將值轉換為字串
+    /// Converts a DateTime value to string.
     /// </summary>
-    public override string? ValueToString(DateTime? value)
+    /// <param name="value">The value to convert.</param>
+    /// <returns>The string representation.</returns>
+    protected override string? ValueToString(DateTime? value)
     {
-        return value?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+        return value?.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz");
     }
-    
+
     /// <summary>
-    /// 驗證值是否符合 FHIR 規範
+    /// Validates the DateTime value according to FHIR specifications.
     /// </summary>
-    public override bool IsValidValue(DateTime? value)
+    /// <param name="value">The DateTime value to validate.</param>
+    /// <returns>True if the value is valid; otherwise, false.</returns>
+    protected override bool ValidateValue(DateTime value)
     {
-        // DateTime 型別本身就是有效的
-        return true;
+        return true; // DateTime 沒有額外驗證規則
     }
-    
-    /// <summary>
-    /// 驗證 FhirDateTime 是否符合 FHIR R5 規範
-    /// </summary>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
-    }
-} 
+}

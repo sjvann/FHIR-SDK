@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -24,7 +24,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Identifier : Element, IExtensibleTypeFramework
+public class Identifier : UnifiedComplexTypeBase<Identifier>
 {
     /// <summary>
     /// 識別碼的使用目的
@@ -54,7 +54,7 @@ public class Identifier : Element, IExtensibleTypeFramework
     public FhirUri? System { get; set; }
 
     /// <summary>
-    /// 唯一的值
+    /// 識別碼的值
     /// FHIR Path: Identifier.value
     /// Cardinality: 0..1
     /// Type: string
@@ -63,7 +63,7 @@ public class Identifier : Element, IExtensibleTypeFramework
     public FhirString? Value { get; set; }
 
     /// <summary>
-    /// 識別碼有效的時間期間
+    /// 識別碼有效的時間週期
     /// FHIR Path: Identifier.period
     /// Cardinality: 0..1
     /// Type: Period
@@ -81,6 +81,27 @@ public class Identifier : Element, IExtensibleTypeFramework
     public Reference? Assigner { get; set; }
 
     /// <summary>
+    /// 檢查是否有使用目的
+    /// </summary>
+    /// <returns>如果存在使用目的則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasUse => !string.IsNullOrEmpty(Use?.Value);
+
+    /// <summary>
+    /// 檢查是否有類型
+    /// </summary>
+    /// <returns>如果存在類型則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasType => Type != null;
+
+    /// <summary>
+    /// 檢查是否有系統
+    /// </summary>
+    /// <returns>如果存在系統則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasSystem => !string.IsNullOrEmpty(System?.Value);
+
+    /// <summary>
     /// 檢查是否有值
     /// </summary>
     /// <returns>如果存在值則為 true，否則為 false</returns>
@@ -88,96 +109,109 @@ public class Identifier : Element, IExtensibleTypeFramework
     public bool HasValue => !string.IsNullOrEmpty(Value?.Value);
 
     /// <summary>
-    /// 取得識別碼的完整表示
+    /// 檢查是否有週期
     /// </summary>
-    /// <returns>識別碼的完整表示</returns>
+    /// <returns>如果存在週期則為 true，否則為 false</returns>
     [JsonIgnore]
-    public string? FullIdentifier => $"{System?.Value}|{Value?.Value}";
+    public bool HasPeriod => Period != null;
 
     /// <summary>
-    /// 建立物件的深層複本
+    /// 檢查是否有發行者
     /// </summary>
-    /// <returns>Identifier 的深層複本</returns>
-    public override Base DeepCopy()
+    /// <returns>如果存在發行者則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasAssigner => Assigner != null;
+
+    /// <summary>
+    /// 取得顯示文字
+    /// </summary>
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
     {
-        var copy = new Identifier
+        get
         {
-            Id = Id,
-            Use = Use?.DeepCopy() as FhirCode,
-            Type = Type?.DeepCopy() as CodeableConcept,
-            System = System?.DeepCopy() as FhirUri,
-            Value = Value?.DeepCopy() as FhirString,
-            Period = Period?.DeepCopy() as Period,
-            Assigner = Assigner?.DeepCopy() as Reference
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            var parts = new List<string>();
+            
+            if (HasSystem)
+            {
+                parts.Add(System?.Value);
+            }
+            
+            if (HasValue)
+            {
+                parts.Add(Value?.Value);
+            }
+            
+            if (HasType && Type?.HasText == true)
+            {
+                parts.Add($"({Type.Text?.Value})");
+            }
+            
+            return parts.Any() ? string.Join(" ", parts) : null;
         }
-
-        return copy;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Identifier 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override void CopyFieldsTo(Identifier target)
     {
-        if (other is not Identifier otherIdentifier)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Use, otherIdentifier.Use) &&
-               Equals(Type, otherIdentifier.Type) &&
-               Equals(System, otherIdentifier.System) &&
-               Equals(Value, otherIdentifier.Value) &&
-               Equals(Period, otherIdentifier.Period) &&
-               Equals(Assigner, otherIdentifier.Assigner);
+        target.Use = Use?.DeepCopy() as FhirCode;
+        target.Type = Type?.DeepCopy() as CodeableConcept;
+        target.System = System?.DeepCopy() as FhirUri;
+        target.Value = Value?.DeepCopy() as FhirString;
+        target.Period = Period?.DeepCopy() as Period;
+        target.Assigner = Assigner?.DeepCopy() as Reference;
     }
 
-    /// <summary>
-    /// 驗證 Identifier 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override bool FieldsAreExactly(Identifier other)
     {
-        // 驗證 use 值（如果提供）
-        if (!string.IsNullOrEmpty(Use?.Value))
+        return DeepEqualityComparer.AreEqual(Use, other.Use) &&
+               DeepEqualityComparer.AreEqual(Type, other.Type) &&
+               DeepEqualityComparer.AreEqual(System, other.System) &&
+               DeepEqualityComparer.AreEqual(Value, other.Value) &&
+               DeepEqualityComparer.AreEqual(Period, other.Period) &&
+               DeepEqualityComparer.AreEqual(Assigner, other.Assigner);
+    }
+
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        var results = new List<ValidationResult>();
+
+        // 驗證 Use
+        if (Use != null)
         {
-            var validUses = new[] { "usual", "official", "temp", "secondary", "old" };
-            if (!validUses.Contains(Use.Value))
-            {
-                yield return new ValidationResult($"Identifier use must be one of: {string.Join(", ", validUses)}");
-            }
+            results.AddRange(Use.Validate(validationContext));
         }
 
-        // 驗證 system URL 格式（如果提供）
-        if (!string.IsNullOrEmpty(System?.Value))
+        // 驗證 Type
+        if (Type != null)
         {
-            if (!Uri.IsWellFormedUriString(System.Value, UriKind.Absolute))
-            {
-                yield return new ValidationResult("Identifier system must be a well-formed absolute URI");
-            }
+            results.AddRange(Type.Validate(validationContext));
         }
 
-        // 驗證 assigner Reference 的型別（如果提供）
-        if (Assigner != null && !string.IsNullOrEmpty(Assigner.Type?.Value))
+        // 驗證 System
+        if (System != null)
         {
-            var validTypes = new[] { "Organization" };
-            if (!validTypes.Contains(Assigner.Type.Value))
-            {
-                yield return new ValidationResult($"Identifier assigner type must be one of: {string.Join(", ", validTypes)}");
-            }
+            results.AddRange(System.Validate(validationContext));
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        // 驗證 Value
+        if (Value != null)
         {
-            yield return result;
+            results.AddRange(Value.Validate(validationContext));
         }
+
+        // 驗證 Period
+        if (Period != null)
+        {
+            results.AddRange(Period.Validate(validationContext));
+        }
+
+        // 驗證 Assigner
+        if (Assigner != null)
+        {
+            results.AddRange(Assigner.Validate(validationContext));
+        }
+
+        return results;
     }
 } 

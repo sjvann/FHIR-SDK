@@ -1,37 +1,54 @@
+using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.TypeFramework.Base;
 
 namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// FHIR string primitive type.
-/// A sequence of Unicode characters.
+/// 字串型別
+/// 代表規範中的 string 型別，為 Unicode 字元序列
 /// </summary>
 /// <remarks>
-/// FHIR R5 string PrimitiveType
-/// Note that strings SHALL NOT exceed 1MB in size.
+/// 這個型別提供：
+/// - 字串值的儲存和驗證
+/// - 隱含轉換支援
+/// - Extension 功能
+/// - 深層複製和相等性比較
 /// 
-/// JSON Representation:
-/// - Simple: "count" : "Hello World"
-/// - Full: "count" : "Hello World", "_count" : { "id" : "a1", "extension" : [...] }
+/// 使用範例：
+/// <code>
+/// var fhirString = new FhirString("Hello World");
+/// var value = fhirString.Value; // "Hello World"
+/// </code>
+/// 
+/// 驗證規則：
+/// - 最大長度：1,048,576 字元
+/// - 支援 UTF-8 編碼
+/// 
+/// JSON 表示：
+/// - 簡化格式："count" : "Hello World"
+/// - 完整格式："count" : "Hello World", "_count" : { "id" : "a1", "extension" : [...] }
 /// </remarks>
-public class FhirString : PrimitiveTypeBase<string>
+public class FhirString : UnifiedPrimitiveTypeBase<string>
 {
+    /// <summary>
+    /// Gets or sets the string value.
+    /// </summary>
+    [JsonIgnore]
+    public string? StringValue { get => Value; set => Value = value; }
+
     /// <summary>
     /// Initializes a new instance of the FhirString class.
     /// </summary>
     public FhirString() { }
-    
+
     /// <summary>
     /// Initializes a new instance of the FhirString class with the specified value.
     /// </summary>
     /// <param name="value">The string value.</param>
-    public FhirString(string? value)
-    {
-        Value = value;
-    }
-    
+    public FhirString(string? value) : base(value) { }
+
     /// <summary>
     /// Implicitly converts a string to a FhirString.
     /// </summary>
@@ -39,9 +56,9 @@ public class FhirString : PrimitiveTypeBase<string>
     /// <returns>A FhirString instance, or null if the value is null.</returns>
     public static implicit operator FhirString?(string? value)
     {
-        return value == null ? null : new FhirString(value);
+        return CreateFromString<FhirString>(value);
     }
-    
+
     /// <summary>
     /// Implicitly converts a FhirString to a string.
     /// </summary>
@@ -49,52 +66,36 @@ public class FhirString : PrimitiveTypeBase<string>
     /// <returns>The string value, or null if the FhirString is null.</returns>
     public static implicit operator string?(FhirString? fhirString)
     {
-        return fhirString?.Value;
+        return GetStringValue<FhirString>(fhirString);
     }
-    
-    /// <summary>
-    /// 從字串解析值
-    /// </summary>
-    public override string? ParseValue(string value)
-    {
-        return value;
-    }
-    
-    /// <summary>
-    /// 將值轉換為字串
-    /// </summary>
-    public override string? ValueToString(string? value)
-    {
-        return value;
-    }
-    
-    /// <summary>
-    /// 驗證值是否符合 FHIR 規範
-    /// </summary>
-    public override bool IsValidValue(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return true; // 空值是有效的
-            
-        // FHIR string cannot exceed 1MB
-        return System.Text.Encoding.UTF8.GetByteCount(value) <= 1024 * 1024;
-    }
-    
-    /// <summary>
-    /// 驗證 FhirString 是否符合 FHIR R5 規範
-    /// </summary>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 驗證字串長度
-        if (Value != null && System.Text.Encoding.UTF8.GetByteCount(Value) > 1024 * 1024)
-        {
-            yield return new ValidationResult("String value cannot exceed 1MB in size");
-        }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
+    /// <summary>
+    /// Parses a string value from string.
+    /// </summary>
+    /// <param name="value">The string to parse.</param>
+    /// <returns>The parsed string value.</returns>
+    protected override string? ParseValueFromString(string value)
+    {
+        return value;
+    }
+
+    /// <summary>
+    /// Converts a string value to string.
+    /// </summary>
+    /// <param name="value">The value to convert.</param>
+    /// <returns>The string representation.</returns>
+    protected override string? ValueToString(string? value)
+    {
+        return value;
+    }
+
+    /// <summary>
+    /// Validates the string value according to FHIR specifications.
+    /// </summary>
+    /// <param name="value">The string value to validate.</param>
+    /// <returns>True if the value is valid; otherwise, false.</returns>
+    protected override bool ValidateValue(string value)
+    {
+        return ValidationFramework.ValidateStringByteSize(value, 1024 * 1024);
     }
 }

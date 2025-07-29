@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -23,7 +23,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Quantity : Element, IExtensibleTypeFramework
+public class Quantity : UnifiedComplexTypeBase<Quantity>
 {
     /// <summary>
     /// 數值（具有隱含精度）
@@ -89,7 +89,21 @@ public class Quantity : Element, IExtensibleTypeFramework
     /// </summary>
     /// <returns>如果存在單位則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasUnit => !string.IsNullOrEmpty(Unit?.Value) || !string.IsNullOrEmpty(Code?.Value);
+    public bool HasUnit => !string.IsNullOrEmpty(Unit?.Value);
+
+    /// <summary>
+    /// 檢查是否有系統
+    /// </summary>
+    /// <returns>如果存在系統則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasSystem => !string.IsNullOrEmpty(System?.Value);
+
+    /// <summary>
+    /// 檢查是否有編碼
+    /// </summary>
+    /// <returns>如果存在編碼則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasCode => !string.IsNullOrEmpty(Code?.Value);
 
     /// <summary>
     /// 取得顯示文字
@@ -102,106 +116,81 @@ public class Quantity : Element, IExtensibleTypeFramework
         {
             var parts = new List<string>();
             
-            if (HasComparator)
-            {
-                parts.Add(Comparator?.Value);
-            }
-            
             if (HasValue)
             {
-                parts.Add(Value?.Value.ToString());
+                var valueText = Value?.Value?.ToString();
+                if (HasComparator)
+                {
+                    valueText = $"{Comparator?.Value}{valueText}";
+                }
+                parts.Add(valueText);
             }
             
             if (HasUnit)
             {
-                parts.Add(Unit?.Value ?? Code?.Value);
+                parts.Add(Unit?.Value);
+            }
+            else if (HasCode)
+            {
+                parts.Add(Code?.Value);
             }
             
-            return parts.Count > 0 ? string.Join(" ", parts) : null;
+            return parts.Any() ? string.Join(" ", parts) : null;
         }
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Quantity 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override void CopyFieldsTo(Quantity target)
     {
-        var copy = new Quantity
-        {
-            Id = Id,
-            Value = Value?.DeepCopy() as FhirDecimal,
-            Comparator = Comparator?.DeepCopy() as FhirCode,
-            Unit = Unit?.DeepCopy() as FhirString,
-            System = System?.DeepCopy() as FhirUri,
-            Code = Code?.DeepCopy() as FhirCode
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        target.Value = Value?.DeepCopy() as FhirDecimal;
+        target.Comparator = Comparator?.DeepCopy() as FhirCode;
+        target.Unit = Unit?.DeepCopy() as FhirString;
+        target.System = System?.DeepCopy() as FhirUri;
+        target.Code = Code?.DeepCopy() as FhirCode;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Quantity 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override bool FieldsAreExactly(Quantity other)
     {
-        if (other is not Quantity otherQuantity)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Value, otherQuantity.Value) &&
-               Equals(Comparator, otherQuantity.Comparator) &&
-               Equals(Unit, otherQuantity.Unit) &&
-               Equals(System, otherQuantity.System) &&
-               Equals(Code, otherQuantity.Code);
+        return DeepEqualityComparer.AreEqual(Value, other.Value) &&
+               DeepEqualityComparer.AreEqual(Comparator, other.Comparator) &&
+               DeepEqualityComparer.AreEqual(Unit, other.Unit) &&
+               DeepEqualityComparer.AreEqual(System, other.System) &&
+               DeepEqualityComparer.AreEqual(Code, other.Code);
     }
 
-    /// <summary>
-    /// 驗證 Quantity 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        // 驗證比較器值（如果提供）
-        if (!string.IsNullOrEmpty(Comparator?.Value))
+        var results = new List<ValidationResult>();
+
+        // 驗證 Value
+        if (Value != null)
         {
-            var validComparators = new[] { "<", "<=", ">=", ">" };
-            if (!validComparators.Contains(Comparator.Value))
-            {
-                yield return new ValidationResult($"Quantity comparator must be one of: {string.Join(", ", validComparators)}");
-            }
+            results.AddRange(Value.Validate(validationContext));
         }
 
-        // 驗證系統 URL 格式（如果提供）
-        if (!string.IsNullOrEmpty(System?.Value))
+        // 驗證 Comparator
+        if (Comparator != null)
         {
-            if (!Uri.IsWellFormedUriString(System.Value, UriKind.Absolute))
-            {
-                yield return new ValidationResult("Quantity system must be a well-formed absolute URI");
-            }
+            results.AddRange(Comparator.Validate(validationContext));
         }
 
-        // 驗證編碼（如果提供）
-        if (!string.IsNullOrEmpty(Code?.Value))
+        // 驗證 Unit
+        if (Unit != null)
         {
-            if (Code.Value.Contains(' '))
-            {
-                yield return new ValidationResult("Quantity code cannot contain spaces");
-            }
+            results.AddRange(Unit.Validate(validationContext));
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        // 驗證 System
+        if (System != null)
         {
-            yield return result;
+            results.AddRange(System.Validate(validationContext));
         }
+
+        // 驗證 Code
+        if (Code != null)
+        {
+            results.AddRange(Code.Validate(validationContext));
+        }
+
+        return results;
     }
 } 

@@ -1,8 +1,9 @@
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.TypeFramework.Base;
 
-namespace Fhir.TypeFramework.DataTypes;
+namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
 /// FHIR uri primitive type.
@@ -16,22 +17,25 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - Simple: "url" : "http://example.com/resource"
 /// - Full: "url" : "http://example.com/resource", "_url" : { "id" : "a1", "extension" : [...] }
 /// </remarks>
-public class FhirUri : PrimitiveTypeBase<string>
+public class FhirUri : UnifiedPrimitiveTypeBase<string>
 {
+    /// <summary>
+    /// Gets or sets the uri value.
+    /// </summary>
+    [JsonIgnore]
+    public string? UriValue { get => Value; set => Value = value; }
+
     /// <summary>
     /// Initializes a new instance of the FhirUri class.
     /// </summary>
     public FhirUri() { }
-    
+
     /// <summary>
     /// Initializes a new instance of the FhirUri class with the specified value.
     /// </summary>
-    /// <param name="value">The URI value.</param>
-    public FhirUri(string? value)
-    {
-        Value = value;
-    }
-    
+    /// <param name="value">The uri value.</param>
+    public FhirUri(string? value) : base(value) { }
+
     /// <summary>
     /// Implicitly converts a string to a FhirUri.
     /// </summary>
@@ -39,9 +43,9 @@ public class FhirUri : PrimitiveTypeBase<string>
     /// <returns>A FhirUri instance, or null if the value is null.</returns>
     public static implicit operator FhirUri?(string? value)
     {
-        return value == null ? null : new FhirUri(value);
+        return CreateFromString<FhirUri>(value);
     }
-    
+
     /// <summary>
     /// Implicitly converts a FhirUri to a string.
     /// </summary>
@@ -49,53 +53,37 @@ public class FhirUri : PrimitiveTypeBase<string>
     /// <returns>The string value, or null if the FhirUri is null.</returns>
     public static implicit operator string?(FhirUri? fhirUri)
     {
-        return fhirUri?.Value;
+        return GetStringValue<FhirUri>(fhirUri);
     }
-    
-    /// <summary>
-    /// 從字串解析值
-    /// </summary>
-    public override string? ParseValue(string value)
-    {
-        return value;
-    }
-    
-    /// <summary>
-    /// 將值轉換為字串
-    /// </summary>
-    public override string? ValueToString(string? value)
-    {
-        return value;
-    }
-    
-    /// <summary>
-    /// 驗證值是否符合 FHIR 規範
-    /// </summary>
-    public override bool IsValidValue(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return true; // 空值是有效的
-            
-        // 驗證 URI 格式
-        return Uri.IsWellFormedUriString(value, UriKind.Absolute) || 
-               Uri.IsWellFormedUriString(value, UriKind.Relative);
-    }
-    
-    /// <summary>
-    /// 驗證 FhirUri 是否符合 FHIR R5 規範
-    /// </summary>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 驗證 URI 格式
-        if (Value != null && !IsValidValue(Value))
-        {
-            yield return new ValidationResult($"URI '{Value}' is not a valid URI format");
-        }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
+    /// <summary>
+    /// Parses a uri value from string.
+    /// </summary>
+    /// <param name="value">The string to parse.</param>
+    /// <returns>The parsed uri value.</returns>
+    protected override string? ParseValueFromString(string value)
+    {
+        return value;
     }
-} 
+
+    /// <summary>
+    /// Converts a uri value to string.
+    /// </summary>
+    /// <param name="value">The value to convert.</param>
+    /// <returns>The string representation.</returns>
+    protected override string? ValueToString(string? value)
+    {
+        return value;
+    }
+
+    /// <summary>
+    /// Validates the uri value according to FHIR specifications.
+    /// </summary>
+    /// <param name="value">The uri value to validate.</param>
+    /// <returns>True if the value is valid; otherwise, false.</returns>
+    protected override bool ValidateValue(string value)
+    {
+        // 使用 ValidationFramework 中的 FHIR 特定驗證規則
+        return ValidationFramework.ValidateFhirUri(value);
+    }
+}

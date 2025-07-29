@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -31,7 +31,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Attachment : Element, IExtensibleTypeFramework
+public class Attachment : UnifiedComplexTypeBase<Attachment>
 {
     /// <summary>
     /// 內容的 MIME 類型，包含字符集等
@@ -52,7 +52,7 @@ public class Attachment : Element, IExtensibleTypeFramework
     public FhirCode? Language { get; set; }
 
     /// <summary>
-    /// 內嵌資料，base64 編碼
+    /// 內聯資料，base64 編碼
     /// FHIR Path: Attachment.data
     /// Cardinality: 0..1
     /// Type: base64Binary
@@ -61,7 +61,7 @@ public class Attachment : Element, IExtensibleTypeFramework
     public FhirBase64Binary? Data { get; set; }
 
     /// <summary>
-    /// 可找到資料的 URI
+    /// 可以找到資料的 URI
     /// FHIR Path: Attachment.url
     /// Cardinality: 0..1
     /// Type: url
@@ -70,7 +70,7 @@ public class Attachment : Element, IExtensibleTypeFramework
     public FhirUrl? Url { get; set; }
 
     /// <summary>
-    /// 內容的位元組數（如果提供了 url）
+    /// 內容的位元組數（如果提供 url）
     /// FHIR Path: Attachment.size
     /// Cardinality: 0..1
     /// Type: integer64
@@ -124,7 +124,7 @@ public class Attachment : Element, IExtensibleTypeFramework
     public FhirPositiveInt? Width { get; set; }
 
     /// <summary>
-    /// 如果大於 1 的幀數（照片）
+    /// 幀數（如果 &gt; 1）（照片）
     /// FHIR Path: Attachment.frames
     /// Cardinality: 0..1
     /// Type: positiveInt
@@ -158,11 +158,18 @@ public class Attachment : Element, IExtensibleTypeFramework
     public bool HasContentType => !string.IsNullOrEmpty(ContentType?.Value);
 
     /// <summary>
+    /// 檢查是否有語言
+    /// </summary>
+    /// <returns>如果存在語言則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasLanguage => !string.IsNullOrEmpty(Language?.Value);
+
+    /// <summary>
     /// 檢查是否有資料
     /// </summary>
     /// <returns>如果存在資料則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasData => Data?.Value != null && Data.Value.Length > 0;
+    public bool HasData => Data != null;
 
     /// <summary>
     /// 檢查是否有 URL
@@ -172,6 +179,20 @@ public class Attachment : Element, IExtensibleTypeFramework
     public bool HasUrl => !string.IsNullOrEmpty(Url?.Value);
 
     /// <summary>
+    /// 檢查是否有大小
+    /// </summary>
+    /// <returns>如果存在大小則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasSize => Size?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有雜湊
+    /// </summary>
+    /// <returns>如果存在雜湊則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasHash => Hash != null;
+
+    /// <summary>
     /// 檢查是否有標題
     /// </summary>
     /// <returns>如果存在標題則為 true，否則為 false</returns>
@@ -179,11 +200,53 @@ public class Attachment : Element, IExtensibleTypeFramework
     public bool HasTitle => !string.IsNullOrEmpty(Title?.Value);
 
     /// <summary>
-    /// 檢查是否有尺寸資訊
+    /// 檢查是否有建立日期
     /// </summary>
-    /// <returns>如果存在尺寸資訊則為 true，否則為 false</returns>
+    /// <returns>如果存在建立日期則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool HasDimensions => Height?.Value != null || Width?.Value != null;
+    public bool HasCreation => Creation?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有高度
+    /// </summary>
+    /// <returns>如果存在高度則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasHeight => Height?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有寬度
+    /// </summary>
+    /// <returns>如果存在寬度則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasWidth => Width?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有幀數
+    /// </summary>
+    /// <returns>如果存在幀數則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasFrames => Frames?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有持續時間
+    /// </summary>
+    /// <returns>如果存在持續時間則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasDuration => Duration?.Value != null;
+
+    /// <summary>
+    /// 檢查是否有頁數
+    /// </summary>
+    /// <returns>如果存在頁數則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasPages => Pages?.Value != null;
+
+    /// <summary>
+    /// 檢查附件是否有效
+    /// </summary>
+    /// <returns>如果附件有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => HasData || HasUrl;
 
     /// <summary>
     /// 取得顯示文字
@@ -199,138 +262,142 @@ public class Attachment : Element, IExtensibleTypeFramework
                 return Title?.Value;
             }
 
-            var parts = new List<string>();
-
             if (HasContentType)
             {
-                parts.Add(ContentType?.Value);
+                return ContentType?.Value;
             }
 
             if (HasUrl)
             {
-                parts.Add(Url?.Value);
+                return Url?.Value;
             }
 
-            if (Size?.Value != null)
-            {
-                parts.Add($"{Size.Value} bytes");
-            }
-
-            return parts.Count > 0 ? string.Join(" - ", parts) : null;
+            return "Attachment";
         }
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Attachment 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override void CopyFieldsTo(Attachment target)
     {
-        var copy = new Attachment
-        {
-            Id = Id,
-            ContentType = ContentType?.DeepCopy() as FhirCode,
-            Language = Language?.DeepCopy() as FhirCode,
-            Data = Data?.DeepCopy() as FhirBase64Binary,
-            Url = Url?.DeepCopy() as FhirUrl,
-            Size = Size?.DeepCopy() as FhirInteger64,
-            Hash = Hash?.DeepCopy() as FhirBase64Binary,
-            Title = Title?.DeepCopy() as FhirString,
-            Creation = Creation?.DeepCopy() as FhirDateTime,
-            Height = Height?.DeepCopy() as FhirPositiveInt,
-            Width = Width?.DeepCopy() as FhirPositiveInt,
-            Frames = Frames?.DeepCopy() as FhirPositiveInt,
-            Duration = Duration?.DeepCopy() as FhirDecimal,
-            Pages = Pages?.DeepCopy() as FhirPositiveInt
-        };
+        target.ContentType = ContentType?.DeepCopy() as FhirCode;
+        target.Language = Language?.DeepCopy() as FhirCode;
+        target.Data = Data?.DeepCopy() as FhirBase64Binary;
+        target.Url = Url?.DeepCopy() as FhirUrl;
+        target.Size = Size?.DeepCopy() as FhirInteger64;
+        target.Hash = Hash?.DeepCopy() as FhirBase64Binary;
+        target.Title = Title?.DeepCopy() as FhirString;
+        target.Creation = Creation?.DeepCopy() as FhirDateTime;
+        target.Height = Height?.DeepCopy() as FhirPositiveInt;
+        target.Width = Width?.DeepCopy() as FhirPositiveInt;
+        target.Frames = Frames?.DeepCopy() as FhirPositiveInt;
+        target.Duration = Duration?.DeepCopy() as FhirDecimal;
+        target.Pages = Pages?.DeepCopy() as FhirPositiveInt;
+    }
 
-        if (Extension != null)
+    protected override bool FieldsAreExactly(Attachment other)
+    {
+        return DeepEqualityComparer.AreEqual(ContentType, other.ContentType) &&
+               DeepEqualityComparer.AreEqual(Language, other.Language) &&
+               DeepEqualityComparer.AreEqual(Data, other.Data) &&
+               DeepEqualityComparer.AreEqual(Url, other.Url) &&
+               DeepEqualityComparer.AreEqual(Size, other.Size) &&
+               DeepEqualityComparer.AreEqual(Hash, other.Hash) &&
+               DeepEqualityComparer.AreEqual(Title, other.Title) &&
+               DeepEqualityComparer.AreEqual(Creation, other.Creation) &&
+               DeepEqualityComparer.AreEqual(Height, other.Height) &&
+               DeepEqualityComparer.AreEqual(Width, other.Width) &&
+               DeepEqualityComparer.AreEqual(Frames, other.Frames) &&
+               DeepEqualityComparer.AreEqual(Duration, other.Duration) &&
+               DeepEqualityComparer.AreEqual(Pages, other.Pages);
+    }
+
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        var results = new List<ValidationResult>();
+
+        // 驗證 ContentType
+        if (ContentType != null)
         {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            results.AddRange(ContentType.Validate(validationContext));
         }
 
-        return copy;
-    }
+        // 驗證 Language
+        if (Language != null)
+        {
+            results.AddRange(Language.Validate(validationContext));
+        }
 
-    /// <summary>
-    /// 判斷與另一個 Attachment 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
-    {
-        if (other is not Attachment otherAttachment)
-            return false;
+        // 驗證 Data
+        if (Data != null)
+        {
+            results.AddRange(Data.Validate(validationContext));
+        }
 
-        return base.IsExactly(other) &&
-               Equals(ContentType, otherAttachment.ContentType) &&
-               Equals(Language, otherAttachment.Language) &&
-               Equals(Data, otherAttachment.Data) &&
-               Equals(Url, otherAttachment.Url) &&
-               Equals(Size, otherAttachment.Size) &&
-               Equals(Hash, otherAttachment.Hash) &&
-               Equals(Title, otherAttachment.Title) &&
-               Equals(Creation, otherAttachment.Creation) &&
-               Equals(Height, otherAttachment.Height) &&
-               Equals(Width, otherAttachment.Width) &&
-               Equals(Frames, otherAttachment.Frames) &&
-               Equals(Duration, otherAttachment.Duration) &&
-               Equals(Pages, otherAttachment.Pages);
-    }
+        // 驗證 Url
+        if (Url != null)
+        {
+            results.AddRange(Url.Validate(validationContext));
+        }
 
-    /// <summary>
-    /// 驗證 Attachment 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        // 驗證必須有資料或 URL
+        // 驗證 Size
+        if (Size != null)
+        {
+            results.AddRange(Size.Validate(validationContext));
+        }
+
+        // 驗證 Hash
+        if (Hash != null)
+        {
+            results.AddRange(Hash.Validate(validationContext));
+        }
+
+        // 驗證 Title
+        if (Title != null)
+        {
+            results.AddRange(Title.Validate(validationContext));
+        }
+
+        // 驗證 Creation
+        if (Creation != null)
+        {
+            results.AddRange(Creation.Validate(validationContext));
+        }
+
+        // 驗證 Height
+        if (Height != null)
+        {
+            results.AddRange(Height.Validate(validationContext));
+        }
+
+        // 驗證 Width
+        if (Width != null)
+        {
+            results.AddRange(Width.Validate(validationContext));
+        }
+
+        // 驗證 Frames
+        if (Frames != null)
+        {
+            results.AddRange(Frames.Validate(validationContext));
+        }
+
+        // 驗證 Duration
+        if (Duration != null)
+        {
+            results.AddRange(Duration.Validate(validationContext));
+        }
+
+        // 驗證 Pages
+        if (Pages != null)
+        {
+            results.AddRange(Pages.Validate(validationContext));
+        }
+
+        // 驗證附件邏輯
         if (!HasData && !HasUrl)
         {
-            yield return new ValidationResult("Attachment must have either data or url");
+            results.Add(new ValidationResult("Attachment must have either data or url"));
         }
 
-        // 驗證 URL 格式（如果提供）
-        if (HasUrl)
-        {
-            if (!Uri.IsWellFormedUriString(Url!.Value, UriKind.Absolute))
-            {
-                yield return new ValidationResult("Attachment URL must be a well-formed absolute URI");
-            }
-        }
-
-        // 驗證尺寸值（如果提供）
-        if (Height?.Value != null && Height.Value <= 0)
-        {
-            yield return new ValidationResult("Attachment height must be a positive integer");
-        }
-
-        if (Width?.Value != null && Width.Value <= 0)
-        {
-            yield return new ValidationResult("Attachment width must be a positive integer");
-        }
-
-        if (Frames?.Value != null && Frames.Value <= 0)
-        {
-            yield return new ValidationResult("Attachment frames must be a positive integer");
-        }
-
-        if (Pages?.Value != null && Pages.Value <= 0)
-        {
-            yield return new ValidationResult("Attachment pages must be a positive integer");
-        }
-
-        // 驗證持續時間（如果提供）
-        if (Duration?.Value != null && Duration.Value < 0)
-        {
-            yield return new ValidationResult("Attachment duration must be non-negative");
-        }
-
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
+        return results;
     }
 } 

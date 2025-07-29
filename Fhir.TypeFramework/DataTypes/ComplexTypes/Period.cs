@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -7,12 +7,12 @@ using System.Text.Json.Serialization;
 namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// Period - 期間型別
-/// 用於在 FHIR 資源中表示時間期間
+/// FHIR Period complex type.
+/// A time period defined by a start and end date and/or time.
 /// </summary>
 /// <remarks>
 /// FHIR R5 Period (Complex Type)
-/// A time period defined by a start and end date and optionally time.
+/// A time period defined by a start and end date and/or time.
 /// 
 /// Structure:
 /// - start: dateTime (0..1) - Starting time with inclusive boundary
@@ -20,127 +20,108 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Period : Element, IExtensibleTypeFramework
+public class Period : UnifiedComplexTypeBase<Period>
 {
     /// <summary>
-    /// 開始時間（包含邊界）
-    /// FHIR Path: Period.start
-    /// Cardinality: 0..1
-    /// Type: dateTime
+    /// Gets or sets the start.
+    /// Starting time with inclusive boundary.
     /// </summary>
     [JsonPropertyName("start")]
     public FhirDateTime? Start { get; set; }
 
     /// <summary>
-    /// 結束時間（包含邊界，如果不是持續中）
-    /// FHIR Path: Period.end
-    /// Cardinality: 0..1
-    /// Type: dateTime
+    /// Gets or sets the end.
+    /// End time with inclusive boundary, if not ongoing.
     /// </summary>
     [JsonPropertyName("end")]
     public FhirDateTime? End { get; set; }
 
     /// <summary>
-    /// 檢查是否有開始時間
+    /// Gets whether the period is ongoing.
     /// </summary>
-    /// <returns>如果存在開始時間則為 true，否則為 false</returns>
+    /// <returns>True if the period is ongoing; otherwise, false.</returns>
     [JsonIgnore]
-    public bool HasStart => Start?.Value != null;
+    public bool IsOngoing => Start != null && End == null;
 
     /// <summary>
-    /// 檢查是否有結束時間
+    /// Gets the duration of the period.
     /// </summary>
-    /// <returns>如果存在結束時間則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasEnd => End?.Value != null;
-
-    /// <summary>
-    /// 檢查是否為持續中
-    /// </summary>
-    /// <returns>如果沒有結束時間則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool IsOngoing => HasStart && !HasEnd;
-
-    /// <summary>
-    /// 檢查期間是否有效
-    /// </summary>
-    /// <returns>如果開始時間早於或等於結束時間則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool IsValid => !HasStart || !HasEnd || Start?.Value <= End?.Value;
-
-    /// <summary>
-    /// 取得期間的持續時間
-    /// </summary>
-    /// <returns>期間的持續時間，如果無法計算則為 null</returns>
+    /// <returns>The duration of the period.</returns>
     [JsonIgnore]
     public TimeSpan? Duration
     {
         get
         {
-            if (Start?.Value != null && End?.Value != null)
-            {
-                return End.Value - Start.Value;
-            }
-            return null;
+            if (Start?.Value == null || End?.Value == null)
+                return null;
+            
+            return End.Value - Start.Value;
         }
     }
 
     /// <summary>
-    /// 建立物件的深層複本
+    /// Checks if a date time is within this period.
     /// </summary>
-    /// <returns>Period 的深層複本</returns>
-    public override Base DeepCopy()
+    /// <param name="dateTime">The date time to check.</param>
+    /// <returns>True if the date time is within this period; otherwise, false.</returns>
+    public bool Contains(DateTime dateTime)
     {
-        var copy = new Period
-        {
-            Id = Id,
-            Start = Start?.DeepCopy() as FhirDateTime,
-            End = End?.DeepCopy() as FhirDateTime
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
-    }
-
-    /// <summary>
-    /// 判斷與另一個 Period 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
-    {
-        if (other is not Period otherPeriod)
+        if (Start?.Value == null)
             return false;
-
-        return base.IsExactly(other) &&
-               Equals(Start, otherPeriod.Start) &&
-               Equals(End, otherPeriod.End);
+        
+        if (End?.Value == null)
+            return dateTime >= Start.Value;
+        
+        return dateTime >= Start.Value && dateTime <= End.Value;
     }
 
     /// <summary>
-    /// 驗證 Period 是否符合 FHIR 規範
+    /// Copies fields to target.
     /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    /// <param name="target">The target object.</param>
+    protected override void CopyFieldsTo(Period target)
     {
-        // 驗證期間的有效性
-        if (Start?.Value != null && End?.Value != null)
+        target.Start = (FhirDateTime?)Start?.DeepCopy();
+        target.End = (FhirDateTime?)End?.DeepCopy();
+    }
+
+    /// <summary>
+    /// Compares if fields are exactly equal.
+    /// </summary>
+    /// <param name="other">The other object to compare.</param>
+    /// <returns>True if fields are exactly equal; otherwise, false.</returns>
+    protected override bool FieldsAreExactly(Period other)
+    {
+        return Equals(Start, other.Start)
+            && Equals(End, other.End);
+    }
+
+    /// <summary>
+    /// Validates fields.
+    /// </summary>
+    /// <param name="validationContext">The validation context.</param>
+    /// <returns>Validation result collection.</returns>
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        if (Start != null)
         {
-            if (Start.Value > End.Value)
+            foreach (var v in Start.Validate(validationContext))
             {
-                yield return new ValidationResult("Period start time cannot be after end time");
+                yield return v;
             }
         }
-
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        if (End != null)
         {
-            yield return result;
+            foreach (var v in End.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        
+        // 驗證開始時間不能晚於結束時間
+        if (Start?.Value != null && End?.Value != null && Start.Value > End.Value)
+        {
+            yield return new ValidationResult("Period start time cannot be later than end time");
         }
     }
 } 

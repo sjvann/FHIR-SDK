@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -19,7 +19,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Range : Element, IExtensibleTypeFramework
+public class Range : UnifiedComplexTypeBase<Range>
 {
     /// <summary>
     /// 下限
@@ -62,14 +62,18 @@ public class Range : Element, IExtensibleTypeFramework
     {
         get
         {
-            if (!HasLow || !HasHigh) return true; // 至少需要一個邊界
-            
-            // 如果兩個邊界都有值，檢查它們是否相容
-            if (Low?.Value != null && High?.Value != null)
+            if (!HasLow && !HasHigh)
+                return false;
+
+            if (HasLow && HasHigh)
             {
-                return Low.Value <= High.Value;
+                // 檢查低值是否小於等於高值
+                if (Low?.Value?.Value != null && High?.Value?.Value != null)
+                {
+                    return Low.Value.Value <= High.Value.Value;
+                }
             }
-            
+
             return true;
         }
     }
@@ -87,102 +91,58 @@ public class Range : Element, IExtensibleTypeFramework
             
             if (HasLow)
             {
-                parts.Add(Low?.DisplayText ?? "low");
+                parts.Add($"≥{Low?.DisplayText}");
             }
-            
-            parts.Add("-");
             
             if (HasHigh)
             {
-                parts.Add(High?.DisplayText ?? "high");
+                parts.Add($"≤{High?.DisplayText}");
             }
             
-            return parts.Count > 0 ? string.Join(" ", parts) : null;
+            return parts.Any() ? string.Join(" ", parts) : null;
         }
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Range 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override void CopyFieldsTo(Range target)
     {
-        var copy = new Range
-        {
-            Id = Id,
-            Low = Low?.DeepCopy() as Quantity,
-            High = High?.DeepCopy() as Quantity
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        target.Low = Low?.DeepCopy() as Quantity;
+        target.High = High?.DeepCopy() as Quantity;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Range 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override bool FieldsAreExactly(Range other)
     {
-        if (other is not Range otherRange)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Low, otherRange.Low) &&
-               Equals(High, otherRange.High);
+        return DeepEqualityComparer.AreEqual(Low, other.Low) &&
+               DeepEqualityComparer.AreEqual(High, other.High);
     }
 
-    /// <summary>
-    /// 驗證 Range 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        // 驗證至少需要一個邊界
-        if (!HasLow && !HasHigh)
-        {
-            yield return new ValidationResult("Range must have at least one boundary (low or high)");
-        }
+        var results = new List<ValidationResult>();
 
-        // 驗證範圍的有效性
-        if (HasLow && HasHigh && Low?.Value != null && High?.Value != null)
-        {
-            if (Low.Value > High.Value)
-            {
-                yield return new ValidationResult("Range low value cannot be greater than high value");
-            }
-        }
-
-        // 驗證下限（如果提供）
+        // 驗證 Low
         if (Low != null)
         {
-            var lowValidationContext = new ValidationContext(Low);
-            foreach (var lowResult in Low.Validate(lowValidationContext))
-            {
-                yield return lowResult;
-            }
+            results.AddRange(Low.Validate(validationContext));
         }
 
-        // 驗證上限（如果提供）
+        // 驗證 High
         if (High != null)
         {
-            var highValidationContext = new ValidationContext(High);
-            foreach (var highResult in High.Validate(highValidationContext))
+            results.AddRange(High.Validate(validationContext));
+        }
+
+        // 驗證範圍邏輯
+        if (HasLow && HasHigh)
+        {
+            if (Low?.Value?.Value != null && High?.Value?.Value != null)
             {
-                yield return highResult;
+                if (Low.Value.Value > High.Value.Value)
+                {
+                    results.Add(new ValidationResult("Range low value cannot be greater than high value"));
+                }
             }
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
+        return results;
     }
 } 

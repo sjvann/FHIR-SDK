@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -7,7 +7,7 @@ namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
 /// Ratio - 比率型別
-/// 用於在 FHIR 資源中表示兩個數量之間的比率
+/// 用於在 FHIR 資源中表示比率
 /// </summary>
 /// <remarks>
 /// FHIR R5 Ratio (Complex Type)
@@ -19,7 +19,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Ratio : Element, IExtensibleTypeFramework
+public class Ratio : UnifiedComplexTypeBase<Ratio>
 {
     /// <summary>
     /// 分子值
@@ -58,21 +58,7 @@ public class Ratio : Element, IExtensibleTypeFramework
     /// </summary>
     /// <returns>如果比率有效則為 true，否則為 false</returns>
     [JsonIgnore]
-    public bool IsValid
-    {
-        get
-        {
-            if (!HasNumerator || !HasDenominator) return true; // 至少需要一個值
-            
-            // 如果兩個值都有，檢查分母是否不為零
-            if (Denominator?.Value?.Value != null && Denominator.Value.Value == 0)
-            {
-                return false;
-            }
-            
-            return true;
-        }
-    }
+    public bool IsValid => HasNumerator && HasDenominator;
 
     /// <summary>
     /// 取得顯示文字
@@ -83,103 +69,53 @@ public class Ratio : Element, IExtensibleTypeFramework
     {
         get
         {
-            var parts = new List<string>();
+            if (!IsValid)
+                return null;
 
-            if (HasNumerator)
-            {
-                parts.Add(Numerator?.DisplayText ?? "numerator");
-            }
+            var numeratorText = Numerator?.DisplayText ?? "0";
+            var denominatorText = Denominator?.DisplayText ?? "1";
 
-            parts.Add("/");
-
-            if (HasDenominator)
-            {
-                parts.Add(Denominator?.DisplayText ?? "denominator");
-            }
-
-            return parts.Count > 0 ? string.Join(" ", parts) : null;
+            return $"{numeratorText}/{denominatorText}";
         }
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Ratio 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override void CopyFieldsTo(Ratio target)
     {
-        var copy = new Ratio
-        {
-            Id = Id,
-            Numerator = Numerator?.DeepCopy() as Quantity,
-            Denominator = Denominator?.DeepCopy() as Quantity
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        target.Numerator = Numerator?.DeepCopy() as Quantity;
+        target.Denominator = Denominator?.DeepCopy() as Quantity;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Ratio 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override bool FieldsAreExactly(Ratio other)
     {
-        if (other is not Ratio otherRatio)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Numerator, otherRatio.Numerator) &&
-               Equals(Denominator, otherRatio.Denominator);
+        return DeepEqualityComparer.AreEqual(Numerator, other.Numerator) &&
+               DeepEqualityComparer.AreEqual(Denominator, other.Denominator);
     }
 
-    /// <summary>
-    /// 驗證 Ratio 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        // 驗證至少需要一個值
-        if (!HasNumerator && !HasDenominator)
-        {
-            yield return new ValidationResult("Ratio must have at least one value (numerator or denominator)");
-        }
+        var results = new List<ValidationResult>();
 
-        // 驗證分母不能為零
-        if (HasDenominator && Denominator?.Value?.Value == 0)
-        {
-            yield return new ValidationResult("Ratio denominator cannot be zero");
-        }
-
-        // 驗證分子（如果提供）
+        // 驗證 Numerator
         if (Numerator != null)
         {
-            var numeratorValidationContext = new ValidationContext(Numerator);
-            foreach (var numeratorResult in Numerator.Validate(numeratorValidationContext))
-            {
-                yield return numeratorResult;
-            }
+            results.AddRange(Numerator.Validate(validationContext));
         }
 
-        // 驗證分母（如果提供）
+        // 驗證 Denominator
         if (Denominator != null)
         {
-            var denominatorValidationContext = new ValidationContext(Denominator);
-            foreach (var denominatorResult in Denominator.Validate(denominatorValidationContext))
+            results.AddRange(Denominator.Validate(validationContext));
+        }
+
+        // 驗證比率邏輯
+        if (HasNumerator && HasDenominator)
+        {
+            if (Denominator?.Value?.Value != null && Denominator.Value.Value == 0)
             {
-                yield return denominatorResult;
+                results.Add(new ValidationResult("Ratio denominator cannot be zero"));
             }
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
+        return results;
     }
 } 

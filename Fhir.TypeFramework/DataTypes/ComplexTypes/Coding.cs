@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -7,8 +7,8 @@ using System.Text.Json.Serialization;
 namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// Coding - 編碼型別
-/// 用於在 FHIR 資源中表示編碼
+/// FHIR Coding complex type.
+/// A reference to a code defined by a terminology system.
 /// </summary>
 /// <remarks>
 /// FHIR R5 Coding (Complex Type)
@@ -23,146 +23,132 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Coding : Element, IExtensibleTypeFramework
+public class Coding : UnifiedComplexTypeBase<Coding>
 {
     /// <summary>
-    /// 術語系統的身份識別
-    /// FHIR Path: Coding.system
-    /// Cardinality: 0..1
-    /// Type: uri
+    /// Gets or sets the system.
+    /// Identity of the terminology system.
     /// </summary>
     [JsonPropertyName("system")]
     public FhirUri? System { get; set; }
 
     /// <summary>
-    /// 系統版本 - 如果相關
-    /// FHIR Path: Coding.version
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the version.
+    /// Version of the system - if relevant.
     /// </summary>
     [JsonPropertyName("version")]
     public FhirString? Version { get; set; }
 
     /// <summary>
-    /// 系統定義語法中的符號
-    /// FHIR Path: Coding.code
-    /// Cardinality: 0..1
-    /// Type: code
+    /// Gets or sets the code.
+    /// Symbol in syntax defined by the system.
     /// </summary>
     [JsonPropertyName("code")]
     public FhirCode? Code { get; set; }
 
     /// <summary>
-    /// 系統定義的表示
-    /// FHIR Path: Coding.display
-    /// Cardinality: 0..1
-    /// Type: string
+    /// Gets or sets the display.
+    /// Representation defined by the system.
     /// </summary>
     [JsonPropertyName("display")]
     public FhirString? Display { get; set; }
 
     /// <summary>
-    /// 如果此編碼是由使用者直接選擇的
-    /// FHIR Path: Coding.userSelected
-    /// Cardinality: 0..1
-    /// Type: boolean
+    /// Gets or sets the user selected.
+    /// If this coding was chosen directly by the user.
     /// </summary>
     [JsonPropertyName("userSelected")]
     public FhirBoolean? UserSelected { get; set; }
 
     /// <summary>
-    /// 檢查是否有編碼
+    /// Checks if code exists.
     /// </summary>
-    /// <returns>如果存在編碼則為 true，否則為 false</returns>
+    /// <returns>True if code exists; otherwise, false.</returns>
     [JsonIgnore]
     public bool HasCode => !string.IsNullOrEmpty(Code?.Value);
 
     /// <summary>
-    /// 檢查是否有系統
+    /// Checks if system exists.
     /// </summary>
-    /// <returns>如果存在系統則為 true，否則為 false</returns>
+    /// <returns>True if system exists; otherwise, false.</returns>
     [JsonIgnore]
     public bool HasSystem => !string.IsNullOrEmpty(System?.Value);
 
     /// <summary>
-    /// 取得顯示文字
+    /// Gets the display text.
     /// </summary>
-    /// <returns>顯示文字</returns>
+    /// <returns>The display text.</returns>
     [JsonIgnore]
     public string? DisplayText => Display?.Value ?? Code?.Value;
 
     /// <summary>
-    /// 建立物件的深層複本
+    /// Copies fields to target.
     /// </summary>
-    /// <returns>Coding 的深層複本</returns>
-    public override Base DeepCopy()
+    /// <param name="target">The target object.</param>
+    protected override void CopyFieldsTo(Coding target)
     {
-        var copy = new Coding
-        {
-            Id = Id,
-            System = System?.DeepCopy() as FhirUri,
-            Version = Version?.DeepCopy() as FhirString,
-            Code = Code?.DeepCopy() as FhirCode,
-            Display = Display?.DeepCopy() as FhirString,
-            UserSelected = UserSelected?.DeepCopy() as FhirBoolean
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        target.System = (FhirUri?)System?.DeepCopy();
+        target.Version = (FhirString?)Version?.DeepCopy();
+        target.Code = (FhirCode?)Code?.DeepCopy();
+        target.Display = (FhirString?)Display?.DeepCopy();
+        target.UserSelected = (FhirBoolean?)UserSelected?.DeepCopy();
     }
 
     /// <summary>
-    /// 判斷與另一個 Coding 物件是否相等
+    /// Compares if fields are exactly equal.
     /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    /// <param name="other">The other object to compare.</param>
+    /// <returns>True if fields are exactly equal; otherwise, false.</returns>
+    protected override bool FieldsAreExactly(Coding other)
     {
-        if (other is not Coding otherCoding)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(System, otherCoding.System) &&
-               Equals(Version, otherCoding.Version) &&
-               Equals(Code, otherCoding.Code) &&
-               Equals(Display, otherCoding.Display) &&
-               Equals(UserSelected, otherCoding.UserSelected);
+        return Equals(System, other.System)
+            && Equals(Version, other.Version)
+            && Equals(Code, other.Code)
+            && Equals(Display, other.Display)
+            && Equals(UserSelected, other.UserSelected);
     }
 
     /// <summary>
-    /// 驗證 Coding 是否符合 FHIR 規範
+    /// Validates fields.
     /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    /// <param name="validationContext">The validation context.</param>
+    /// <returns>Validation result collection.</returns>
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        // 驗證系統 URL 格式（如果提供）
-        if (!string.IsNullOrEmpty(System?.Value))
+        if (System != null)
         {
-            if (!Uri.IsWellFormedUriString(System.Value, UriKind.Absolute))
+            foreach (var v in System.Validate(validationContext))
             {
-                yield return new ValidationResult("Coding system must be a well-formed absolute URI");
+                yield return v;
             }
         }
-
-        // 驗證編碼（如果提供）
-        if (!string.IsNullOrEmpty(Code?.Value))
+        if (Version != null)
         {
-            // 編碼不能包含空格
-            if (Code.Value.Contains(' '))
+            foreach (var v in Version.Validate(validationContext))
             {
-                yield return new ValidationResult("Coding code cannot contain spaces");
+                yield return v;
             }
         }
-
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        if (Code != null)
         {
-            yield return result;
+            foreach (var v in Code.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        if (Display != null)
+        {
+            foreach (var v in Display.Validate(validationContext))
+            {
+                yield return v;
+            }
+        }
+        if (UserSelected != null)
+        {
+            foreach (var v in UserSelected.Validate(validationContext))
+            {
+                yield return v;
+            }
         }
     }
 } 

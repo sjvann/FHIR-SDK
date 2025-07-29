@@ -73,7 +73,8 @@ public class EnhancedTypeMapper
         ["Attachment"] = "Attachment",
         ["Narrative"] = "Narrative",
         ["Extension"] = "Extension",
-        ["Meta"] = "Meta"
+        ["Meta"] = "Meta",
+        ["BackboneElement"] = "BackboneElement"
     };
 
     // 抽象型別映射 - 需要具體實例時使用 Impl 類別
@@ -98,30 +99,46 @@ public class EnhancedTypeMapper
             // 1. 單一資源類型：可以考慮使用泛型 Reference<T>（未來功能）
             // 2. 多資源類型：必須使用基礎 Reference，執行時透過 type 欄位判斷
             // 3. 無限制：使用基礎 Reference
-
-            // 目前統一使用基礎 Reference 類型，因為：
-            // - 支援所有情境（單一、多重、無限制）
-            // - 執行時可透過 Reference.type 欄位得知實際資源類型
-            // - 符合 FHIR 標準的驗證概念
             baseType = "Reference";
         }
-        // 基本型別
-        else if (_primitiveTypeMap.TryGetValue(cleanType, out var primitiveType))
+        // 處理 FHIR 基礎型別
+        else if (_primitiveTypeMap.ContainsKey(cleanType))
         {
-            baseType = primitiveType;
+            baseType = _primitiveTypeMap[cleanType];
         }
-        // 複雜型別
-        else if (_complexTypeMap.TryGetValue(cleanType, out var complexType))
+        // 處理複雜型別
+        else if (_complexTypeMap.ContainsKey(cleanType))
         {
-            baseType = complexType;
+            baseType = _complexTypeMap[cleanType];
         }
-        // 資源型別或未知型別
+        // 處理抽象型別
+        else if (_abstractTypeToImplMap.ContainsKey(cleanType))
+        {
+            baseType = _abstractTypeToImplMap[cleanType];
+        }
+        // 預設處理
         else
         {
-            baseType = ToPascalCase(cleanType);
+            // 嘗試從 targetProfiles 推斷資源類型
+            if (targetProfiles != null && targetProfiles.Any())
+            {
+                var resourceType = ExtractResourceTypeFromProfile(targetProfiles.First());
+                if (!string.IsNullOrEmpty(resourceType))
+                {
+                    baseType = resourceType;
+                }
+                else
+                {
+                    baseType = ToPascalCase(cleanType);
+                }
+            }
+            else
+            {
+                baseType = ToPascalCase(cleanType);
+            }
         }
 
-        return isArray ? $"List<{baseType}>" : baseType;
+        return baseType;
     }
 
     /// <summary>

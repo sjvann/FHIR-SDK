@@ -1,8 +1,9 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Fhir.TypeFramework.DataTypes.ComplexTypes;
 
 namespace Fhir.TypeFramework.DataTypes;
 
@@ -21,7 +22,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Annotation : Element, IExtensibleTypeFramework
+public class Annotation : UnifiedComplexTypeBase<Annotation>
 {
     /// <summary>
     /// 註解的作者 - 使用 Choice Type 支援 Reference 或 string
@@ -60,122 +61,99 @@ public class Annotation : Element, IExtensibleTypeFramework
     public bool HasAuthor => Author != null;
 
     /// <summary>
-    /// 取得作者字串
+    /// 檢查是否有時間
     /// </summary>
-    /// <returns>作者的字串表示</returns>
+    /// <returns>如果存在時間則為 true，否則為 false</returns>
     [JsonIgnore]
-    public string? AuthorDisplay => Author?.Match(
-        reference => reference.Display,
-        str => str.Value
-    );
+    public bool HasTime => Time?.Value != null;
 
     /// <summary>
-    /// 取得作者（如果存在）
+    /// 檢查是否有文字
     /// </summary>
-    /// <typeparam name="T">期望的型別</typeparam>
-    /// <returns>轉換後的值，如果型別不匹配則返回 null</returns>
-    public T? GetAuthor<T>() where T : class
-    {
-        if (Author == null) return null;
-        
-        return Author.Match(
-            reference => reference as T,
-            str => str as T
-        );
-    }
+    /// <returns>如果存在文字則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool HasText => !string.IsNullOrEmpty(Text?.Value);
 
     /// <summary>
-    /// 設定作者（Reference 型別）
+    /// 檢查註解是否有效
     /// </summary>
-    /// <param name="reference">參考物件</param>
-    public void SetAuthor(Reference reference)
-    {
-        Author = reference;
-    }
+    /// <returns>如果註解有效則為 true，否則為 false</returns>
+    [JsonIgnore]
+    public bool IsValid => HasText;
 
     /// <summary>
-    /// 設定作者（字串型別）
+    /// 取得顯示文字
     /// </summary>
-    /// <param name="authorString">作者字串</param>
-    public void SetAuthor(FhirString authorString)
+    /// <returns>顯示文字</returns>
+    [JsonIgnore]
+    public string? DisplayText
     {
-        Author = authorString;
-    }
-
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Annotation 的深層複本</returns>
-    public override Base DeepCopy()
-    {
-        var copy = new Annotation
+        get
         {
-            Id = Id,
-            Author = Author, // Choice Type 本身是不可變的，直接複製
-            Time = Time?.DeepCopy() as FhirDateTime,
-            Text = Text?.DeepCopy() as FhirMarkdown
-        };
+            if (!IsValid)
+                return null;
 
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            var parts = new List<string>();
+            
+            if (HasText)
+            {
+                parts.Add(Text?.Value);
+            }
+            
+            if (HasAuthor)
+            {
+                parts.Add($"by {Author}");
+            }
+            
+            if (HasTime)
+            {
+                parts.Add($"at {Time?.Value}");
+            }
+            
+            return parts.Any() ? string.Join(" ", parts) : null;
         }
-
-        return copy;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Annotation 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override void CopyFieldsTo(Annotation target)
     {
-        if (other is not Annotation otherAnnotation)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Author, otherAnnotation.Author) &&
-               Equals(Time, otherAnnotation.Time) &&
-               Equals(Text, otherAnnotation.Text);
+        target.Author = Author?.DeepCopy() as AnnotationAuthorChoice;
+        target.Time = Time?.DeepCopy() as FhirDateTime;
+        target.Text = Text?.DeepCopy() as FhirMarkdown;
     }
 
-    /// <summary>
-    /// 驗證 Annotation 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override bool FieldsAreExactly(Annotation other)
     {
-        // 驗證必須有文字內容
-        if (string.IsNullOrEmpty(Text?.Value))
-        {
-            yield return new ValidationResult("Annotation text is required");
-        }
+        return DeepEqualityComparer.AreEqual(Author, other.Author) &&
+               DeepEqualityComparer.AreEqual(Time, other.Time) &&
+               DeepEqualityComparer.AreEqual(Text, other.Text);
+    }
 
-        // 驗證作者 Reference 的型別（如果提供）
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
+    {
+        var results = new List<ValidationResult>();
+
+        // 驗證 Author
         if (Author != null)
         {
-            Author.Match(
-                reference =>
-                {
-                    if (!string.IsNullOrEmpty(reference.Type))
-                    {
-                        var validTypes = new[] { "Organization", "Patient", "Practitioner", "PractitionerRole", "RelatedPerson" };
-                        if (!validTypes.Contains(reference.Type))
-                        {
-                            yield return new ValidationResult($"AuthorReference type must be one of: {string.Join(", ", validTypes)}");
-                        }
-                    }
-                },
-                str => { } // 字串型別不需要額外驗證
-            );
+            results.AddRange(Author.Validate(validationContext));
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        // 驗證 Time
+        if (Time != null)
         {
-            yield return result;
+            results.AddRange(Time.Validate(validationContext));
         }
+
+        // 驗證 Text
+        if (Text != null)
+        {
+            results.AddRange(Text.Validate(validationContext));
+        }
+        else
+        {
+            results.Add(new ValidationResult("Annotation.text is required"));
+        }
+
+        return results;
     }
 } 

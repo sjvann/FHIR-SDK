@@ -4,51 +4,27 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.Abstractions;
-using Fhir.Support.Base;
+using Fhir.R4.Models.Base;
+using Fhir.TypeFramework.DataTypes;
 
 namespace Fhir.R4.Models.Resources;
 
 /// <summary>
 /// Details and position information for a physical place where services are provided and resources and participants may be stored, found, contained, or accommodated.
 /// </summary>
-public class Location : IDomainResource
+public class Location : DomainResource
 {
     /// <summary>
     /// Resource type name
     /// </summary>
     [JsonPropertyName("resourceType")]
-    public string ResourceType => "Location";
-
-    /// <summary>
-    /// Logical id of this artifact
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// A human-readable narrative
-    /// </summary>
-    [JsonPropertyName("text")]
-    public object? Text { get; set; }
-
-    /// <summary>
-    /// Additional content defined by implementations
-    /// </summary>
-    [JsonPropertyName("extension")]
-    public IList<object>? Extension { get; set; }
-
-    /// <summary>
-    /// Extensions that cannot be ignored
-    /// </summary>
-    [JsonPropertyName("modifierExtension")]
-    public IList<object>? ModifierExtension { get; set; }
+    public override string ResourceType => "Location";
 
     /// <summary>
     /// Unique code or number identifying the location to its users
     /// </summary>
     [JsonPropertyName("identifier")]
-    public List<Identifier> IdentifierValue { get; set; }
+    public List<Identifier>? IdentifierValue { get; set; }
 
     /// <summary>
     /// active | suspended | inactive
@@ -72,7 +48,7 @@ public class Location : IDomainResource
     /// A list of alternate names that the location is known as, or was known as, in the past
     /// </summary>
     [JsonPropertyName("alias")]
-    public List<FhirString> Alias { get; set; }
+    public List<FhirString>? Alias { get; set; }
 
     /// <summary>
     /// Additional details about the location that could be displayed as further information to identify the location beyond its name
@@ -90,13 +66,13 @@ public class Location : IDomainResource
     /// Type of function performed
     /// </summary>
     [JsonPropertyName("type")]
-    public List<CodeableConcept> Type { get; set; }
+    public List<CodeableConcept>? Type { get; set; }
 
     /// <summary>
     /// Contact details of the location
     /// </summary>
     [JsonPropertyName("telecom")]
-    public List<ContactPoint> Telecom { get; set; }
+    public List<ContactPoint>? Telecom { get; set; }
 
     /// <summary>
     /// Physical location
@@ -152,13 +128,13 @@ public class Location : IDomainResource
     /// What days/times during a week is this location usually open
     /// </summary>
     [JsonPropertyName("hoursOfOperation")]
-    public List<BackboneElement> HoursOfOperation { get; set; }
+    public List<BackboneElement>? HoursOfOperation { get; set; }
 
     /// <summary>
     /// mon | tue | wed | thu | fri | sat | sun
     /// </summary>
     [JsonPropertyName("daysOfWeek")]
-    public List<FhirCode> DaysOfWeek { get; set; }
+    public List<FhirCode>? DaysOfWeek { get; set; }
 
     /// <summary>
     /// The Location is open all day
@@ -188,7 +164,7 @@ public class Location : IDomainResource
     /// Technical endpoints providing access to services operated for the location
     /// </summary>
     [JsonPropertyName("endpoint")]
-    public List<Reference> Endpoint { get; set; }
+    public List<Reference>? Endpoint { get; set; }
 
     /// <summary>
     /// Validates this instance according to FHIR rules

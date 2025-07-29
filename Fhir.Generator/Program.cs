@@ -71,7 +71,9 @@ class Program
         Console.WriteLine($"📋 Target FHIR Version: {fhirVersion}");
 
         // 自動偵測定義檔路徑
-        var definitionsPath = Path.Combine("Definitions", fhirVersion, "definitions.json.zip");
+        var currentDir = Directory.GetCurrentDirectory();
+        var projectRoot = currentDir.EndsWith("Fhir.Generator") ? Path.GetFullPath(Path.Combine(currentDir, "..")) : currentDir;
+        var definitionsPath = Path.Combine(projectRoot, "Definitions", fhirVersion, "definitions.json.zip");
 
         // 檢查定義檔是否存在
         if (!File.Exists(definitionsPath))
@@ -80,7 +82,7 @@ class Program
             Console.WriteLine($"💡 Expected structure: Definitions/{fhirVersion}/definitions.json.zip");
             Console.WriteLine($"🔍 Available versions:");
 
-            var definitionsDir = "Definitions";
+            var definitionsDir = Path.Combine(projectRoot, "Definitions");
             if (Directory.Exists(definitionsDir))
             {
                 var availableVersions = Directory.GetDirectories(definitionsDir)
@@ -114,11 +116,11 @@ class Program
         switch (fhirVersion.ToUpper())
         {
             case "R4":
-                generatedDir = "Fhir.R4.Models";
+                generatedDir = Path.Combine(projectRoot, "Fhir.R4.Models");
                 namespaceName = "Fhir.R4.Models";
                 break;
             case "R5":
-                generatedDir = "Fhir.R5.Models";
+                generatedDir = Path.Combine(projectRoot, "Fhir.R5.Models");
                 namespaceName = "Fhir.R5.Models";
                 break;
             default:
@@ -149,31 +151,11 @@ class Program
         {
             Console.WriteLine($"⚡ Starting {fhirVersion} code generation...");
 
-            // 使用能產生正確 FHIR 架構的 SimpleGenerator
-            Console.WriteLine("🔧 Using SimpleGenerator that produces correct FHIR Primitive Types");
+            // 生成專案結構
+            var projectGenerator = new ProjectGenerator();
+            await projectGenerator.GenerateProjectAsync(fhirVersion, generatedDir);
 
-            // 先清理錯誤的生成檔案
-            Console.WriteLine("🧹 Cleaning incorrect generated files...");
-            var resourcesDir = Path.Combine(generatedDir, "Resources");
-            if (Directory.Exists(resourcesDir))
-            {
-                var generatedFiles = Directory.GetFiles(resourcesDir, "*.cs")
-                    .Where(f => !IsHandCraftedFile(f))
-                    .ToList();
-
-                foreach (var file in generatedFiles)
-                {
-                    File.Delete(file);
-                }
-                Console.WriteLine($"🗑️ Deleted {generatedFiles.Count} incorrect generated files");
-            }
-
-            // TODO: 整合 SimpleGenerator 與 FHIR 定義檔載入
-            // 目前先使用測試模式展示正確的生成結果
-            Console.WriteLine("📋 Using SimpleGenerator test mode to show correct architecture");
-            Console.WriteLine("⚠️ Full integration with FHIR definitions coming soon");
-
-            // 暫時保持舊邏輯以避免破壞，但標記為需要替換
+            // 載入 FHIR 定義檔
             var loader = new FhirDefinitionLoader();
             var schema = await loader.LoadFromZipAsync(definitionsPath);
 
@@ -181,12 +163,10 @@ class Program
             Console.WriteLine($"✅ Loaded {schema.Resources.Count} resources");
             Console.WriteLine($"✅ Loaded {schema.ValueSets.Count} value sets");
 
-            // 使用舊的生成器但標記問題
-            Console.WriteLine("⚠️ WARNING: Using old FhirCodeGenerator that produces incorrect types");
-            Console.WriteLine("📋 Generated files will use string, bool instead of FhirString, FhirBoolean");
-
+            // 生成 Resources
+            Console.WriteLine($"📄 Generating {schema.Resources.Count} resources...");
             var generator = new FhirCodeGenerator();
-            await generator.GenerateAllAsync(schema, generatedDir, fhirVersion);
+            await generator.GenerateResourcesOnlyAsync(schema, generatedDir, fhirVersion);
 
             Console.WriteLine($"🎉 {fhirVersion} code generation completed successfully!");
             Console.WriteLine($"📦 Output location: {Path.GetFullPath(generatedDir)}");

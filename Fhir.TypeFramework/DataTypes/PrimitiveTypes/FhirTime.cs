@@ -1,50 +1,81 @@
-using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
-/// FHIR Primitive Type: time
+/// FHIR time primitive type.
+/// A time during the day, with no date specified.
 /// </summary>
-public class FhirTime : PrimitiveTypeBase<TimeSpan>
+/// <remarks>
+/// FHIR R5 time PrimitiveType
+/// A time during the day, with no date specified.
+/// 
+/// JSON Representation:
+/// - Simple: "time" : "10:30:00"
+/// - Full: "time" : "10:30:00", "_time" : { "id" : "a1", "extension" : [...] }
+/// </remarks>
+public class FhirTime : DateTimePrimitiveTypeBase<TimeSpan>
 {
+    /// <summary>
+    /// Gets or sets the Time value.
+    /// </summary>
+    [JsonIgnore]
+    public TimeSpan? TimeValue { get => Value; set => Value = value; }
+
+    /// <summary>
+    /// Initializes a new instance of the FhirTime class.
+    /// </summary>
     public FhirTime() { }
 
+    /// <summary>
+    /// Initializes a new instance of the FhirTime class with the specified value.
+    /// </summary>
+    /// <param name="value">The Time value.</param>
     public FhirTime(TimeSpan? value) : base(value) { }
 
-    public FhirTime(string? value) : base(ParseValue(value)) { }
-
-    public static implicit operator FhirTime(TimeSpan? value) => new(value);
-    public static implicit operator FhirTime(string? value) => new(value);
-    public static implicit operator TimeSpan?(FhirTime fhirValue) => fhirValue?.Value;
-    public static implicit operator string?(FhirTime fhirValue) => fhirValue?.ToString();
-
-    public override TimeSpan? ParseValue(string? value)
+    /// <summary>
+    /// Implicitly converts a TimeSpan to a FhirTime.
+    /// </summary>
+    /// <param name="value">The TimeSpan value to convert.</param>
+    /// <returns>A FhirTime instance.</returns>
+    public static implicit operator FhirTime?(TimeSpan? value)
     {
-        if (string.IsNullOrEmpty(value)) return null;
+        return CreateFromDateTime<FhirTime>(value);
+    }
+
+    /// <summary>
+    /// Implicitly converts a FhirTime to a TimeSpan.
+    /// </summary>
+    /// <param name="fhirTime">The FhirTime to convert.</param>
+    /// <returns>The TimeSpan value.</returns>
+    public static implicit operator TimeSpan?(FhirTime? fhirTime)
+    {
+        return GetDateTimeValue<FhirTime>(fhirTime);
+    }
+
+    /// <summary>
+    /// Parses a string value to a TimeSpan.
+    /// </summary>
+    /// <param name="value">The string value to parse.</param>
+    /// <returns>The parsed TimeSpan value, or null if parsing fails.</returns>
+    protected override TimeSpan? ParseDateTimeValue(string value)
+    {
         if (TimeSpan.TryParse(value, out var result))
-        {
             return result;
-        }
         return null;
     }
 
-    public override string? ValueToString(TimeSpan? value)
+    /// <summary>
+    /// Validates the Time value according to FHIR specifications.
+    /// </summary>
+    /// <param name="value">The Time value to validate.</param>
+    /// <returns>True if the value is valid; otherwise, false.</returns>
+    protected override bool ValidateDateTimeValue(TimeSpan value)
     {
-        return value?.ToString(@"hh\:mm\:ss");
+        // FHIR time has no additional validation rules beyond being a valid TimeSpan
+        return true;
     }
-
-    public override bool IsValidValue(TimeSpan? value)
-    {
-        return value == null || (value.Value >= TimeSpan.MinValue && value.Value <= TimeSpan.MaxValue);
-    }
-
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (Value.HasValue && (Value.Value < TimeSpan.MinValue || Value.Value > TimeSpan.MaxValue))
-        {
-            yield return new ValidationResult("Time value is out of valid range");
-        }
-    }
-} 
+}

@@ -4,63 +4,39 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.Abstractions;
-using Fhir.Support.Base;
+using Fhir.R4.Models.Base;
+using Fhir.TypeFramework.DataTypes;
 
 namespace Fhir.R4.Models.Resources;
 
 /// <summary>
 /// Measurements and simple assertions made about a patient, device or other subject.
 /// </summary>
-public class Observation : IDomainResource
+public class Observation : DomainResource
 {
     /// <summary>
     /// Resource type name
     /// </summary>
     [JsonPropertyName("resourceType")]
-    public string ResourceType => "Observation";
-
-    /// <summary>
-    /// Logical id of this artifact
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// A human-readable narrative
-    /// </summary>
-    [JsonPropertyName("text")]
-    public object? Text { get; set; }
-
-    /// <summary>
-    /// Additional content defined by implementations
-    /// </summary>
-    [JsonPropertyName("extension")]
-    public IList<object>? Extension { get; set; }
-
-    /// <summary>
-    /// Extensions that cannot be ignored
-    /// </summary>
-    [JsonPropertyName("modifierExtension")]
-    public IList<object>? ModifierExtension { get; set; }
+    public override string ResourceType => "Observation";
 
     /// <summary>
     /// Business Identifier for observation
     /// </summary>
     [JsonPropertyName("identifier")]
-    public List<Identifier> IdentifierValue { get; set; }
+    public List<Identifier>? IdentifierValue { get; set; }
 
     /// <summary>
     /// Fulfills plan, proposal or order
     /// </summary>
     [JsonPropertyName("basedOn")]
-    public List<Reference> BasedOn { get; set; }
+    public List<Reference>? BasedOn { get; set; }
 
     /// <summary>
     /// Part of referenced event
     /// </summary>
     [JsonPropertyName("partOf")]
-    public List<Reference> PartOf { get; set; }
+    public List<Reference>? PartOf { get; set; }
 
     /// <summary>
     /// registered | preliminary | final | amended +
@@ -73,7 +49,7 @@ public class Observation : IDomainResource
     /// Classification of  type of observation
     /// </summary>
     [JsonPropertyName("category")]
-    public List<CodeableConcept> Category { get; set; }
+    public List<CodeableConcept>? Category { get; set; }
 
     /// <summary>
     /// Type of observation (code / type)
@@ -92,25 +68,13 @@ public class Observation : IDomainResource
     /// What the observation is about, when it is not about the subject of record
     /// </summary>
     [JsonPropertyName("focus")]
-    public List<Reference> Focus { get; set; }
+    public List<Reference>? Focus { get; set; }
 
     /// <summary>
     /// Healthcare event during which this observation is made
     /// </summary>
     [JsonPropertyName("encounter")]
     public Reference Encounter { get; set; }
-
-    /// <summary>
-    /// Clinically relevant time/time-period for observation (dateTime)
-    /// </summary>
-    [JsonPropertyName("effectiveDateTime")]
-    public FhirDateTime? EffectiveDateTime { get; set; }
-
-    /// <summary>
-    /// Clinically relevant time/time-period for observation (period)
-    /// </summary>
-    [JsonPropertyName("effectivePeriod")]
-    public Period? EffectivePeriod { get; set; }
 
     /// <summary>
     /// Date/Time this version was made available
@@ -122,19 +86,7 @@ public class Observation : IDomainResource
     /// Who is responsible for the observation
     /// </summary>
     [JsonPropertyName("performer")]
-    public List<Reference> Performer { get; set; }
-
-    /// <summary>
-    /// Actual result (Quantity)
-    /// </summary>
-    [JsonPropertyName("valueQuantity")]
-    public Quantity? ValueQuantity { get; set; }
-
-    /// <summary>
-    /// Actual result (string)
-    /// </summary>
-    [JsonPropertyName("valueString")]
-    public FhirString? ValueString { get; set; }
+    public List<Reference>? Performer { get; set; }
 
     /// <summary>
     /// Why the result is missing
@@ -146,13 +98,13 @@ public class Observation : IDomainResource
     /// High, low, normal, etc.
     /// </summary>
     [JsonPropertyName("interpretation")]
-    public List<CodeableConcept> Interpretation { get; set; }
+    public List<CodeableConcept>? Interpretation { get; set; }
 
     /// <summary>
     /// Comments about the observation
     /// </summary>
     [JsonPropertyName("note")]
-    public List<Annotation> Note { get; set; }
+    public List<Annotation>? Note { get; set; }
 
     /// <summary>
     /// Observed body part
@@ -182,7 +134,7 @@ public class Observation : IDomainResource
     /// Provides guide for interpretation
     /// </summary>
     [JsonPropertyName("referenceRange")]
-    public List<BackboneElement> ReferenceRange { get; set; }
+    public List<BackboneElement>? ReferenceRange { get; set; }
 
     /// <summary>
     /// Low Range, if relevant
@@ -206,7 +158,7 @@ public class Observation : IDomainResource
     /// Reference range population
     /// </summary>
     [JsonPropertyName("appliesTo")]
-    public List<CodeableConcept> AppliesTo { get; set; }
+    public List<CodeableConcept>? AppliesTo { get; set; }
 
     /// <summary>
     /// Applicable age range, if relevant
@@ -218,56 +170,19 @@ public class Observation : IDomainResource
     /// Related resource that belongs to the Observation group
     /// </summary>
     [JsonPropertyName("hasMember")]
-    public List<Reference> HasMember { get; set; }
+    public List<Reference>? HasMember { get; set; }
 
     /// <summary>
     /// Related measurements the observation is made from
     /// </summary>
     [JsonPropertyName("derivedFrom")]
-    public List<Reference> DerivedFrom { get; set; }
+    public List<Reference>? DerivedFrom { get; set; }
 
     /// <summary>
     /// Component results
     /// </summary>
     [JsonPropertyName("component")]
-    public List<BackboneElement> Component { get; set; }
-
-    /// <summary>
-    /// Type of component observation (code / type)
-    /// </summary>
-    [Required]
-    [JsonPropertyName("code")]
-    public CodeableConcept Code { get; set; }
-
-    /// <summary>
-    /// Actual component result (Quantity)
-    /// </summary>
-    [JsonPropertyName("valueQuantity")]
-    public Quantity? ValueQuantity { get; set; }
-
-    /// <summary>
-    /// Actual component result (string)
-    /// </summary>
-    [JsonPropertyName("valueString")]
-    public FhirString? ValueString { get; set; }
-
-    /// <summary>
-    /// Why the component result is missing
-    /// </summary>
-    [JsonPropertyName("dataAbsentReason")]
-    public CodeableConcept DataAbsentReason { get; set; }
-
-    /// <summary>
-    /// High, low, normal, etc.
-    /// </summary>
-    [JsonPropertyName("interpretation")]
-    public List<CodeableConcept> Interpretation { get; set; }
-
-    /// <summary>
-    /// Provides guide for interpretation of component result
-    /// </summary>
-    [JsonPropertyName("referenceRange")]
-    public List<> ReferenceRange { get; set; }
+    public List<BackboneElement>? Component { get; set; }
 
     /// <summary>
     /// Validates this instance according to FHIR rules

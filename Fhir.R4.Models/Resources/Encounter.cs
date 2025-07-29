@@ -4,51 +4,27 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Fhir.Abstractions;
-using Fhir.Support.Base;
+using Fhir.R4.Models.Base;
+using Fhir.TypeFramework.DataTypes;
 
 namespace Fhir.R4.Models.Resources;
 
 /// <summary>
 /// An interaction between a patient and healthcare provider(s) for the purpose of providing healthcare service(s) or assessing the health status of a patient.
 /// </summary>
-public class Encounter : IDomainResource
+public class Encounter : DomainResource
 {
     /// <summary>
     /// Resource type name
     /// </summary>
     [JsonPropertyName("resourceType")]
-    public string ResourceType => "Encounter";
-
-    /// <summary>
-    /// Logical id of this artifact
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// A human-readable narrative
-    /// </summary>
-    [JsonPropertyName("text")]
-    public object? Text { get; set; }
-
-    /// <summary>
-    /// Additional content defined by implementations
-    /// </summary>
-    [JsonPropertyName("extension")]
-    public IList<object>? Extension { get; set; }
-
-    /// <summary>
-    /// Extensions that cannot be ignored
-    /// </summary>
-    [JsonPropertyName("modifierExtension")]
-    public IList<object>? ModifierExtension { get; set; }
+    public override string ResourceType => "Encounter";
 
     /// <summary>
     /// Identifier(s) by which this encounter is known
     /// </summary>
     [JsonPropertyName("identifier")]
-    public List<Identifier> IdentifierValue { get; set; }
+    public List<Identifier>? IdentifierValue { get; set; }
 
     /// <summary>
     /// planned | arrived | triaged | in-progress | onleave | finished | cancelled +
@@ -61,7 +37,7 @@ public class Encounter : IDomainResource
     /// List of past encounter statuses
     /// </summary>
     [JsonPropertyName("statusHistory")]
-    public List<BackboneElement> StatusHistory { get; set; }
+    public List<BackboneElement>? StatusHistory { get; set; }
 
     /// <summary>
     /// planned | arrived | triaged | in-progress | onleave | finished | cancelled +
@@ -88,7 +64,7 @@ public class Encounter : IDomainResource
     /// List of past encounter classes
     /// </summary>
     [JsonPropertyName("classHistory")]
-    public List<BackboneElement> ClassHistory { get; set; }
+    public List<BackboneElement>? ClassHistory { get; set; }
 
     /// <summary>
     /// inpatient | outpatient | ambulatory | emergency +
@@ -108,7 +84,7 @@ public class Encounter : IDomainResource
     /// Specific type of encounter
     /// </summary>
     [JsonPropertyName("type")]
-    public List<CodeableConcept> Type { get; set; }
+    public List<CodeableConcept>? Type { get; set; }
 
     /// <summary>
     /// Specific type of service
@@ -132,43 +108,25 @@ public class Encounter : IDomainResource
     /// Episode(s) of care that this encounter should be recorded against
     /// </summary>
     [JsonPropertyName("episodeOfCare")]
-    public List<Reference> EpisodeOfCare { get; set; }
+    public List<Reference>? EpisodeOfCare { get; set; }
 
     /// <summary>
     /// The ServiceRequest that initiated this encounter
     /// </summary>
     [JsonPropertyName("basedOn")]
-    public List<Reference> BasedOn { get; set; }
+    public List<Reference>? BasedOn { get; set; }
 
     /// <summary>
     /// List of participants involved in the encounter
     /// </summary>
     [JsonPropertyName("participant")]
-    public List<BackboneElement> Participant { get; set; }
-
-    /// <summary>
-    /// Role of participant in encounter
-    /// </summary>
-    [JsonPropertyName("type")]
-    public List<CodeableConcept> Type { get; set; }
-
-    /// <summary>
-    /// Period of time during the encounter that the participant participated
-    /// </summary>
-    [JsonPropertyName("period")]
-    public Period PeriodValue { get; set; }
-
-    /// <summary>
-    /// Persons involved in the encounter other than the patient
-    /// </summary>
-    [JsonPropertyName("individual")]
-    public Reference Individual { get; set; }
+    public List<BackboneElement>? Participant { get; set; }
 
     /// <summary>
     /// The appointment that scheduled this encounter
     /// </summary>
     [JsonPropertyName("appointment")]
-    public List<Reference> Appointment { get; set; }
+    public List<Reference>? Appointment { get; set; }
 
     /// <summary>
     /// The start and end time of the encounter
@@ -186,44 +144,25 @@ public class Encounter : IDomainResource
     /// Coded reason the encounter takes place
     /// </summary>
     [JsonPropertyName("reasonCode")]
-    public List<CodeableConcept> ReasonCode { get; set; }
+    public List<CodeableConcept>? ReasonCode { get; set; }
 
     /// <summary>
     /// Reason the encounter takes place (reference)
     /// </summary>
     [JsonPropertyName("reasonReference")]
-    public List<Reference> ReasonReference { get; set; }
+    public List<Reference>? ReasonReference { get; set; }
 
     /// <summary>
     /// The list of diagnosis relevant to this encounter
     /// </summary>
     [JsonPropertyName("diagnosis")]
-    public List<BackboneElement> Diagnosis { get; set; }
-
-    /// <summary>
-    /// The diagnosis or procedure relevant to the encounter
-    /// </summary>
-    [Required]
-    [JsonPropertyName("condition")]
-    public Reference Condition { get; set; }
-
-    /// <summary>
-    /// Role that this diagnosis has within the encounter (e.g. admission, billing, discharge …)
-    /// </summary>
-    [JsonPropertyName("use")]
-    public CodeableConcept Use { get; set; }
-
-    /// <summary>
-    /// Ranking of the diagnosis (for each role type)
-    /// </summary>
-    [JsonPropertyName("rank")]
-    public FhirPositiveInt Rank { get; set; }
+    public List<BackboneElement>? Diagnosis { get; set; }
 
     /// <summary>
     /// The set of accounts that may be used for billing for this Encounter
     /// </summary>
     [JsonPropertyName("account")]
-    public List<Reference> Account { get; set; }
+    public List<Reference>? Account { get; set; }
 
     /// <summary>
     /// Details about the admission to a healthcare service
@@ -259,19 +198,19 @@ public class Encounter : IDomainResource
     /// Diet preferences reported by the patient
     /// </summary>
     [JsonPropertyName("dietPreference")]
-    public List<CodeableConcept> DietPreference { get; set; }
+    public List<CodeableConcept>? DietPreference { get; set; }
 
     /// <summary>
     /// Special courtesies (VIP, board member)
     /// </summary>
     [JsonPropertyName("specialCourtesy")]
-    public List<CodeableConcept> SpecialCourtesy { get; set; }
+    public List<CodeableConcept>? SpecialCourtesy { get; set; }
 
     /// <summary>
     /// Wheelchair, translator, stretcher, etc.
     /// </summary>
     [JsonPropertyName("specialArrangement")]
-    public List<CodeableConcept> SpecialArrangement { get; set; }
+    public List<CodeableConcept>? SpecialArrangement { get; set; }
 
     /// <summary>
     /// Location/organization to which the patient is discharged
@@ -289,7 +228,7 @@ public class Encounter : IDomainResource
     /// List of locations where the patient has been
     /// </summary>
     [JsonPropertyName("location")]
-    public List<BackboneElement> Location { get; set; }
+    public List<BackboneElement>? Location { get; set; }
 
     /// <summary>
     /// Location the encounter takes place

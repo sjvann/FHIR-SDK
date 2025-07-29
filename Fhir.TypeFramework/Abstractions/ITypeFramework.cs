@@ -1,3 +1,5 @@
+using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+
 namespace Fhir.TypeFramework.Abstractions;
 
 /// <summary>
@@ -69,7 +71,7 @@ public interface IIdentifiableTypeFramework : ITypeFramework
     /// 唯一識別碼
     /// </summary>
     /// <returns>物件的唯一識別碼</returns>
-    string? Id { get; set; }
+    FhirId? Id { get; set; }
 }
 
 /// <summary>
@@ -97,21 +99,21 @@ public interface IExtensibleTypeFramework : ITypeFramework
     /// </summary>
     /// <param name="url">要查詢的擴展 URL</param>
     /// <returns>找到的擴展，如果不存在則為 null</returns>
-    IExtension? GetExtension(string url);
+    IExtension? GetExtension(FhirUri url);
     
     /// <summary>
     /// 添加擴展
     /// </summary>
     /// <param name="url">擴展的 URL</param>
     /// <param name="value">擴展的值</param>
-    void AddExtension(string url, object? value);
+    void AddExtension(FhirUri url, ITypeFramework? value);
     
     /// <summary>
     /// 移除指定 URL 的擴展
     /// </summary>
     /// <param name="url">要移除的擴展 URL</param>
     /// <returns>如果成功移除則為 true，否則為 false</returns>
-    bool RemoveExtension(string url);
+    bool RemoveExtension(FhirUri url);
 }
 
 /// <summary>
@@ -126,11 +128,11 @@ public interface IExtension : ITypeFramework
     /// 擴展的 URL
     /// </summary>
     /// <returns>擴展的 URL</returns>
-    string? Url { get; set; }
+    FhirUri? Url { get; set; }
     
     /// <summary>
     /// 擴展的值
     /// </summary>
     /// <returns>擴展的值</returns>
-    object? Value { get; set; }
+    ITypeFramework? Value { get; set; }
 } 

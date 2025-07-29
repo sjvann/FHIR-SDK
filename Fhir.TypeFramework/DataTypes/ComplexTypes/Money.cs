@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -20,7 +20,7 @@ namespace Fhir.TypeFramework.DataTypes;
 /// - id: string (0..1) - inherited from Element
 /// - extension: Extension[] (0..*) - inherited from Element
 /// </remarks>
-public class Money : Element, IExtensibleTypeFramework
+public class Money : UnifiedComplexTypeBase<Money>
 {
     /// <summary>
     /// 數值（具有隱含精度）
@@ -64,78 +64,49 @@ public class Money : Element, IExtensibleTypeFramework
         get
         {
             var parts = new List<string>();
-
+            
             if (HasValue)
             {
-                parts.Add(Value?.Value.ToString());
+                parts.Add(Value?.Value?.ToString());
             }
-
+            
             if (HasCurrency)
             {
                 parts.Add(Currency?.Value);
             }
-
-            return parts.Count > 0 ? string.Join(" ", parts) : null;
+            
+            return parts.Any() ? string.Join(" ", parts) : null;
         }
     }
 
-    /// <summary>
-    /// 建立物件的深層複本
-    /// </summary>
-    /// <returns>Money 的深層複本</returns>
-    public override Base DeepCopy()
+    protected override void CopyFieldsTo(Money target)
     {
-        var copy = new Money
-        {
-            Id = Id,
-            Value = Value?.DeepCopy() as FhirDecimal,
-            Currency = Currency?.DeepCopy() as FhirCode
-        };
-
-        if (Extension != null)
-        {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
-        }
-
-        return copy;
+        target.Value = Value?.DeepCopy() as FhirDecimal;
+        target.Currency = Currency?.DeepCopy() as FhirCode;
     }
 
-    /// <summary>
-    /// 判斷與另一個 Money 物件是否相等
-    /// </summary>
-    /// <param name="other">要比較的物件</param>
-    /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    public override bool IsExactly(Base other)
+    protected override bool FieldsAreExactly(Money other)
     {
-        if (other is not Money otherMoney)
-            return false;
-
-        return base.IsExactly(other) &&
-               Equals(Value, otherMoney.Value) &&
-               Equals(Currency, otherMoney.Currency);
+        return DeepEqualityComparer.AreEqual(Value, other.Value) &&
+               DeepEqualityComparer.AreEqual(Currency, other.Currency);
     }
 
-    /// <summary>
-    /// 驗證 Money 是否符合 FHIR 規範
-    /// </summary>
-    /// <param name="validationContext">驗證上下文</param>
-    /// <returns>驗證結果集合</returns>
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
     {
-        // 驗證貨幣代碼（如果提供）
-        if (!string.IsNullOrEmpty(Currency?.Value))
+        var results = new List<ValidationResult>();
+
+        // 驗證 Value
+        if (Value != null)
         {
-            // 驗證是否為有效的 ISO 4217 貨幣代碼（3 字母）
-            if (Currency.Value.Length != 3 || !Currency.Value.All(char.IsLetter))
-            {
-                yield return new ValidationResult("Money currency must be a valid 3-letter ISO 4217 currency code");
-            }
+            results.AddRange(Value.Validate(validationContext));
         }
 
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
+        // 驗證 Currency
+        if (Currency != null)
         {
-            yield return result;
+            results.AddRange(Currency.Validate(validationContext));
         }
+
+        return results;
     }
 } 

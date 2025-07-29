@@ -1,50 +1,81 @@
-using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Base;
+﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 /// <summary>
-/// FHIR Primitive Type: unsignedInt
+/// FHIR unsignedInt primitive type.
+/// A non-negative integer (0, 1, 2, 3, ...).
 /// </summary>
-public class FhirUnsignedInt : PrimitiveTypeBase<uint>
+/// <remarks>
+/// FHIR R5 unsignedInt PrimitiveType
+/// A non-negative integer (0, 1, 2, 3, ...).
+/// 
+/// JSON Representation:
+/// - Simple: "count" : 42
+/// - Full: "count" : 42, "_count" : { "id" : "a1", "extension" : [...] }
+/// </remarks>
+public class FhirUnsignedInt : NumericPrimitiveTypeBase<uint>
 {
+    /// <summary>
+    /// Gets or sets the unsigned integer value.
+    /// </summary>
+    [JsonIgnore]
+    public uint? UnsignedIntValue { get => Value; set => Value = value; }
+
+    /// <summary>
+    /// Initializes a new instance of the FhirUnsignedInt class.
+    /// </summary>
     public FhirUnsignedInt() { }
 
+    /// <summary>
+    /// Initializes a new instance of the FhirUnsignedInt class with the specified value.
+    /// </summary>
+    /// <param name="value">The unsigned integer value.</param>
     public FhirUnsignedInt(uint? value) : base(value) { }
 
-    public FhirUnsignedInt(string? value) : base(ParseValue(value)) { }
-
-    public static implicit operator FhirUnsignedInt(uint? value) => new(value);
-    public static implicit operator FhirUnsignedInt(string? value) => new(value);
-    public static implicit operator uint?(FhirUnsignedInt fhirValue) => fhirValue?.Value;
-    public static implicit operator string?(FhirUnsignedInt fhirValue) => fhirValue?.ToString();
-
-    public override uint? ParseValue(string? value)
+    /// <summary>
+    /// Implicitly converts a uint to a FhirUnsignedInt.
+    /// </summary>
+    /// <param name="value">The uint value to convert.</param>
+    /// <returns>A FhirUnsignedInt instance.</returns>
+    public static implicit operator FhirUnsignedInt?(uint? value)
     {
-        if (string.IsNullOrEmpty(value)) return null;
-        if (uint.TryParse(value, out var result))
-        {
+        return CreateFromValue<FhirUnsignedInt>(value);
+    }
+
+    /// <summary>
+    /// Implicitly converts a FhirUnsignedInt to a uint.
+    /// </summary>
+    /// <param name="fhirUnsignedInt">The FhirUnsignedInt to convert.</param>
+    /// <returns>The uint value.</returns>
+    public static implicit operator uint?(FhirUnsignedInt? fhirUnsignedInt)
+    {
+        return GetNumericValue<FhirUnsignedInt>(fhirUnsignedInt);
+    }
+
+    /// <summary>
+    /// Parses a string value to an unsigned integer.
+    /// </summary>
+    /// <param name="value">The string value to parse.</param>
+    /// <returns>The parsed unsigned integer value, or null if parsing fails.</returns>
+    protected override uint? ParseNumericValue(string value)
+    {
+        if (uint.TryParse(value, out uint result))
             return result;
-        }
         return null;
     }
 
-    public override string? ValueToString(uint? value)
+    /// <summary>
+    /// Validates the unsigned integer value according to FHIR specifications.
+    /// </summary>
+    /// <param name="value">The unsigned integer value to validate.</param>
+    /// <returns>True if the value is valid; otherwise, false.</returns>
+    protected override bool ValidateNumericValue(uint value)
     {
-        return value?.ToString();
+        // FHIR unsignedInt has no additional validation rules beyond being a valid uint
+        return true;
     }
-
-    public override bool IsValidValue(uint? value)
-    {
-        return value == null || (value.Value >= uint.MinValue && value.Value <= uint.MaxValue);
-    }
-
-    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (Value.HasValue && (Value.Value < uint.MinValue || Value.Value > uint.MaxValue))
-        {
-            yield return new ValidationResult("UnsignedInt value is out of valid range");
-        }
-    }
-} 
+}
