@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>FHIR DataType Services</Title>
+    <Authors>sjvann</Authors>
+    <Description>FHIR SDK 提供資料型態層級之服務</Description>
+    <SignAssembly>True</SignAssembly>
+    <DelaySign>False</DelaySign>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="DataTypes\ChoiceTypes\" />
+    <Folder Include="DataTypes\PrimitiveTypes\" />
+    <Folder Include="FhirParser\ExtensionMethods\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
+    <ProjectReference Include="..\TerminologyService\TerminologyService.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>FHIR R4 Implementation</Title>
+    <Authors>sjvann</Authors>
+    <Description>FHIR R4 �귽�M���������@</Description>
+    <Version>1.0.0</Version>
+    <PackageId>FhirCore.R4</PackageId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
+    <ProjectReference Include="..\DataTypeServices\DataTypeServices.csproj" />
+    <ProjectReference Include="..\TerminologyService\TerminologyService.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="coverlet.collector" Version="6.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Factory\" />
+    <Folder Include="Examples\" />
+    <Folder Include="Extensions\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>R4PatientDemo</AssemblyName>
+    <RootNamespace>R4PatientDemo</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
+    <ProjectReference Include="..\DataTypeServices\DataTypeServices.csproj" />
+    <ProjectReference Include="..\ResourceTypeServices\ResourceTypeServices.csproj" />
+  </ItemGroup>
+
+</Project>

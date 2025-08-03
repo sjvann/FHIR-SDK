@@ -1,0 +1,228 @@
+{
+  "resourceType": "Bundle",
+  "id": "profiles-resources",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "Patient",
+        "url": "http://hl7.org/fhir/StructureDefinition/Patient",
+        "name": "Patient",
+        "title": "Patient",
+        "status": "active",
+        "kind": "resource",
+        "abstract": false,
+        "type": "Patient",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+        "description": "Demographics and other administrative information about an individual or animal receiving care or other health-related services.",
+        "purpose": "Tracking patient is the center of the healthcare process.",
+        "snapshot": {
+          "element": [
+            {
+              "path": "Patient",
+              "short": "Information about an individual or animal receiving health care services",
+              "definition": "Demographics and other administrative information about an individual or animal receiving care or other health-related services.",
+              "min": 0,
+              "max": "*",
+              "type": [
+                {
+                  "code": "DomainResource"
+                }
+              ]
+            },
+            {
+              "path": "Patient.identifier",
+              "short": "An identifier for this patient",
+              "definition": "An identifier for this patient.",
+              "min": 0,
+              "max": "*",
+              "type": [
+                {
+                  "code": "Identifier"
+                }
+              ]
+            },
+            {
+              "path": "Patient.active",
+              "short": "Whether this patient's record is in active use",
+              "definition": "Whether this patient record is in active use.",
+              "min": 0,
+              "max": "1",
+              "type": [
+                {
+                  "code": "boolean"
+                }
+              ]
+            },
+            {
+              "path": "Patient.name",
+              "short": "A name associated with the patient",
+              "definition": "A name associated with the individual.",
+              "min": 0,
+              "max": "*",
+              "type": [
+                {
+                  "code": "HumanName"
+                }
+              ]
+            },
+            {
+              "path": "Patient.telecom",
+              "short": "A contact detail for the individual",
+              "definition": "A contact detail (e.g. a telephone number or an email address) by which the individual may be contacted.",
+              "min": 0,
+              "max": "*",
+              "type": [
+                {
+                  "code": "ContactPoint"
+                }
+              ]
+            },
+            {
+              "path": "Patient.gender",
+              "short": "male | female | other | unknown",
+              "definition": "Administrative Gender - the gender that the patient is considered to have for administration and record keeping purposes.",
+              "min": 0,
+              "max": "1",
+              "type": [
+                {
+                  "code": "code"
+                }
+              ]
+            },
+            {
+              "path": "Patient.birthDate",
+              "short": "The date of birth for the individual",
+              "definition": "The date of birth for the individual.",
+              "min": 0,
+              "max": "1",
+              "type": [
+                {
+                  "code": "date"
+                }
+              ]
+            },
+            {
+              "path": "Patient.address",
+              "short": "An address for the individual",
+              "definition": "An address for the individual.",
+              "min": 0,
+              "max": "*",
+              "type": [
+                {
+                  "code": "Address"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "Observation",
+        "url": "http://hl7.org/fhir/StructureDefinition/Observation",
+        "name": "Observation",
+        "title": "Observation",
+        "status": "active",
+        "kind": "resource",
+        "abstract": false,
+        "type": "Observation",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+        "description": "Measurements and simple assertions made about a patient, device or other subject.",
+        "purpose": "Observations are central to healthcare. They are used to capture data about a patient.",
+        "snapshot": {
+          "element": [
+            {
+              "path": "Observation",
+              "short": "Measurements and simple assertions",
+              "definition": "Measurements and simple assertions made about a patient, device or other subject.",
+              "min": 0,
+              "max": "*",
+              "type": [
+                {
+                  "code": "DomainResource"
+                }
+              ]
+            },
+            {
+              "path": "Observation.identifier",
+              "short": "Business Identifier for observation",
+              "definition": "A unique identifier assigned to this observation.",
+              "min": 0,
+              "max": "*",
+              "type": [
+                {
+                  "code": "Identifier"
+                }
+              ]
+            },
+            {
+              "path": "Observation.status",
+              "short": "registered | preliminary | final | amended +",
+              "definition": "The status of the result value.",
+              "min": 1,
+              "max": "1",
+              "type": [
+                {
+                  "code": "code"
+                }
+              ]
+            },
+            {
+              "path": "Observation.code",
+              "short": "Type of observation (code / type)",
+              "definition": "Describes what was observed. Sometimes this is called the observation \"name\".",
+              "min": 1,
+              "max": "1",
+              "type": [
+                {
+                  "code": "CodeableConcept"
+                }
+              ]
+            },
+            {
+              "path": "Observation.subject",
+              "short": "Who and/or what the observation is about",
+              "definition": "The patient, or group of patients, location, or device this observation is about.",
+              "min": 0,
+              "max": "1",
+              "type": [
+                {
+                  "code": "Reference",
+                  "targetProfile": [
+                    "http://hl7.org/fhir/StructureDefinition/Patient",
+                    "http://hl7.org/fhir/StructureDefinition/Group"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "Observation.value[x]",
+              "short": "Actual result",
+              "definition": "The information determined as a result of making the observation.",
+              "min": 0,
+              "max": "1",
+              "type": [
+                {
+                  "code": "Quantity"
+                },
+                {
+                  "code": "CodeableConcept"
+                },
+                {
+                  "code": "string"
+                },
+                {
+                  "code": "boolean"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

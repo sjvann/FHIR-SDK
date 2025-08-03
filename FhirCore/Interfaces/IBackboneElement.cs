@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Nodes;
+using System.Threading.Tasks;
+
+namespace FhirCore.Interfaces
+{
+    public interface IBackboneElement
+    {
+        public bool IsChoiceType();
+        public bool IsComplex();
+        public bool IsPrimitive();
+
+    }
+}

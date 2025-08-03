@@ -1,0 +1,63 @@
+{
+  "resourceType": "Bundle",
+  "id": "profiles-types",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "string",
+        "url": "http://hl7.org/fhir/StructureDefinition/string",
+        "name": "string",
+        "title": "string",
+        "status": "active",
+        "kind": "primitive-type",
+        "abstract": false,
+        "type": "string",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "boolean",
+        "url": "http://hl7.org/fhir/StructureDefinition/boolean",
+        "name": "boolean",
+        "title": "boolean",
+        "status": "active",
+        "kind": "primitive-type",
+        "abstract": false,
+        "type": "boolean",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "code",
+        "url": "http://hl7.org/fhir/StructureDefinition/code",
+        "name": "code",
+        "title": "code",
+        "status": "active",
+        "kind": "primitive-type",
+        "abstract": false,
+        "type": "code",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "StructureDefinition",
+        "id": "date",
+        "url": "http://hl7.org/fhir/StructureDefinition/date",
+        "name": "date",
+        "title": "date",
+        "status": "active",
+        "kind": "primitive-type",
+        "abstract": false,
+        "type": "date",
+        "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+      }
+    }
+  ]
+}

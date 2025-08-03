@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>FHIR SDK Terminology Services</Title>
+    <Authors>sjvann</Authors>
+    <Description>FHIR SDK 提供術語相關服務(持續更版中)</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
+  </ItemGroup>
+
+  <!-- 移除對 FhirCore 的直接相依性 -->
+  <!-- <ItemGroup>
+    <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
+  </ItemGroup> -->
+
+</Project>
