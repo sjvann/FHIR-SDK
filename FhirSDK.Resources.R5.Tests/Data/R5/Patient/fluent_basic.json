@@ -1,0 +1,20 @@
+{
+  "name": "Patient-fluent-basic",
+  "chain": [
+    { "call": "WithGender", "args": ["male"] },
+    { "call": "WithBirthDate", "args": ["1980-01-01"] },
+    { "call": "WithActive", "args": [true] },
+    { "call": "AddName", "args": [ { "family": "Doe", "given": ["John"] } ] },
+    { "call": "AddIdentifier", "args": [ { "use": "official", "system": "http://hospital.org/mrn", "value": "12345" } ] },
+    { "call": "AddTelecom", "args": [ { "system": "phone", "value": "123-456" } ] }
+  ],
+  "asserts": [
+    { "path": "/gender", "equals": "male" },
+    { "path": "/birthDate", "equals": "1980-01-01" },
+    { "path": "/active", "equals": "true" },
+    { "path": "/name/0/family", "equals": "Doe" },
+    { "path": "/identifier/0/system", "equals": "http://hospital.org/mrn" },
+    { "path": "/telecom/0/system", "equals": "phone" }
+  ]
+}
+

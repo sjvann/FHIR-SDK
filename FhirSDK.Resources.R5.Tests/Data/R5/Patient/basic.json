@@ -1,0 +1,12 @@
+{
+  "name": "Patient-basic",
+  "inputJson": "{ \"resourceType\": \"Patient\", \"id\": \"p1\", \"gender\": \"female\", \"name\": [{ \"family\": \"Doe\", \"given\": [\"Jane\"] }] }",
+  "asserts": [
+    { "path": "/resourceType", "equals": "Patient" },
+    { "path": "/id", "equals": "p1" },
+    { "path": "/gender", "equals": "female" },
+    { "path": "/name/0/family", "equals": "Doe" },
+    { "path": "/name/0/given/0", "equals": "Jane" }
+  ]
+}
+

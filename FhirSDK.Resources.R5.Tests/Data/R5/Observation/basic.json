@@ -1,0 +1,10 @@
+{
+  "name": "Observation-basic",
+  "inputJson": "{ \"resourceType\": \"Observation\", \"id\": \"o1\", \"status\": \"final\" }",
+  "asserts": [
+    { "path": "/resourceType", "equals": "Observation" },
+    { "path": "/id", "equals": "o1" },
+    { "path": "/status", "equals": "final" }
+  ]
+}
+

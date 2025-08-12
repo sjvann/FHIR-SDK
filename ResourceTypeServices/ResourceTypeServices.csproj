@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>FHIR SDK Resource Service</Title>
+    <Authors>sjvann</Authors>
+    <Description>FHIR SDK 提供資源層級之服務</Description>
+    <Version>1.0.0</Version>
+    <PackageId>ResourceTypeServices</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="R5 - 複製\**" />
+    <EmbeddedResource Remove="R5 - 複製\**" />
+    <None Remove="R5 - 複製\**" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\DataTypeServices\DataTypeServices.csproj" />
+    <ProjectReference Include="..\TerminologyService\TerminologyService.csproj" />
+    <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
+  </ItemGroup>
+
+</Project>

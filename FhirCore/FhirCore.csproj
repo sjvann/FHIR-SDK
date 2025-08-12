@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>FhirSDK.Core</Title>
+    <Authors>sjvann</Authors>
+    <Description>FHIR SDK Core runtime and versioning abstractions</Description>
+    <Version>1.0.0</Version>
+    <PackageId>FhirSDK.Core</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+
+  <!-- 移除對 DataTypeServices 的直接相依性 -->
+  <!-- <ItemGroup>
+    <ProjectReference Include="..\DataTypeServices\DataTypeServices.csproj" />
+  </ItemGroup> -->
+
+</Project>

@@ -1,0 +1,364 @@
+{
+  "R4TypeMappings": {
+    "string": {
+      "CSharpType": "FhirString",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 字串類型"
+    },
+    "boolean": {
+      "CSharpType": "FhirBoolean", 
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 布林類型"
+    },
+    "integer": {
+      "CSharpType": "FhirInteger",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes", 
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 整數類型"
+    },
+    "decimal": {
+      "CSharpType": "FhirDecimal",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true, 
+      "IsNullable": true,
+      "Description": "FHIR 小數類型"
+    },
+    "uri": {
+      "CSharpType": "FhirUri",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR URI 類型"
+    },
+    "url": {
+      "CSharpType": "FhirUrl", 
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR URL 類型"
+    },
+    "canonical": {
+      "CSharpType": "FhirCanonical",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR Canonical 類型"
+    },
+    "base64Binary": {
+      "CSharpType": "FhirBase64Binary",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR Base64 二進位類型"
+    },
+    "instant": {
+      "CSharpType": "FhirInstant",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 瞬間時間類型"
+    },
+    "date": {
+      "CSharpType": "FhirDate",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 日期類型"
+    },
+    "dateTime": {
+      "CSharpType": "FhirDateTime",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 日期時間類型"
+    },
+    "time": {
+      "CSharpType": "FhirTime",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 時間類型"
+    },
+    "code": {
+      "CSharpType": "FhirCode",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 代碼類型"
+    },
+    "oid": {
+      "CSharpType": "FhirOid",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR OID 類型"
+    },
+    "id": {
+      "CSharpType": "FhirId",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR ID 類型"
+    },
+    "markdown": {
+      "CSharpType": "FhirMarkdown",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR Markdown 類型"
+    },
+    "uuid": {
+      "CSharpType": "FhirUuid",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR UUID 類型"
+    },
+    "positiveInt": {
+      "CSharpType": "FhirPositiveInt",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 正整數類型"
+    },
+    "unsignedInt": {
+      "CSharpType": "FhirUnsignedInt",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR 非負整數類型"
+    },
+    "xhtml": {
+      "CSharpType": "FhirXhtml",
+      "Namespace": "DataTypeServices.DataTypes.PrimitiveTypes",
+      "IsPrimitive": true,
+      "IsNullable": true,
+      "Description": "FHIR XHTML 類型"
+    },
+    "Address": {
+      "CSharpType": "Address",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 地址複雜類型"
+    },
+    "Age": {
+      "CSharpType": "Age",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 年齡複雜類型"
+    },
+    "Annotation": {
+      "CSharpType": "Annotation",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 註解複雜類型"
+    },
+    "Attachment": {
+      "CSharpType": "Attachment",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 附件複雜類型"
+    },
+    "CodeableConcept": {
+      "CSharpType": "CodeableConcept",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 可編碼概念複雜類型"
+    },
+    "CodeableReference": {
+      "CSharpType": "CodeableReference",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 可編碼參考複雜類型"
+    },
+    "Coding": {
+      "CSharpType": "Coding",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 編碼複雜類型"
+    },
+    "ContactPoint": {
+      "CSharpType": "ContactPoint",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 聯絡點複雜類型"
+    },
+    "Count": {
+      "CSharpType": "Count",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 計數複雜類型"
+    },
+    "Distance": {
+      "CSharpType": "Distance",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 距離複雜類型"
+    },
+    "Duration": {
+      "CSharpType": "Duration",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 持續時間複雜類型"
+    },
+    "HumanName": {
+      "CSharpType": "HumanName",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 人名複雜類型"
+    },
+    "Identifier": {
+      "CSharpType": "Identifier",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 識別符複雜類型"
+    },
+    "Money": {
+      "CSharpType": "Money",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 金錢複雜類型"
+    },
+    "Period": {
+      "CSharpType": "Period",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 期間複雜類型"
+    },
+    "Quantity": {
+      "CSharpType": "Quantity",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 數量複雜類型"
+    },
+    "Range": {
+      "CSharpType": "Range",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 範圍複雜類型"
+    },
+    "Ratio": {
+      "CSharpType": "Ratio",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 比率複雜類型"
+    },
+    "RatioRange": {
+      "CSharpType": "RatioRange",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 比率範圍複雜類型"
+    },
+    "SampledData": {
+      "CSharpType": "SampledData",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 採樣資料複雜類型"
+    },
+    "Signature": {
+      "CSharpType": "Signature",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 簽章複雜類型"
+    },
+    "Timing": {
+      "CSharpType": "Timing",
+      "Namespace": "DataTypeServices.DataTypes.ComplexTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 時機複雜類型"
+    },
+    "Reference": {
+      "CSharpType": "ReferenceType",
+      "Namespace": "DataTypeServices.DataTypes.SpecialTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 參考特殊類型"
+    },
+    "Extension": {
+      "CSharpType": "Extension",
+      "Namespace": "DataTypeServices.DataTypes.SpecialTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 擴展特殊類型"
+    },
+    "Narrative": {
+      "CSharpType": "Narrative",
+      "Namespace": "DataTypeServices.DataTypes.SpecialTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 敘述特殊類型"
+    },
+    "Meta": {
+      "CSharpType": "Meta",
+      "Namespace": "DataTypeServices.DataTypes.SpecialTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 後設資料特殊類型"
+    },
+    "Element": {
+      "CSharpType": "Element",
+      "Namespace": "DataTypeServices.DataTypes.MetaTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 元素後設類型"
+    },
+    "BackboneElement": {
+      "CSharpType": "BackboneElement",
+      "Namespace": "DataTypeServices.DataTypes.MetaTypes",
+      "IsPrimitive": false,
+      "IsNullable": true,
+      "Description": "FHIR 背骨元素後設類型"
+    },
+    "DomainResource": {
+      "CSharpType": "DomainResource",
+      "Namespace": "FhirCore.Base",
+      "IsPrimitive": false,
+      "IsNullable": false,
+      "Description": "FHIR 領域資源基礎類型"
+    },
+    "Resource": {
+      "CSharpType": "ResourceBase",
+      "Namespace": "FhirCore.Base",
+      "IsPrimitive": false,
+      "IsNullable": false,
+      "Description": "FHIR 資源基礎類型"
+    }
+  },
+  "R4SpecificSettings": {
+    "FhirVersion": "4.0.1",
+    "ReleaseDate": "2019-10-30",
+    "SupportedResourceCount": 130,
+    "ValidationRules": {
+      "id": "^[A-Za-z0-9\\-\\.]{1,64}$",
+      "uri": "^\\S*$",
+      "code": "^[^\\s]+( [^\\s]+)*$"
+    }
+  }
+}

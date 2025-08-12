@@ -1,0 +1,18 @@
+{
+  "name": "Observation-fluent-basic",
+  "chain": [
+    { "call": "WithStatus", "args": ["final"] },
+    { "call": "WithCode", "args": ["http://loinc.org", "718-7", "Hemoglobin"] },
+    { "call": "WithSubject", "args": ["Patient/p1"] },
+    { "call": "WithEffectiveDateTime", "args": ["2024-01-01T12:00:00Z"] },
+    { "call": "WithValueQuantity", "args": [13.5, "g/dL", "http://unitsofmeasure.org", "g/dL"] }
+  ],
+  "asserts": [
+    { "path": "/status", "equals": "final" },
+    { "path": "/code/coding/0/system", "equals": "http://loinc.org" },
+    { "path": "/subject/reference", "equals": "Patient/p1" },
+    { "path": "/effectiveDateTime", "contains": "2024-01-01" },
+    { "path": "/valueQuantity/unit", "equals": "g/dL" }
+  ]
+}
+
