@@ -85,6 +85,16 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// The string value, or <c>null</c> if no value has been set.
         /// </value>
         public string? Value => _stringValue;
+        public override bool IsValidValue()
+        {
+            if (string.IsNullOrEmpty(_stringValue)) return false;
+            var s = _stringValue.Trim();
+
+            // 僅支援帶有 urn:uuid: 前綴
+            if (!s.StartsWith("urn:uuid:", StringComparison.OrdinalIgnoreCase)) return false;
+            var uuidPart = s.Substring(9);
+            return Regex.IsMatch(uuidPart, @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", RegexOptions.IgnoreCase);
+        }
 
         #endregion
 
@@ -98,7 +108,6 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// Valid FHIR uuid values must follow the format "urn:uuid:" followed by a valid UUID
         /// in the standard 8-4-4-4-12 hexadecimal format.
         /// </remarks>
-        public override bool IsValidValue() => IsValidUuidValue(_stringValue);
 
         /// <summary>
         /// Gets the value as an object.

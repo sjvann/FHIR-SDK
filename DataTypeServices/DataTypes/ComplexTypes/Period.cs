@@ -142,6 +142,20 @@ namespace DataTypeServices.DataTypes.ComplexTypes
         }
 
         /// <summary>
+        /// 快速創建時間範圍（FHIR DateTime 版本）
+        /// </summary>
+        /// <param name="start">開始時間（FhirDateTime）</param>
+        /// <param name="end">結束時間（FhirDateTime）</param>
+        /// <returns>Period 實例</returns>
+        public static Period Range(FhirDateTime start, FhirDateTime end)
+        {
+            var p = new Period();
+            p.Start = start;
+            p.End = end;
+            return p;
+        }
+
+        /// <summary>
         /// 快速創建從現在開始的期間
         /// </summary>
         /// <param name="duration">持續時間</param>

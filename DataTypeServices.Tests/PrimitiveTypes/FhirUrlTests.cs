@@ -108,7 +108,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
         }
 
         [Fact]
-        public void FhirUrl_Specific_NonHttpUrlIsValid()
+        public void FhirUrl_Specific_NonHttpUrlIsInvalid()
         {
             // Arrange
             var fhirUrl = new FhirUrl("ftp://example.com");
@@ -117,7 +117,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             var result = fhirUrl.IsValidValue();
 
             // Assert
-            Assert.True(result);
+            Assert.False(result);
         }
 
         [Theory]

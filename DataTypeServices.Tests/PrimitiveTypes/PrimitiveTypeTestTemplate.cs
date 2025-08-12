@@ -22,9 +22,10 @@ namespace DataTypeServices.Tests.PrimitiveTypes
     /// </summary>
     public class PrimitiveTypeTestTemplate
     {
+        public const string SkipReason = "Template tests are placeholders and should be customized per type";
         #region 基本測試
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void Constructor_WithValidValue_CreatesInstance()
         {
             // Arrange & Act
@@ -35,7 +36,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.True(instance.IsValidValue());
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void Constructor_WithNullValue_CreatesInstance()
         {
             // Arrange & Act
@@ -46,7 +47,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.False(instance.IsValidValue());
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void Constructor_WithStringValue_CreatesInstance()
         {
             // Arrange & Act
@@ -61,7 +62,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
 
         #region 驗證測試
 
-        [Theory]
+        [Theory(Skip = SkipReason)]
         [InlineData("valid1")] // 修改為實際的有效值
         [InlineData("valid2")]
         [InlineData("valid3")]
@@ -78,7 +79,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.Equal(value, instance.Value);
         }
 
-        [Theory]
+        [Theory(Skip = SkipReason)]
         [InlineData("invalid1")] // 修改為實際的無效值，如果沒有則刪除此測試
         [InlineData("invalid2")]
         public void InvalidValues_AreInvalid(string value)
@@ -93,7 +94,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.False(result);
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void NullValue_IsInvalid()
         {
             // Arrange
@@ -110,7 +111,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
 
         #region 類型名稱測試
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void GetFhirTypeName_ReturnsCorrectName()
         {
             // Arrange
@@ -123,7 +124,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.Equal("String", result); // 修改為實際的類型名稱
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void GetFhirTypeName_Lowercase_ReturnsCorrectName()
         {
             // Arrange
@@ -140,7 +141,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
 
         #region 詳細驗證測試
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void ValidateDetailed_ValidValue_ReturnsSuccess()
         {
             // Arrange
@@ -154,7 +155,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.Null(result.ErrorMessage);
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void ValidateDetailed_InvalidValue_ReturnsError()
         {
             // Arrange
@@ -177,7 +178,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
         // 例如：FhirInteger 的數字範圍測試
         // 例如：FhirDate 的日期格式測試
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void Specific_TestName()
         {
             // Arrange
@@ -195,7 +196,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
 
         #region JSON 測試
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void GetElementJsonString_ReturnsValidJson()
         {
             // Arrange
@@ -209,7 +210,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.Contains("test", result);
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void SetElementObject_WithValidJson_SetsValue()
         {
             // Arrange
@@ -228,7 +229,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
 
         #region 值比較測試
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void ValueEquals_SameValue_ReturnsTrue()
         {
             // Arrange
@@ -242,7 +243,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void ValueEquals_DifferentValue_ReturnsFalse()
         {
             // Arrange
@@ -260,7 +261,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
 
         #region 元素測試
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void HasElement_NoElement_ReturnsFalse()
         {
             // Arrange
@@ -273,7 +274,7 @@ namespace DataTypeServices.Tests.PrimitiveTypes
             Assert.False(result);
         }
 
-        [Fact]
+        [Fact(Skip = SkipReason)]
         public void GetJsonValue_ReturnsValidJson()
         {
             // Arrange

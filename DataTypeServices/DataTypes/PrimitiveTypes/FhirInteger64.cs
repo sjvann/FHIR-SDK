@@ -99,7 +99,14 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// The long value, or <c>null</c> if no value has been set or the value is invalid.
         /// </value>
         /// <exception cref="FormatException">Thrown when the string value cannot be converted to a long.</exception>
-        public long? Value => Convert.ToInt64(_stringValue);
+        public long? Value
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_stringValue)) return null;
+                return long.TryParse(_stringValue, out var v) ? v : (long?)null;
+            }
+        }
 
         #endregion
 

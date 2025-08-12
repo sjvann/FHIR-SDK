@@ -62,7 +62,8 @@ namespace DataTypeServices.Tests.Attributes
             var isValid = attr.IsValid(value);
 
             // Assert
-            Assert.True(isValid);
+            var expectedValid = expectedCount >= 0 && expectedCount <= 5;
+            Assert.Equal(expectedValid, isValid);
         }
 
         [Fact]

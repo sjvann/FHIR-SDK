@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Title>FhirSDK.Resources.R4</Title>
+    <Authors>sjvann</Authors>
+    <Description>FHIR SDK R4 resource models (auto-generated)</Description>
+    <Version>0.1.0</Version>
+    <PackageId>FhirSDK.Resources.R4</PackageId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
+  </ItemGroup>
+</Project>
+

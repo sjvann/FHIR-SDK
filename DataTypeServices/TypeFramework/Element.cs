@@ -3,8 +3,10 @@ using DataTypeServices.TypeFramework;
 using FhirCore.ExtensionMethods;
 using FhirCore.Interfaces;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Nodes;
+using ExtensionType = DataTypeServices.DataTypes.SpecialTypes.Extension;
 
 namespace DataTypeServices.TypeFramework
 {
@@ -39,8 +41,8 @@ namespace DataTypeServices.TypeFramework
                 }
             }
         }
-        private List<DataTypeServices.DataTypes.SpecialTypes.Extension>? _extension;
-        public List<DataTypeServices.DataTypes.SpecialTypes.Extension>? Extension
+        private List<ExtensionType>? _extension;
+        public List<ExtensionType>? Extension
         {
             get => _extension;
             set
@@ -48,7 +50,7 @@ namespace DataTypeServices.TypeFramework
                 if (_extension != value)
                 {
                     _extension = value;
-                    OnPropertyChanged("Extension", value);
+                    OnPropertyChanged("extension", value);
                 }
             }
         }
@@ -85,12 +87,12 @@ namespace DataTypeServices.TypeFramework
                 }
                 if (jObject["extension"] is JsonArray jArray)
                 {
-                    List<DataTypeServices.DataTypes.SpecialTypes.Extension> extensions = [];
+                    List<ExtensionType> extensions = [];
                     foreach (JsonNode? item in jArray)
                     {
                         if (item is JsonObject extension)
                         {
-                            var ext = new DataTypeServices.DataTypes.SpecialTypes.Extension(extension);
+                            var ext = new ExtensionType(extension);
                             extensions.Add(ext);
                         }
                     }

@@ -1,0 +1,16 @@
+{
+  "name": "Organization-fluent-basic",
+  "chain": [
+    { "call": "WithActive", "args": [true] },
+    { "call": "WithName", "args": ["Acme Hospital"] },
+    { "call": "AddIdentifier", "args": ["http://hospital.org/id", "ORG-001"] },
+    { "call": "AddAlias", "args": ["Acme"] }
+  ],
+  "asserts": [
+    { "path": "/active", "equals": "true" },
+    { "path": "/name", "equals": "Acme Hospital" },
+    { "path": "/identifier/0/system", "equals": "http://hospital.org/id" },
+    { "path": "/alias/0", "equals": "Acme" }
+  ]
+}
+

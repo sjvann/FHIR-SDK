@@ -250,7 +250,9 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
             try
             {
                 var uri = new Uri(value, UriKind.Absolute);
-                return uri.IsAbsoluteUri;
+                if (!uri.IsAbsoluteUri) return false;
+                // 允許的 URL schemes：僅 http, https
+                return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
             }
             catch
             {

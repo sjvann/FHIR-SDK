@@ -95,7 +95,7 @@ namespace DataTypeServices.Validation
                 }
                 else if (attribute is RegexValidationAttribute regexAttr)
                 {
-                    result = ValidateRegex(propertyValue, propertyName, regexAttr.Pattern);
+                    result = ValidateRegex(propertyValue, propertyName, regexAttr.Pattern, regexAttr.ErrorMessage);
                 }
                 else
                 {
@@ -264,7 +264,7 @@ namespace DataTypeServices.Validation
         /// <summary>
         /// 驗證正則表達式
         /// </summary>
-        private static ValidationResult ValidateRegex(object? value, string propertyName, string pattern)
+        private static ValidationResult ValidateRegex(object? value, string propertyName, string pattern, string? errorMessage)
         {
             if (value == null)
                 return ValidationResult.Success();
@@ -280,7 +280,10 @@ namespace DataTypeServices.Validation
                     return ValidationResult.Success();
                 }
 
-                return ValidationResult.Error($"Value '{text}' does not match required pattern", propertyName);
+                var msg = string.IsNullOrWhiteSpace(errorMessage)
+                    ? $"Value '{text}' does not match required pattern"
+                    : errorMessage!;
+                return ValidationResult.Error(msg, propertyName);
             }
             catch (Exception ex)
             {

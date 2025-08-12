@@ -1,0 +1,15 @@
+{
+  "name": "Observation-fluent-value-mutex",
+  "chain": [
+    { "call": "WithStatus", "args": ["final"] },
+    { "call": "WithCode", "args": ["http://loinc.org", "4548-4", "Hematocrit"] },
+    { "call": "WithSubject", "args": ["Patient/p1"] },
+    { "call": "WithValueString", "args": ["13.5"] },
+    { "call": "WithValueQuantity", "args": [13.5, "g/dL", "http://unitsofmeasure.org", "g/dL"] }
+  ],
+  "asserts": [
+    { "path": "/valueQuantity/unit", "equals": "g/dL" },
+    { "path": "/valueString", "equals": "" }
+  ]
+}
+

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Nodes;
+using System.Linq;
 using FhirCore.Interfaces;
 using FhirCore.Versioning;
 using ValidationResult = System.ComponentModel.DataAnnotations.ValidationResult;
@@ -327,6 +329,145 @@ namespace FhirCore.Base
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        // Centralized JSON sync for property updates (expects JSON property name)
+        protected virtual void OnPropertyChanged(string propertyName, object? newValue)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            UpdateRaw(propertyName, newValue);
+        }
+
+        // New: allow raising change by CLR property name; will be mapped to JSON name
+        protected virtual void OnPropertyChangedByClr(string clrPropertyName, object? newValue)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(clrPropertyName));
+            var jsonName = ResolveJsonName(clrPropertyName);
+            UpdateRaw(jsonName, newValue);
+        }
+
+        // Default mapping: camelCase first letter. Resources can override for exact maps.
+        protected virtual string ResolveJsonName(string clrPropertyName)
+        {
+            if (string.IsNullOrEmpty(clrPropertyName)) return clrPropertyName;
+            return char.ToLowerInvariant(clrPropertyName[0]) + clrPropertyName.Substring(1);
+        }
+
+        // Backing JSON for dot-notation access; aligns with FHIR JSON rules for primitives
+        private JsonObject? _raw;
+        public JsonObject? Raw => _raw;
+
+        // Set initial Raw JSON (synchronous). Does not populate strong-typed properties.
+        protected void SetRawFrom(JsonNode? source)
+        {
+            _raw = source as JsonObject;
+        }
+
+        protected virtual void UpdateRaw(string name, object? value)
+        {
+            _raw ??= new JsonObject();
+
+            // Helper to serialize any object to JsonNode according to FHIR rules
+            static JsonNode? ToNode(object? v)
+            {
+                switch (v)
+                {
+                    case null:
+                        return null;
+                    case IPrimitiveType p:
+                        return p.GetJsonValue();
+                    case IComplexType c:
+                        return c.GetJsonObject();
+                    default:
+                        return JsonValue.Create(v?.ToString());
+                }
+            }
+
+            // Remove underscore sibling helper
+            void RemoveElementSibling() => _raw!.Remove($"_{name}");
+
+            switch (value)
+            {
+                case null:
+                    _raw[name] = null;
+                    RemoveElementSibling();
+                    break;
+
+                case IPrimitiveType p:
+                    _raw[name] = p.GetJsonValue();
+                    if (p.HasElement())
+                    {
+                        _raw[$"_{name}"] = p.GetElementJsonObject();
+                    }
+                    else
+                    {
+                        RemoveElementSibling();
+                    }
+                    break;
+
+                case IComplexType c:
+                    _raw[name] = c.GetJsonObject();
+                    RemoveElementSibling();
+                    break;
+
+                case System.Collections.IEnumerable list:
+                {
+                    // Build values array and optional elements (underscore) array aligned by index
+                    var values = new JsonArray();
+                    JsonArray? elements = null;
+                    int idx = 0;
+                    foreach (var item in list.Cast<object?>())
+                    {
+                        switch (item)
+                        {
+                            case null:
+                                values.Add((JsonNode?)null);
+                                if (elements != null) elements.Add((JsonNode?)null);
+                                break;
+                            case IPrimitiveType pp:
+                                values.Add(pp.GetJsonValue());
+                                if (pp.HasElement())
+                                {
+                                    elements ??= new JsonArray();
+                                    // pad elements with nulls until current index
+                                    while (elements.Count < idx) elements.Add((JsonNode?)null);
+                                    elements.Add(pp.GetElementJsonObject());
+                                }
+                                else if (elements != null)
+                                {
+                                    elements.Add((JsonNode?)null);
+                                }
+                                break;
+                            case IComplexType cc:
+                                values.Add(cc.GetJsonObject());
+                                if (elements != null) elements.Add((JsonNode?)null);
+                                break;
+                            default:
+                                values.Add(JsonValue.Create(item?.ToString()));
+                                if (elements != null) elements.Add((JsonNode?)null);
+                                break;
+                        }
+                        idx++;
+                    }
+                    _raw[name] = values;
+                    if (elements != null && elements.Any(e => e != null))
+                    {
+                        // Ensure elements array length matches values length
+                        while (elements.Count < values.Count) elements.Add((JsonNode?)null);
+                        _raw[$"_{name}"] = elements;
+                    }
+                    else
+                    {
+                        RemoveElementSibling();
+                    }
+                    break;
+                }
+
+                default:
+                    _raw[name] = JsonValue.Create(value?.ToString());
+                    RemoveElementSibling();
+                    break;
+            }
         }
     }
 }

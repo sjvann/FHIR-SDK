@@ -10,10 +10,10 @@ namespace DataTypeServices.Tests.PrimitiveTypes
         {
             return new[]
             {
-                "12345678-1234-1234-1234-123456789abc",
-                "00000000-0000-0000-0000-000000000000",
-                "ffffffff-ffff-ffff-ffff-ffffffffffff",
-                "550e8400-e29b-41d4-a716-446655440000"
+                "urn:uuid:12345678-1234-1234-1234-123456789abc",
+                "urn:uuid:00000000-0000-0000-0000-000000000000",
+                "urn:uuid:ffffffff-ffff-ffff-ffff-ffffffffffff",
+                "urn:uuid:550e8400-e29b-41d4-a716-446655440000"
             };
         }
 

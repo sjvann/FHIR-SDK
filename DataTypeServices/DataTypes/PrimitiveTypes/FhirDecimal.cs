@@ -101,7 +101,14 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// The decimal value, or <c>null</c> if no value has been set or the value is invalid.
         /// </value>
         /// <exception cref="FormatException">Thrown when the string value cannot be converted to a decimal.</exception>
-        public decimal? Value => Convert.ToDecimal(_stringValue);
+        public decimal? Value
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_stringValue)) return null;
+                return decimal.TryParse(_stringValue, out var v) ? v : (decimal?)null;
+            }
+        }
 
         #endregion
 
@@ -121,7 +128,13 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// Valid FHIR decimals can have up to 18 digits of precision and may use scientific notation.
         /// Leading zeros (except for values less than 1) and unnecessary trailing zeros should be avoided.
         /// </remarks>
-        public override bool IsValidValue() => CheckValidate(@"-?(0|[1-9][0-9]{0,17})(\.[0-9]{1,17})?([eE][+-]?[0-9]{1,9}})?", _stringValue);
+        public override bool IsValidValue()
+        {
+            if (string.IsNullOrEmpty(_stringValue)) return false;
+            // 科學記號不支援，且必須是標準十進位格式（可帶負號）
+            if (_stringValue.Contains('e') || _stringValue.Contains('E')) return false;
+            return CheckValidate(@"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$", _stringValue);
+        }
 
         /// <summary>
         /// Gets the value as an object.

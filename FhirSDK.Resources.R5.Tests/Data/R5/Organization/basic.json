@@ -1,0 +1,10 @@
+{
+  "name": "Organization-basic",
+  "inputJson": "{ \"resourceType\": \"Organization\", \"id\": \"org1\", \"name\": \"Acme Hospital\" }",
+  "asserts": [
+    { "path": "/resourceType", "equals": "Organization" },
+    { "path": "/id", "equals": "org1" },
+    { "path": "/name", "equals": "Acme Hospital" }
+  ]
+}
+

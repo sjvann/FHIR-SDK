@@ -1,0 +1,12 @@
+{
+  "name": "Patient-fluent-choice-mutex",
+  "chain": [
+    { "call": "WithDeceasedBoolean", "args": [true] },
+    { "call": "WithDeceasedDateTime", "args": ["2024-01-01T00:00:00Z"] }
+  ],
+  "asserts": [
+    { "path": "/deceasedDateTime", "contains": "2024-01-01" },
+    { "path": "/deceasedBoolean", "equals": "" }
+  ]
+}
+

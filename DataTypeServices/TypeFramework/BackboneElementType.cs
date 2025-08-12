@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace DataTypeServices.TypeFramework
 {
-    public class BackboneElementType<T> : BackboneElement<T> where T : BackboneElement<T>, new()
+    public class BackboneElementType<T> : BackboneElement<T> where T : BackboneElement<T>
     {
         public override string GetFhirTypeName(bool withCapital = true) => typeof(T).Name.ToTitleCase(withCapital);
         protected BackboneElementType() { }
@@ -42,6 +42,16 @@ namespace DataTypeServices.TypeFramework
             }
         }
         #region Private Method
+        private static bool IsBackboneElementType(Type toCheck)
+        {
+            while (toCheck != null && toCheck != typeof(object))
+            {
+                if (toCheck.IsGenericType && toCheck.GetGenericTypeDefinition().Name == "BackboneElement`1")
+                    return true;
+                toCheck = toCheck.BaseType!;
+            }
+            return false;
+        }
         private static JsonObject? SetupJsonObject(BackboneElement<T> source)
         {
             var propertyInfos = SetupPropertyValue((T)source);
@@ -147,7 +157,7 @@ namespace DataTypeServices.TypeFramework
                         }
                         property.SetValue(this, choiceValue);
                     }
-                    else if (listDataType.IsSubclassOf(typeof(BackboneElement)))
+                    else if (IsBackboneElementType(listDataType))
                     {
                         var listType = typeof(List<>).MakeGenericType(listDataType);
                         if (listType == null) continue;
@@ -189,7 +199,7 @@ namespace DataTypeServices.TypeFramework
                         var choice = Activator.CreateInstance(propertyType, [prefix, propertyValue]);
                         property.SetValue(this, choice);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(BackboneElement)))
+                    else if (IsBackboneElementType(propertyType))
                     {
                         var instance = Activator.CreateInstance(propertyType, [propertyValue]);
                         property.SetValue(this, instance);

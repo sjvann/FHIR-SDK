@@ -196,9 +196,9 @@ namespace DataTypeServices.Tests.ComplexTypes
             Assert.Equal("mon", availability.AvailableTime?.DaysOfWeek?[0].Value);
             Assert.Equal("fri", availability.AvailableTime?.DaysOfWeek?[4].Value);
             Assert.NotNull(availability.AvailableTime?.AvailableStartTime);
-            Assert.Equal("09:00:00", availability.AvailableTime?.AvailableStartTime?.Value);
+            Assert.Equal("09:00:00", availability.AvailableTime?.AvailableStartTime?.Value?.ToString("HH:mm:ss"));
             Assert.NotNull(availability.AvailableTime?.AvailableEndTime);
-            Assert.Equal("17:00:00", availability.AvailableTime?.AvailableEndTime?.Value);
+            Assert.Equal("17:00:00", availability.AvailableTime?.AvailableEndTime?.Value?.ToString("HH:mm:ss"));
         }
 
         [Fact]
@@ -254,7 +254,7 @@ namespace DataTypeServices.Tests.ComplexTypes
             {
                 Description = new FhirString("Lunch break"),
                 During = Period.Range(
-                    new FhirDateTime(new DateTime(2023, 1, 1, 12, 0, 0)), 
+                    new FhirDateTime(new DateTime(2023, 1, 1, 12, 0, 0)),
                     new FhirDateTime(new DateTime(2023, 1, 1, 13, 0, 0))
                 )
             };
@@ -291,8 +291,8 @@ namespace DataTypeServices.Tests.ComplexTypes
             // Assert
             Assert.NotNull(availability.AvailableTime);
             Assert.Equal(3, availability.AvailableTime?.DaysOfWeek?.Count);
-            Assert.Equal("08:00:00", availability.AvailableTime?.AvailableStartTime?.Value);
-            Assert.Equal("16:00:00", availability.AvailableTime?.AvailableEndTime?.Value);
+            Assert.Equal("08:00:00", availability.AvailableTime?.AvailableStartTime?.Value?.ToString("HH:mm:ss"));
+            Assert.Equal("16:00:00", availability.AvailableTime?.AvailableEndTime?.Value?.ToString("HH:mm:ss"));
             Assert.NotNull(availability.NotAvailableTime);
             Assert.Equal("Lunch break", availability.NotAvailableTime?.Description?.Value);
         }

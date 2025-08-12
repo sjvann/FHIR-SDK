@@ -1,0 +1,12 @@
+{
+  "name": "Patient-choice-mutex-fluent",
+  "chain": [
+    { "call": "WithActive", "args": [true] },
+    { "call": "WithBirthDate", "args": ["1980-01-01"] }
+  ],
+  "asserts": [
+    { "path": "/active", "equals": "true" },
+    { "path": "/birthDate", "equals": "1980-01-01" }
+  ]
+}
+

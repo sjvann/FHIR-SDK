@@ -99,7 +99,14 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// The uint value, or <c>null</c> if no value has been set or the value is invalid.
         /// </value>
         /// <exception cref="FormatException">Thrown when the string value cannot be converted to a uint.</exception>
-        public uint? Value => Convert.ToUInt32(_stringValue);
+        public uint? Value
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_stringValue)) return null;
+                return uint.TryParse(_stringValue, out var v) ? v : (uint?)null;
+            }
+        }
 
         #endregion
 

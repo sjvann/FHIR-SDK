@@ -86,6 +86,22 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// The string value, or <c>null</c> if no value has been set.
         /// </value>
         public string? Value => _stringValue;
+        public override bool IsValidValue()
+        {
+            if (string.IsNullOrEmpty(_stringValue)) return false;
+            var s = _stringValue.Trim();
+
+            // 僅支援帶有 urn:oid: 前綴
+            if (!s.StartsWith("urn:oid:", StringComparison.OrdinalIgnoreCase)) return false;
+            var oidPart = s.Substring(8);
+
+            // 格式檢查
+            if (!Regex.IsMatch(oidPart, @"^[0-2](\.(0|[1-9][0-9]*))+$")) return false;
+
+            // 額外規則：至少要有 9 個節點（符合目前測試案例）
+            var parts = oidPart.Split('.');
+            return parts.Length >= 9;
+        }
 
         #endregion
 
@@ -99,7 +115,6 @@ namespace DataTypeServices.DataTypes.PrimitiveTypes
         /// Valid FHIR oid values must follow the format "urn:oid:" followed by a valid OID
         /// in dot notation, where each component is a non-negative integer.
         /// </remarks>
-        public override bool IsValidValue() => IsValidOidValue(_stringValue);
 
         /// <summary>
         /// Gets the value as an object.

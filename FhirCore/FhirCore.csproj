@@ -5,11 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>FHIR SDK Core</Title>
+    <Title>FhirSDK.Core</Title>
     <Authors>sjvann</Authors>
-    <Description>FHIR SDK 共用性模組</Description>
+    <Description>FHIR SDK Core runtime and versioning abstractions</Description>
     <Version>1.0.0</Version>
-    <PackageId>FhirCore</PackageId>
+    <PackageId>FhirSDK.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

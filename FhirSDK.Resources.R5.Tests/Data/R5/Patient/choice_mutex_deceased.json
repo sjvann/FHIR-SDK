@@ -1,0 +1,10 @@
+{
+  "name": "Patient-choice-mutex-deceased",
+  "chain": [
+    { "call": "WithBirthDate", "args": ["1975-05-05"] }
+  ],
+  "asserts": [
+    { "path": "/birthDate", "equals": "1975-05-05" }
+  ]
+}
+

@@ -23,7 +23,8 @@ namespace DataTypeServices.Tests
             var targetFramework = assembly.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>();
             
             Assert.NotNull(targetFramework);
-            Assert.Contains("net9.0", targetFramework.FrameworkName);
+            // .NET returns framework name like ".NETCoreApp,Version=v9.0" for net9.0
+            Assert.Contains("Version=v9.0", targetFramework.FrameworkName);
         }
 
         [Theory]

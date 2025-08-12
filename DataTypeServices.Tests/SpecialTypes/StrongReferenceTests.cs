@@ -3,28 +3,43 @@ using DataTypeServices.DataTypes.PrimitiveTypes;
 using DataTypeServices.DataTypes.SpecialTypes;
 using DataTypeServices.TypeFramework;
 using FhirCore.Interfaces;
+using Ext = DataTypeServices.DataTypes.SpecialTypes;
 using System.Text.Json.Nodes;
 using Xunit;
 
 namespace DataTypeServices.Tests.SpecialTypes
 {
     // 測試用的假 Resource 類型
-    public class TestPatient : IPatientResource
+    // 最小 IResource 實作，僅供測試用，避免引入真實資源依賴
+    public class TestPatient : IResource
     {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
+        public string? Id { get; set; } = "";
+        public string ResourceType => "TestPatient";
+        public FhirCore.Interfaces.Meta? Meta { get; set; }
+        public string? ImplicitRules { get; set; }
+        public string? Language { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<FhirCore.Interfaces.Extension> Extension { get; } = new();
+        public System.Collections.ObjectModel.ObservableCollection<FhirCore.Interfaces.Extension> ModifierExtension { get; } = new();
+        public System.ComponentModel.DataAnnotations.ValidationResult Validate() => System.ComponentModel.DataAnnotations.ValidationResult.Success!;
+        public string GetFhirVersion() => "5.0.0";
 
-        public string GetResourceTypeName(bool withCapital = true) => withCapital ? "Patient" : "patient";
-        public JsonObject? GetJsonResource() => new JsonObject();
+        // 測試輔助欄位
+        public string Name { get; set; } = "";
     }
 
-    public class TestPractitioner : IPractitionerResource
+    public class TestPractitioner : IResource
     {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
+        public string? Id { get; set; } = "";
+        public string ResourceType => "TestPractitioner";
+        public FhirCore.Interfaces.Meta? Meta { get; set; }
+        public string? ImplicitRules { get; set; }
+        public string? Language { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<FhirCore.Interfaces.Extension> Extension { get; } = new();
+        public System.Collections.ObjectModel.ObservableCollection<FhirCore.Interfaces.Extension> ModifierExtension { get; } = new();
+        public System.ComponentModel.DataAnnotations.ValidationResult Validate() => System.ComponentModel.DataAnnotations.ValidationResult.Success!;
+        public string GetFhirVersion() => "5.0.0";
 
-        public string GetResourceTypeName(bool withCapital = true) => withCapital ? "Practitioner" : "practitioner";
-        public JsonObject? GetJsonResource() => new JsonObject();
+        public string Name { get; set; } = "";
     }
 
     public class StrongReferenceTests

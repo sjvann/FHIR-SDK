@@ -6,21 +6,6 @@ using System.Text.Json.Nodes;
 
 namespace DataTypeServices.DataTypes.MetaTypes
 {
-    /// <summary>
-    /// 複雜類型介面
-    /// </summary>
-    public interface IComplexType
-    {
-        // 複雜類型的基本行為
-    }
-
-    /// <summary>
-    /// 原始類型介面
-    /// </summary>
-    public interface IPrimitiveType
-    {
-        // 原始類型的基本行為
-    }
 
     /// <summary>
     /// 虛擬服務詳細資訊
@@ -141,7 +126,7 @@ namespace DataTypeServices.DataTypes.MetaTypes
         /// 從複雜類型初始化
         /// </summary>
         /// <param name="value">複雜類型</param>
-        public VirtualServiceDetailAddressChoice(IComplexType? value) : base("versionAlgorithm", value)
+        public VirtualServiceDetailAddressChoice(FhirCore.Interfaces.IComplexType? value) : base("versionAlgorithm", value)
         {
         }
         
@@ -149,7 +134,7 @@ namespace DataTypeServices.DataTypes.MetaTypes
         /// 從原始類型初始化
         /// </summary>
         /// <param name="value">原始類型</param>
-        public VirtualServiceDetailAddressChoice(IPrimitiveType? value) : base("versionAlgorithm", value) { }
+        public VirtualServiceDetailAddressChoice(FhirCore.Interfaces.IPrimitiveType? value) : base("versionAlgorithm", value) { }
 
         /// <summary>
         /// 取得前綴名稱

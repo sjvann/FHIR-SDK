@@ -144,8 +144,20 @@ namespace DataTypeServices.TypeFramework
         {
             return Id != null || (Extension != null && Extension.Count > 0);
         }
-        public JsonObject? GetElementJsonObject() => _elementValue?.GetJsonNode() as JsonObject;
-        public string GetElementJsonString() => _elementValue?.GetElementString() ?? string.Empty;
+        public JsonObject? GetElementJsonObject()
+        {
+            // Prefer explicit element value if present; otherwise derive from current Element state
+            var obj = _elementValue?.GetJsonNode() as JsonObject;
+            if (obj != null) return obj;
+            return GetElementValue() as JsonObject;
+        }
+        public string GetElementJsonString()
+        {
+            var str = _elementValue?.GetElementString();
+            if (!string.IsNullOrEmpty(str)) return str!;
+            var obj = GetElementValue() as JsonObject;
+            return obj?.SerializeCustom() ?? string.Empty;
+        }
         public virtual JsonValue? GetJsonValue() => JsonValue.Create(_stringValue);
         public override JsonNode? GetJsonObject() => GetJsonValue();
         public abstract bool IsValidValue();

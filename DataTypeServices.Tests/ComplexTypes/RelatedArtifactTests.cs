@@ -420,7 +420,7 @@ namespace DataTypeServices.Tests.ComplexTypes
             Assert.NotNull(relatedArtifact.PublicationStatus);
             Assert.Equal("published", relatedArtifact.PublicationStatus?.Value);
             Assert.NotNull(relatedArtifact.PublicationDate);
-            Assert.Equal("2023-01-15", relatedArtifact.PublicationDate?.Value);
+            Assert.Equal("2023-01-15", relatedArtifact.PublicationDate?.Value?.ToString("yyyy-MM-dd"));
         }
 
         [Fact]

@@ -1,0 +1,12 @@
+{
+  "name": "Observation-effective-mutex",
+  "chain": [
+    { "call": "WithEffectiveDateTime", "args": ["2024-05-06T12:00:00Z"] },
+    { "call": "WithEffectivePeriod", "args": ["2024-05-06T12:00:00Z", "2024-05-06T13:00:00Z"] }
+  ],
+  "asserts": [
+    { "path": "/effectivePeriod/start", "contains": "2024-05-06" },
+    { "path": "/effectiveDateTime", "equals": "" }
+  ]
+}
+
