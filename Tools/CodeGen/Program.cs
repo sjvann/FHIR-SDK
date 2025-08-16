@@ -1,42 +1,37 @@
 using System.Text;
+using CodeGen;
+
 using System.Text.Json;
 using CodeGen.Models;
 using CodeGen.Services;
 using CodeGen.Generators;
 
 // CLI entry point
-var defs = GetArg("--definitions-root");
-var ver = GetArg("--version", "R5");
-var proj = GetArg("--output-project");
-var inc = GetArg("--include", null);
-var dry = GetBool("--dry-run", true);
-
-if (string.IsNullOrWhiteSpace(defs) || string.IsNullOrWhiteSpace(proj))
-{
-    Console.Error.WriteLine("Usage: --definitions-root <path|folder> --version <R4|R5> --output-project <csproj|folder> [--include <A,B>] [--dry-run true|false]");
-    return 1;
-}
-
-if (!string.Equals(ver, "R4", StringComparison.OrdinalIgnoreCase) && !string.Equals(ver, "R5", StringComparison.OrdinalIgnoreCase))
-{
-    Console.Error.WriteLine("--version must be R4 or R5");
-    return 1;
-}
+var a = CliArgs.Parse(args);
+var defs = a.DefinitionsRoot;
+var ver = a.Version;
+var proj = a.OutputProject;
+var inc = a.Include;
+var dry = a.DryRun;
+var emitExamples = a.EmitExamples;
+var examplesSource = a.ExamplesSource;
 
 Console.WriteLine($"[CodeGen] Definitions: {defs}");
 Console.WriteLine($"[CodeGen] Version: {ver}");
 Console.WriteLine($"[CodeGen] OutputProject: {proj}");
 Console.WriteLine($"[CodeGen] Include: {inc}");
 Console.WriteLine($"[CodeGen] DryRun: {dry}");
+Console.WriteLine($"[CodeGen] EmitExamples: {emitExamples}");
+Console.WriteLine($"[CodeGen] ExamplesSource: {examplesSource}");
 
 try
 {
     // Locate profiles-resources.json
-    var profilesPath = ResolveProfilesPath(defs, ver.ToUpperInvariant());
+    var profilesPath = Helpers.ResolveProfilesPath(defs, ver.ToUpperInvariant());
 
     // Read list of resources
     using var fs = File.OpenRead(profilesPath);
-    var (allResources, total) = ReadResourceTypesFromJson(fs);
+    var (allResources, total) = Helpers.ReadResourceTypesFromJson(fs);
 
     var selected = allResources;
     if (!string.IsNullOrWhiteSpace(inc))
@@ -46,6 +41,9 @@ try
     }
 
     Console.WriteLine($"[CodeGen] Found {total} resource types; selected {selected.Count}.");
+    var selectedList = selected.ToList();
+    Console.WriteLine($"[CodeGen] Will generate {selectedList.Count} resources.");
+    var swAll = System.Diagnostics.Stopwatch.StartNew();
 
     // Load cardinalities and documentation for selected resources
     using var fs2 = File.OpenRead(profilesPath);
@@ -56,30 +54,50 @@ try
     var choices = new ChoiceService().Load(fs4, selected.ToHashSet(StringComparer.OrdinalIgnoreCase));
 
     // Prepare generator
-    var ns = string.Equals(ver, "R4", StringComparison.OrdinalIgnoreCase) ? "FhirSDK.Resources.R4" : "FhirSDK.Resources.R5";
+    var ns = $"FhirSDK.Resources.{ver.ToUpperInvariant()}";
     var emitter = new PropertyEmitter();
-    var gen = new PoCGenerator(emitter, docs, choices);
 
-    var outDir = EnsureGeneratedDir(proj);
+    // Load generic type info for all selected resources
+    using var fsTypes = File.OpenRead(profilesPath);
+    var typeInfo = new TypeInfoService().Load(fsTypes, selected.ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+    var gen = new PoCGenerator(emitter, docs, choices, typeInfo);
+
+    // Ensure target project exists and required references are present (works for new versions like R6)
+    var csprojPath = ProjectWriter.EnsureProjectFileAndReferences(proj, ver.ToUpperInvariant());
+
+    var outDir = Helpers.EnsureGeneratedDir(proj);
 
     // Registry
     var registrySrc = gen.BuildResourceRegistry(ns, ver.ToUpperInvariant(), selected);
     var registryFile = Path.Combine(outDir, $"ResourceRegistry.{ver.ToUpperInvariant()}.g.cs");
-    WriteFile(registryFile, registrySrc, dry);
+    Helpers.WriteFile(registryFile, registrySrc, dry);
 
-    // Resources
-    foreach (var r in selected)
+    // Resources (generic generation for all; keep hand-crafted overrides for known ones if needed later)
+    GenerationRunner.Run(ns, selectedList, docs, choices, typeInfo, cards, outDir, dry, Helpers.WriteFile);
+    swAll.Stop();
+    Console.WriteLine($"[CodeGen] All done. Generated {selectedList.Count} resources in {swAll.ElapsedMilliseconds} ms.");
+
+    // Backbone summary logging for visibility
+    if (!dry)
     {
-        string src = r switch
-        {
-            "Patient" => gen.BuildPatient(ns, (IReadOnlyDictionary<string, Cardinality>)cards.GetValueOrDefault("Patient", new Dictionary<string, Cardinality>())),
-            "Observation" => gen.BuildObservation(ns, (IReadOnlyDictionary<string, Cardinality>)cards.GetValueOrDefault("Observation", new Dictionary<string, Cardinality>())),
-            "Organization" => gen.BuildOrganization(ns, (IReadOnlyDictionary<string, Cardinality>)cards.GetValueOrDefault("Organization", new Dictionary<string, Cardinality>())),
-            _ => BuildSkeleton(ns, r)
-        };
+        Console.WriteLine("[CodeGen] Backbone generation summary:");
+        Console.WriteLine("[CodeGen] Top-level backbone classes are emitted as nested partial classes inside each resource.");
 
-        var file = Path.Combine(outDir, $"{r}.g.cs");
-        WriteFile(file, src, dry);
+    // Optionally embed example JSON files into the resource project
+    if (emitExamples)
+    {
+        try
+        {
+            ExamplesWriter.EmitExamples(csprojPath, ver, selected, examplesSource);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CodeGen] WARN: Failed to emit examples: {ex.Message}");
+        }
+    }
+
+        Console.WriteLine("[CodeGen] Each backbone emits its immediate child properties; deeper nesting will be iteratively expanded in future passes if required.");
     }
 }
 catch (Exception ex)
@@ -186,8 +204,192 @@ void WriteFile(string path, string content, bool isDryRun)
     if (isDryRun)
     {
         Console.WriteLine($"[CodeGen] Dry-run on. Would write: {path}");
+
+// Ensure a target project file exists (if a directory is passed), and ensure it contains required project references
+#if false
+string EnsureProjectFileAndReferences(string outputProjectArg, string version)
+{
+    // If a csproj path was passed, use it; otherwise create a default project file in the directory
+    string csprojPath;
+    if (File.Exists(outputProjectArg) && outputProjectArg.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+    {
+        csprojPath = Path.GetFullPath(outputProjectArg);
+    }
+    else if (Directory.Exists(outputProjectArg))
+    {
+        var dir = Path.GetFullPath(outputProjectArg);
+        var name = $"FhirSDK.Resources.{version}";
+        csprojPath = Path.Combine(dir, $"{name}.csproj");
+        if (!File.Exists(csprojPath))
+        {
+            var content = $@"<Project Sdk=\"Microsoft.NET.Sdk\">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Title>FhirSDK.Resources.{version}</Title>
+    <Authors>sjvann</Authors>
+    <Description>FHIR SDK {version} resource models (auto-generated)</Description>
+    <Version>0.1.0</Version>
+    <PackageId>FhirSDK.Resources.{version}</PackageId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\\$(Configuration)\\$(TargetFramework)\\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include=\"..\\FhirCore\\FhirCore.csproj\" />
+    <ProjectReference Include=\"..\\DataTypeServices\\DataTypeServices.csproj\" />
+    <ProjectReference Include=\"..\\Fhir.TypeFramework\\Fhir.TypeFramework.csproj\" />
+  </ItemGroup>
+</Project>";
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(csprojPath, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            Console.WriteLine($"[CodeGen] Created project file: {csprojPath}");
+        }
+    }
+    else
+    {
+        throw new DirectoryNotFoundException($"Output project not found: {outputProjectArg}");
+    }
+
+    // Ensure required references exist in the csproj
+    var xml = File.ReadAllText(csprojPath);
+    bool changed = false;
+    string[] requiredRefs = new[]
+    {
+        "..\\FhirCore\\FhirCore.csproj",
+        "..\\DataTypeServices\\DataTypeServices.csproj",
+        "..\\Fhir.TypeFramework\\Fhir.TypeFramework.csproj"
+    };
+    foreach (var r in requiredRefs)
+    {
+        if (!xml.Contains(r, StringComparison.OrdinalIgnoreCase))
+        {
+            // insert before closing </ItemGroup> if exists, else create one
+            if (xml.Contains("</ItemGroup>", StringComparison.OrdinalIgnoreCase))
+            {
+                xml = xml.Replace("</ItemGroup>", $"  <ProjectReference Include=\"{r}\" />\n  </ItemGroup>");
+            }
+            else
+            {
+                var insert = $"  <ItemGroup>\n    <ProjectReference Include=\"{r}\" />\n  </ItemGroup>\n";
+                xml = xml.Replace("</Project>", insert + "</Project>");
+            }
+            changed = true;
+        }
+    }
+    if (changed)
+    {
+        File.WriteAllText(csprojPath, xml, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        Console.WriteLine($"[CodeGen] Updated project references in: {csprojPath}");
+    }
+
+    return csprojPath;
+}
+
+#endif
         return;
     }
     File.WriteAllText(path, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     Console.WriteLine($"[CodeGen] Wrote: {path}");
+}
+
+
+// Ensure a target project file exists (if a directory is passed), and ensure it contains required project references
+string EnsureProjectFileAndReferences(string outputProjectArg, string version)
+{
+    // If a csproj path was passed, use it; otherwise create a default project file in the directory
+    string csprojPath;
+    if (File.Exists(outputProjectArg) && outputProjectArg.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+    {
+        csprojPath = Path.GetFullPath(outputProjectArg);
+    }
+    else if (Directory.Exists(outputProjectArg))
+    {
+        var dir = Path.GetFullPath(outputProjectArg);
+        var name = $"FhirSDK.Resources.{version}";
+        csprojPath = Path.Combine(dir, $"{name}.csproj");
+        if (!File.Exists(csprojPath))
+        {
+            var sbp = new StringBuilder();
+            sbp.AppendLine("<Project Sdk=\"Microsoft.NET.Sdk\">");
+            sbp.AppendLine("  <PropertyGroup>");
+            sbp.AppendLine("    <TargetFramework>net9.0</TargetFramework>");
+            sbp.AppendLine("    <ImplicitUsings>enable</ImplicitUsings>");
+            sbp.AppendLine("    <Nullable>enable</Nullable>");
+            sbp.AppendLine("    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>");
+            sbp.AppendLine($"    <Title>FhirSDK.Resources.{version}</Title>");
+            sbp.AppendLine("    <Authors>sjvann</Authors>");
+            sbp.AppendLine($"    <Description>FHIR SDK {version} resource models (auto-generated)</Description>");
+            sbp.AppendLine("    <Version>0.1.0</Version>");
+            sbp.AppendLine($"    <PackageId>FhirSDK.Resources.{version}</PackageId>");
+            sbp.AppendLine("    <GenerateDocumentationFile>true</GenerateDocumentationFile>");
+            sbp.AppendLine("    <DocumentationFile>bin\\$(Configuration)\\$(TargetFramework)\\$(AssemblyName).xml</DocumentationFile>");
+            sbp.AppendLine("    <NoWarn>$(NoWarn);1591</NoWarn>");
+            sbp.AppendLine("  </PropertyGroup>");
+            sbp.AppendLine("  <ItemGroup>");
+            sbp.AppendLine("    <ProjectReference Include=\"..\\FhirCore\\FhirCore.csproj\" />");
+            sbp.AppendLine("    <ProjectReference Include=\"..\\DataTypeServices\\DataTypeServices.csproj\" />");
+            sbp.AppendLine("    <ProjectReference Include=\"..\\Fhir.TypeFramework\\Fhir.TypeFramework.csproj\" />");
+            sbp.AppendLine("  </ItemGroup>");
+            sbp.AppendLine("</Project>");
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(csprojPath, sbp.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            Console.WriteLine($"[CodeGen] Created project file: {csprojPath}");
+        }
+    }
+    else
+    {
+        throw new DirectoryNotFoundException($"Output project not found: {outputProjectArg}");
+    }
+
+    // Ensure required references exist in the csproj
+    var xml = File.ReadAllText(csprojPath);
+    bool changed = false;
+
+    // Remove any accidental reference to Fhir.TypeFramework (it's not required for generated resources)
+    if (xml.IndexOf("Fhir.TypeFramework.csproj", StringComparison.OrdinalIgnoreCase) >= 0)
+    {
+        var lines = xml.Split(new[] {"\r\n", "\n"}, StringSplitOptions.None);
+        var filtered = new List<string>(lines.Length);
+        foreach (var l in lines)
+        {
+            if (l.IndexOf("Fhir.TypeFramework.csproj", StringComparison.OrdinalIgnoreCase) < 0)
+                filtered.Add(l);
+            else
+                changed = true;
+        }
+        xml = string.Join("\n", filtered);
+    }
+
+    string[] requiredRefs = new[]
+    {
+        "..\\FhirCore\\FhirCore.csproj",
+        "..\\DataTypeServices\\DataTypeServices.csproj"
+    };
+    foreach (var r in requiredRefs)
+    {
+        if (!xml.Contains(r, StringComparison.OrdinalIgnoreCase))
+        {
+            // insert before closing </ItemGroup> if exists, else create one
+            if (xml.Contains("</ItemGroup>", StringComparison.OrdinalIgnoreCase))
+            {
+                xml = xml.Replace("</ItemGroup>", $"  <ProjectReference Include=\"{r}\" />\n  </ItemGroup>");
+            }
+            else
+            {
+                var insert = $"  <ItemGroup>\n    <ProjectReference Include=\"{r}\" />\n  </ItemGroup>\n";
+                xml = xml.Replace("</Project>", insert + "</Project>");
+            }
+            changed = true;
+        }
+    }
+    if (changed)
+    {
+        File.WriteAllText(csprojPath, xml, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        Console.WriteLine($"[CodeGen] Updated project references in: {csprojPath}");
+    }
+
+    return csprojPath;
 }

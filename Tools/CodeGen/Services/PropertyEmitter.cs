@@ -101,22 +101,22 @@ public sealed class PropertyEmitter : IPropertyEmitter
         {
             if (c.IsRequired)
             {
-                return $"private List<{csType}> {field} = new();\n        [JsonPropertyName(\"{jsonName}\")]\n        public List<{csType}> {propName} {{ get => {field}; set {{ {field} = value; OnPropertyChanged(\"{jsonName}\", value); }} }}";
+                return $"private List<{csType}> {field} = new();\n        [JsonPropertyName(\"{jsonName}\")]\n        public List<{csType}> {propName} {{ get => {field}; set {{ {field} = value; }} }}";
             }
             else
             {
-                return $"private List<{csType}>? {field};\n        [JsonPropertyName(\"{jsonName}\")]\n        public List<{csType}>? {propName} {{ get => {field}; set {{ {field} = value; OnPropertyChanged(\"{jsonName}\", value); }} }}";
+                return $"private List<{csType}>? {field};\n        [JsonPropertyName(\"{jsonName}\")]\n        public List<{csType}>? {propName} {{ get => {field}; set {{ {field} = value; }} }}";
             }
         }
         else
         {
             if (c.IsRequired)
             {
-                return $"private {csType}? {field};\n        [JsonPropertyName(\"{jsonName}\")]\n        public {csType} {propName} {{ get => {field} ?? throw new InvalidOperationException(\"{propName} is required\"); set {{ {field} = value; OnPropertyChanged(\"{jsonName}\", value); }} }}";
+                return $"private {csType}? {field};\n        [JsonPropertyName(\"{jsonName}\")]\n        public {csType} {propName} {{ get => {field} ?? throw new InvalidOperationException(\"{propName} is required\"); set {{ {field} = value; }} }}";
             }
             else
             {
-                return $"private {csType}? {field};\n        [JsonPropertyName(\"{jsonName}\")]\n        public {csType}? {propName} {{ get => {field}; set {{ {field} = value; OnPropertyChanged(\"{jsonName}\", value); }} }}";
+                return $"private {csType}? {field};\n        [JsonPropertyName(\"{jsonName}\")]\n        public {csType}? {propName} {{ get => {field}; set {{ {field} = value; }} }}";
             }
         }
     }

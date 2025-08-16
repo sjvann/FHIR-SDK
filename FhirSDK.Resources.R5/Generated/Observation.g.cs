@@ -7,10 +7,13 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Linq;
 using FhirCore.Base;
-using FhirCore.Interfaces;
 using DataTypeServices.TypeFramework;
+using DataTypeServices.DataTypes.MetaTypes;
 namespace FhirSDK.Resources.R5
 {
+    /// <summary>
+    /// Measurements and simple assertions
+    /// </summary>
     public partial class Observation : ResourceBase
     {
         public override string ResourceType => "Observation";
@@ -18,207 +21,319 @@ namespace FhirSDK.Resources.R5
         public Observation() { }
         public Observation(string json) { SetRawFrom(JsonNode.Parse(json)); }
         public Observation(JsonNode? source) { SetRawFrom(source); }
-        // JSON handled by ResourceBase.UpdateRaw via OnPropertyChanged
+        protected override void OnPropertyChanged(string propertyName, object? newValue) { base.OnPropertyChanged(propertyName, newValue); }
 
-        private FhirCode? _status;
-        [JsonPropertyName("status")]
-        public FhirCode Status { get => _status ?? throw new InvalidOperationException("Status is required"); set { _status = value; OnPropertyChangedByClr(nameof(Status), value); } }
-        private List<CodeableConcept>? _category;
-        [JsonPropertyName("category")]
-        public List<CodeableConcept>? Category { get => _category; set { _category = value; OnPropertyChangedByClr(nameof(Category), value); } }
-        private CodeableConcept? _code;
-        [JsonPropertyName("code")]
-        public CodeableConcept Code { get => _code ?? throw new InvalidOperationException("Code is required"); set { _code = value; OnPropertyChangedByClr(nameof(Code), value); } }
-        private ReferenceType? _subject;
-        [JsonPropertyName("subject")]
-        public ReferenceType? Subject { get => _subject; set { _subject = value; OnPropertyChangedByClr(nameof(Subject), value); } }
+        private List<ReferenceType>? _basedOn;
+        [JsonPropertyName("basedOn")]
+        public List<ReferenceType>? BasedOn { get => _basedOn; set { _basedOn = value; OnPropertyChangedByClr(nameof(BasedOn), value); } }
 
-        // effective[x]
-        private FhirDateTime? _effectiveDateTime;
-        [JsonPropertyName("effectiveDateTime")]
-        public FhirDateTime? EffectiveDateTime { get => _effectiveDateTime; set { _effectiveDateTime = value; if (value != null) {{ _effectivePeriod = null; OnPropertyChangedByClr(nameof(EffectivePeriod), null); _effectiveTiming = null; OnPropertyChangedByClr(nameof(EffectiveTiming), null); _effectiveInstant = null; OnPropertyChangedByClr(nameof(EffectiveInstant), null); }}; OnPropertyChangedByClr(nameof(EffectiveDateTime), value); } }
-        private Period? _effectivePeriod;
-        [JsonPropertyName("effectivePeriod")]
-        public Period? EffectivePeriod { get => _effectivePeriod; set { _effectivePeriod = value; if (value != null) {{ _effectiveDateTime = null; OnPropertyChangedByClr(nameof(EffectiveDateTime), null); _effectiveTiming = null; OnPropertyChangedByClr(nameof(EffectiveTiming), null); _effectiveInstant = null; OnPropertyChangedByClr(nameof(EffectiveInstant), null); }}; OnPropertyChangedByClr(nameof(EffectivePeriod), value); } }
-        private Timing? _effectiveTiming;
-        [JsonPropertyName("effectiveTiming")]
-        public Timing? EffectiveTiming { get => _effectiveTiming; set { _effectiveTiming = value; if (value != null) {{ _effectiveDateTime = null; OnPropertyChangedByClr(nameof(EffectiveDateTime), null); _effectivePeriod = null; OnPropertyChangedByClr(nameof(EffectivePeriod), null); _effectiveInstant = null; OnPropertyChangedByClr(nameof(EffectiveInstant), null); }}; OnPropertyChangedByClr(nameof(EffectiveTiming), value); } }
-        private FhirInstant? _effectiveInstant;
-        [JsonPropertyName("effectiveInstant")]
-        public FhirInstant? EffectiveInstant { get => _effectiveInstant; set { _effectiveInstant = value; if (value != null) {{ _effectiveDateTime = null; OnPropertyChangedByClr(nameof(EffectiveDateTime), null); _effectivePeriod = null; OnPropertyChangedByClr(nameof(EffectivePeriod), null); _effectiveTiming = null; OnPropertyChangedByClr(nameof(EffectiveTiming), null); }}; OnPropertyChangedByClr(nameof(EffectiveInstant), value); } }
-
-        private FhirInstant? _issued;
-        [JsonPropertyName("issued")]
-        public FhirInstant? Issued { get => _issued; set { _issued = value; OnPropertyChangedByClr(nameof(Issued), value); } }
-        private List<ReferenceType>? _performer;
-        [JsonPropertyName("performer")]
-        public List<ReferenceType>? Performer { get => _performer; set { _performer = value; OnPropertyChangedByClr(nameof(Performer), value); } }
-
-        // value[x]
-        private Quantity? _valueQuantity;
-        [JsonPropertyName("valueQuantity")]
-        public Quantity? ValueQuantity { get => _valueQuantity; set { _valueQuantity = value; if (value != null) {{ _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueQuantity), value); } }
-        private CodeableConcept? _valueCodeableConcept;
-        [JsonPropertyName("valueCodeableConcept")]
-        public CodeableConcept? ValueCodeableConcept { get => _valueCodeableConcept; set { _valueCodeableConcept = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueCodeableConcept), value); } }
-        private FhirString? _valueString;
-        [JsonPropertyName("valueString")]
-        public FhirString? ValueString { get => _valueString; set { _valueString = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueString), value); } }
-        private FhirBoolean? _valueBoolean;
-        [JsonPropertyName("valueBoolean")]
-        public FhirBoolean? ValueBoolean { get => _valueBoolean; set { _valueBoolean = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueBoolean), value); } }
-        private FhirInteger? _valueInteger;
-        [JsonPropertyName("valueInteger")]
-        public FhirInteger? ValueInteger { get => _valueInteger; set { _valueInteger = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueInteger), value); } }
-        private DataTypeServices.DataTypes.ComplexTypes.Range? _valueRange;
-        [JsonPropertyName("valueRange")]
-        public DataTypeServices.DataTypes.ComplexTypes.Range? ValueRange { get => _valueRange; set { _valueRange = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueRange), value); } }
-        private Ratio? _valueRatio;
-        [JsonPropertyName("valueRatio")]
-        public Ratio? ValueRatio { get => _valueRatio; set { _valueRatio = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueRatio), value); } }
-        private SampledData? _valueSampledData;
-        [JsonPropertyName("valueSampledData")]
-        public SampledData? ValueSampledData { get => _valueSampledData; set { _valueSampledData = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueSampledData), value); } }
-        private FhirTime? _valueTime;
-        [JsonPropertyName("valueTime")]
-        public FhirTime? ValueTime { get => _valueTime; set { _valueTime = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueTime), value); } }
-        private FhirDateTime? _valueDateTime;
-        [JsonPropertyName("valueDateTime")]
-        public FhirDateTime? ValueDateTime { get => _valueDateTime; set { _valueDateTime = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueDateTime), value); } }
-        private Period? _valuePeriod;
-        [JsonPropertyName("valuePeriod")]
-        public Period? ValuePeriod { get => _valuePeriod; set { _valuePeriod = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValuePeriod), value); } }
-        private Attachment? _valueAttachment;
-        [JsonPropertyName("valueAttachment")]
-        public Attachment? ValueAttachment { get => _valueAttachment; set { _valueAttachment = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueAttachment), value); } }
-        private ReferenceType? _valueReference;
-        [JsonPropertyName("valueReference")]
-        public ReferenceType? ValueReference { get => _valueReference; set { _valueReference = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); }}; OnPropertyChangedByClr(nameof(ValueReference), value); } }
-
-        // Facade Choice for effective[x] (Phase A, JsonIgnore)
-        [System.Text.Json.Serialization.JsonIgnore]
-        public ObservationEffectiveChoice? Effective { get { if (EffectiveDateTime != null) return new ObservationEffectiveChoice { DateTime = EffectiveDateTime }; if (EffectivePeriod != null) return new ObservationEffectiveChoice { Period = EffectivePeriod }; if (EffectiveTiming != null) return new ObservationEffectiveChoice { Timing = EffectiveTiming }; if (EffectiveInstant != null) return new ObservationEffectiveChoice { Instant = EffectiveInstant }; return null; } set { if (value == null) { EffectiveDateTime = null; EffectivePeriod = null; EffectiveTiming = null; EffectiveInstant = null; } else if (value.DateTime != null) { EffectiveDateTime = value.DateTime; } else if (value.Period != null) { EffectivePeriod = value.Period; } else if (value.Timing != null) { EffectiveTiming = value.Timing; } else if (value.Instant != null) { EffectiveInstant = value.Instant; } } }
-
-        public sealed class ObservationEffectiveChoice
-        {
-            public FhirDateTime? DateTime { get; init; }
-            public Period? Period { get; init; }
-            public Timing? Timing { get; init; }
-            public FhirInstant? Instant { get; init; }
-            public static ObservationEffectiveChoice FromDateTime(FhirDateTime v) => new ObservationEffectiveChoice { DateTime = v };
-            public static ObservationEffectiveChoice FromPeriod(Period v) => new ObservationEffectiveChoice { Period = v };
-            public static ObservationEffectiveChoice FromTiming(Timing v) => new ObservationEffectiveChoice { Timing = v };
-            public static ObservationEffectiveChoice FromInstant(FhirInstant v) => new ObservationEffectiveChoice { Instant = v };
-        }
-
-        private CodeableConcept? _dataAbsentReason;
-        [JsonPropertyName("dataAbsentReason")]
-        public CodeableConcept? DataAbsentReason { get => _dataAbsentReason; set { _dataAbsentReason = value; OnPropertyChangedByClr(nameof(DataAbsentReason), value); } }
-        private List<CodeableConcept>? _interpretation;
-        [JsonPropertyName("interpretation")]
-        public List<CodeableConcept>? Interpretation { get => _interpretation; set { _interpretation = value; OnPropertyChangedByClr(nameof(Interpretation), value); } }
-        private List<Annotation>? _note;
-        [JsonPropertyName("note")]
-        public List<Annotation>? Note { get => _note; set { _note = value; OnPropertyChangedByClr(nameof(Note), value); } }
         private CodeableConcept? _bodySite;
         [JsonPropertyName("bodySite")]
         public CodeableConcept? BodySite { get => _bodySite; set { _bodySite = value; OnPropertyChangedByClr(nameof(BodySite), value); } }
-        private CodeableConcept? _method;
-        [JsonPropertyName("method")]
-        public CodeableConcept? Method { get => _method; set { _method = value; OnPropertyChangedByClr(nameof(Method), value); } }
-        private ReferenceType? _specimen;
-        [JsonPropertyName("specimen")]
-        public ReferenceType? Specimen { get => _specimen; set { _specimen = value; OnPropertyChangedByClr(nameof(Specimen), value); } }
-        private ReferenceType? _device;
-        [JsonPropertyName("device")]
-        public ReferenceType? Device { get => _device; set { _device = value; OnPropertyChangedByClr(nameof(Device), value); } }
 
-        private List<Observation_ReferenceRange>? _referenceRange;
-        [JsonPropertyName("referenceRange")]
-        public List<Observation_ReferenceRange>? ReferenceRange { get => _referenceRange; set { _referenceRange = value; OnPropertyChangedByClr(nameof(ReferenceRange), value); } }
+        private ReferenceType? _bodyStructure;
+        [JsonPropertyName("bodyStructure")]
+        public ReferenceType? BodyStructure { get => _bodyStructure; set { _bodyStructure = value; OnPropertyChangedByClr(nameof(BodyStructure), value); } }
+
+        private List<CodeableConcept>? _category;
+        [JsonPropertyName("category")]
+        public List<CodeableConcept>? Category { get => _category; set { _category = value; OnPropertyChangedByClr(nameof(Category), value); } }
+
+        private CodeableConcept? _code;
+        [JsonPropertyName("code")]
+        public CodeableConcept Code { get => _code ?? throw new InvalidOperationException("Code is required"); set { _code = value; OnPropertyChangedByClr(nameof(Code), value); } }
+
         private List<Observation_Component>? _component;
         [JsonPropertyName("component")]
         public List<Observation_Component>? Component { get => _component; set { _component = value; OnPropertyChangedByClr(nameof(Component), value); } }
 
-        public partial class Observation_ReferenceRange : BackboneElement<Observation_ReferenceRange>
-        {
-            public override string GetFhirTypeName(bool withCapital = true) => withCapital ? "ReferenceRange" : "referenceRange";
-            private Quantity? _low;
-        [JsonPropertyName("low")]
-        public Quantity? Low { get => _low; set { _low = value; OnPropertyChanged("low", value); } }
-            private Quantity? _high;
-        [JsonPropertyName("high")]
-        public Quantity? High { get => _high; set { _high = value; OnPropertyChanged("high", value); } }
-            private CodeableConcept? _type;
-        [JsonPropertyName("type")]
-        public CodeableConcept? Type { get => _type; set { _type = value; OnPropertyChanged("type", value); } }
-            private List<CodeableConcept>? _appliesTo;
-        [JsonPropertyName("appliesTo")]
-        public List<CodeableConcept>? AppliesTo { get => _appliesTo; set { _appliesTo = value; OnPropertyChanged("appliesTo", value); } }
-            private DataTypeServices.DataTypes.ComplexTypes.Range? _age;
-        [JsonPropertyName("age")]
-        public DataTypeServices.DataTypes.ComplexTypes.Range? Age { get => _age; set { _age = value; OnPropertyChanged("age", value); } }
-            private FhirString? _text;
-        [JsonPropertyName("text")]
-        public FhirString? Text { get => _text; set { _text = value; OnPropertyChanged("text", value); } }
-        }
-
+        /// <summary>
+        /// Component results
+        /// </summary>
         public partial class Observation_Component : BackboneElement<Observation_Component>
         {
-            public override string GetFhirTypeName(bool withCapital = true) => withCapital ? "Component" : "component";
+            public override string GetFhirTypeName(bool withCapital = true) => withCapital ? "Observation_Component" : "observation_Component";
             private CodeableConcept? _code;
         [JsonPropertyName("code")]
-        public CodeableConcept Code { get => _code ?? throw new InvalidOperationException("Code is required"); set { _code = value; OnPropertyChanged("code", value); } }
-            // value[x]
+        public CodeableConcept Code { get => _code ?? throw new InvalidOperationException("Code is required"); set { _code = value; } }
+
+            private CodeableConcept? _dataAbsentReason;
+        [JsonPropertyName("dataAbsentReason")]
+        public CodeableConcept? DataAbsentReason { get => _dataAbsentReason; set { _dataAbsentReason = value; } }
+
+            private List<CodeableConcept>? _interpretation;
+        [JsonPropertyName("interpretation")]
+        public List<CodeableConcept>? Interpretation { get => _interpretation; set { _interpretation = value; } }
+
+            private List<FhirString>? _referenceRange;
+        [JsonPropertyName("referenceRange")]
+        public List<FhirString>? ReferenceRange { get => _referenceRange; set { _referenceRange = value; } }
+
             private Quantity? _valueQuantity;
         [JsonPropertyName("valueQuantity")]
         public Quantity? ValueQuantity { get => _valueQuantity; set { _valueQuantity = value; if (value != null) {{ _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueQuantity", value); } }
+
             private CodeableConcept? _valueCodeableConcept;
         [JsonPropertyName("valueCodeableConcept")]
         public CodeableConcept? ValueCodeableConcept { get => _valueCodeableConcept; set { _valueCodeableConcept = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueCodeableConcept", value); } }
+
             private FhirString? _valueString;
         [JsonPropertyName("valueString")]
         public FhirString? ValueString { get => _valueString; set { _valueString = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueString", value); } }
+
             private FhirBoolean? _valueBoolean;
         [JsonPropertyName("valueBoolean")]
         public FhirBoolean? ValueBoolean { get => _valueBoolean; set { _valueBoolean = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueBoolean", value); } }
+
             private FhirInteger? _valueInteger;
         [JsonPropertyName("valueInteger")]
         public FhirInteger? ValueInteger { get => _valueInteger; set { _valueInteger = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueInteger", value); } }
+
             private DataTypeServices.DataTypes.ComplexTypes.Range? _valueRange;
         [JsonPropertyName("valueRange")]
         public DataTypeServices.DataTypes.ComplexTypes.Range? ValueRange { get => _valueRange; set { _valueRange = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueRange", value); } }
+
             private Ratio? _valueRatio;
         [JsonPropertyName("valueRatio")]
         public Ratio? ValueRatio { get => _valueRatio; set { _valueRatio = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueRatio", value); } }
+
             private SampledData? _valueSampledData;
         [JsonPropertyName("valueSampledData")]
         public SampledData? ValueSampledData { get => _valueSampledData; set { _valueSampledData = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueSampledData", value); } }
+
             private FhirTime? _valueTime;
         [JsonPropertyName("valueTime")]
         public FhirTime? ValueTime { get => _valueTime; set { _valueTime = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueTime", value); } }
+
             private FhirDateTime? _valueDateTime;
         [JsonPropertyName("valueDateTime")]
         public FhirDateTime? ValueDateTime { get => _valueDateTime; set { _valueDateTime = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueDateTime", value); } }
+
             private Period? _valuePeriod;
         [JsonPropertyName("valuePeriod")]
         public Period? ValuePeriod { get => _valuePeriod; set { _valuePeriod = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valuePeriod", value); } }
+
             private Attachment? _valueAttachment;
         [JsonPropertyName("valueAttachment")]
         public Attachment? ValueAttachment { get => _valueAttachment; set { _valueAttachment = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueReference = null; OnPropertyChanged("valueReference", null); }}; OnPropertyChanged("valueAttachment", value); } }
+
             private ReferenceType? _valueReference;
         [JsonPropertyName("valueReference")]
         public ReferenceType? ValueReference { get => _valueReference; set { _valueReference = value; if (value != null) {{ _valueQuantity = null; OnPropertyChanged("valueQuantity", null); _valueCodeableConcept = null; OnPropertyChanged("valueCodeableConcept", null); _valueString = null; OnPropertyChanged("valueString", null); _valueBoolean = null; OnPropertyChanged("valueBoolean", null); _valueInteger = null; OnPropertyChanged("valueInteger", null); _valueRange = null; OnPropertyChanged("valueRange", null); _valueRatio = null; OnPropertyChanged("valueRatio", null); _valueSampledData = null; OnPropertyChanged("valueSampledData", null); _valueTime = null; OnPropertyChanged("valueTime", null); _valueDateTime = null; OnPropertyChanged("valueDateTime", null); _valuePeriod = null; OnPropertyChanged("valuePeriod", null); _valueAttachment = null; OnPropertyChanged("valueAttachment", null); }}; OnPropertyChanged("valueReference", value); } }
 
-            private CodeableConcept? _dataAbsentReason;
-        [JsonPropertyName("dataAbsentReason")]
-        public CodeableConcept? DataAbsentReason { get => _dataAbsentReason; set { _dataAbsentReason = value; OnPropertyChanged("dataAbsentReason", value); } }
-            private List<CodeableConcept>? _interpretation;
-        [JsonPropertyName("interpretation")]
-        public List<CodeableConcept>? Interpretation { get => _interpretation; set { _interpretation = value; OnPropertyChanged("interpretation", value); } }
-            private List<Observation_ReferenceRange>? _referenceRange;
-        [JsonPropertyName("referenceRange")]
-        public List<Observation_ReferenceRange>? ReferenceRange { get => _referenceRange; set { _referenceRange = value; OnPropertyChanged("referenceRange", value); } }
         }
+
+        private List<Resource>? _contained;
+        [JsonPropertyName("contained")]
+        public List<Resource>? Contained { get => _contained; set { _contained = value; OnPropertyChangedByClr(nameof(Contained), value); } }
+
+        private CodeableConcept? _dataAbsentReason;
+        [JsonPropertyName("dataAbsentReason")]
+        public CodeableConcept? DataAbsentReason { get => _dataAbsentReason; set { _dataAbsentReason = value; OnPropertyChangedByClr(nameof(DataAbsentReason), value); } }
+
+        private List<ReferenceType>? _derivedFrom;
+        [JsonPropertyName("derivedFrom")]
+        public List<ReferenceType>? DerivedFrom { get => _derivedFrom; set { _derivedFrom = value; OnPropertyChangedByClr(nameof(DerivedFrom), value); } }
+
+        private ReferenceType? _device;
+        [JsonPropertyName("device")]
+        public ReferenceType? Device { get => _device; set { _device = value; OnPropertyChangedByClr(nameof(Device), value); } }
+
+        private FhirDateTime? _effectiveDateTime;
+        [JsonPropertyName("effectiveDateTime")]
+        public FhirDateTime? EffectiveDateTime { get => _effectiveDateTime; set { _effectiveDateTime = value; if (value != null) {{ _effectivePeriod = null; OnPropertyChangedByClr(nameof(EffectivePeriod), null); _effectiveTiming = null; OnPropertyChangedByClr(nameof(EffectiveTiming), null); _effectiveInstant = null; OnPropertyChangedByClr(nameof(EffectiveInstant), null); }}; OnPropertyChangedByClr(nameof(EffectiveDateTime), value); } }
+
+        private Period? _effectivePeriod;
+        [JsonPropertyName("effectivePeriod")]
+        public Period? EffectivePeriod { get => _effectivePeriod; set { _effectivePeriod = value; if (value != null) {{ _effectiveDateTime = null; OnPropertyChangedByClr(nameof(EffectiveDateTime), null); _effectiveTiming = null; OnPropertyChangedByClr(nameof(EffectiveTiming), null); _effectiveInstant = null; OnPropertyChangedByClr(nameof(EffectiveInstant), null); }}; OnPropertyChangedByClr(nameof(EffectivePeriod), value); } }
+
+        private Timing? _effectiveTiming;
+        [JsonPropertyName("effectiveTiming")]
+        public Timing? EffectiveTiming { get => _effectiveTiming; set { _effectiveTiming = value; if (value != null) {{ _effectiveDateTime = null; OnPropertyChangedByClr(nameof(EffectiveDateTime), null); _effectivePeriod = null; OnPropertyChangedByClr(nameof(EffectivePeriod), null); _effectiveInstant = null; OnPropertyChangedByClr(nameof(EffectiveInstant), null); }}; OnPropertyChangedByClr(nameof(EffectiveTiming), value); } }
+
+        private FhirInstant? _effectiveInstant;
+        [JsonPropertyName("effectiveInstant")]
+        public FhirInstant? EffectiveInstant { get => _effectiveInstant; set { _effectiveInstant = value; if (value != null) {{ _effectiveDateTime = null; OnPropertyChangedByClr(nameof(EffectiveDateTime), null); _effectivePeriod = null; OnPropertyChangedByClr(nameof(EffectivePeriod), null); _effectiveTiming = null; OnPropertyChangedByClr(nameof(EffectiveTiming), null); }}; OnPropertyChangedByClr(nameof(EffectiveInstant), value); } }
+
+        private ReferenceType? _encounter;
+        [JsonPropertyName("encounter")]
+        public ReferenceType? Encounter { get => _encounter; set { _encounter = value; OnPropertyChangedByClr(nameof(Encounter), value); } }
+
+        private List<ReferenceType>? _focus;
+        [JsonPropertyName("focus")]
+        public List<ReferenceType>? Focus { get => _focus; set { _focus = value; OnPropertyChangedByClr(nameof(Focus), value); } }
+
+        private List<ReferenceType>? _hasMember;
+        [JsonPropertyName("hasMember")]
+        public List<ReferenceType>? HasMember { get => _hasMember; set { _hasMember = value; OnPropertyChangedByClr(nameof(HasMember), value); } }
+
+        private List<Identifier>? _identifier;
+        [JsonPropertyName("identifier")]
+        public List<Identifier>? Identifier { get => _identifier; set { _identifier = value; OnPropertyChangedByClr(nameof(Identifier), value); } }
+
+        private FhirCanonical? _instantiatescanonical;
+        [JsonPropertyName("instantiatescanonical")]
+        public FhirCanonical? Instantiatescanonical { get => _instantiatescanonical; set { _instantiatescanonical = value; if (value != null) {{ _instantiatesReference = null; OnPropertyChangedByClr(nameof(InstantiatesReference), null); }}; OnPropertyChangedByClr(nameof(Instantiatescanonical), value); } }
+
+        private ReferenceType? _instantiatesReference;
+        [JsonPropertyName("instantiatesReference")]
+        public ReferenceType? InstantiatesReference { get => _instantiatesReference; set { _instantiatesReference = value; if (value != null) {{ _instantiatescanonical = null; OnPropertyChangedByClr(nameof(Instantiatescanonical), null); }}; OnPropertyChangedByClr(nameof(InstantiatesReference), value); } }
+
+        private List<CodeableConcept>? _interpretation;
+        [JsonPropertyName("interpretation")]
+        public List<CodeableConcept>? Interpretation { get => _interpretation; set { _interpretation = value; OnPropertyChangedByClr(nameof(Interpretation), value); } }
+
+        private FhirInstant? _issued;
+        [JsonPropertyName("issued")]
+        public FhirInstant? Issued { get => _issued; set { _issued = value; OnPropertyChangedByClr(nameof(Issued), value); } }
+
+        private CodeableConcept? _method;
+        [JsonPropertyName("method")]
+        public CodeableConcept? Method { get => _method; set { _method = value; OnPropertyChangedByClr(nameof(Method), value); } }
+
+        private List<Annotation>? _note;
+        [JsonPropertyName("note")]
+        public List<Annotation>? Note { get => _note; set { _note = value; OnPropertyChangedByClr(nameof(Note), value); } }
+
+        private List<ReferenceType>? _partOf;
+        [JsonPropertyName("partOf")]
+        public List<ReferenceType>? PartOf { get => _partOf; set { _partOf = value; OnPropertyChangedByClr(nameof(PartOf), value); } }
+
+        private List<ReferenceType>? _performer;
+        [JsonPropertyName("performer")]
+        public List<ReferenceType>? Performer { get => _performer; set { _performer = value; OnPropertyChangedByClr(nameof(Performer), value); } }
+
+        private List<Observation_ReferenceRange>? _referenceRange;
+        [JsonPropertyName("referenceRange")]
+        public List<Observation_ReferenceRange>? ReferenceRange { get => _referenceRange; set { _referenceRange = value; OnPropertyChangedByClr(nameof(ReferenceRange), value); } }
+
+        /// <summary>
+        /// Provides guide for interpretation
+        /// </summary>
+        public partial class Observation_ReferenceRange : BackboneElement<Observation_ReferenceRange>
+        {
+            public override string GetFhirTypeName(bool withCapital = true) => withCapital ? "Observation_ReferenceRange" : "observation_ReferenceRange";
+            private DataTypeServices.DataTypes.ComplexTypes.Range? _age;
+        [JsonPropertyName("age")]
+        public DataTypeServices.DataTypes.ComplexTypes.Range? Age { get => _age; set { _age = value; } }
+
+            private List<CodeableConcept>? _appliesTo;
+        [JsonPropertyName("appliesTo")]
+        public List<CodeableConcept>? AppliesTo { get => _appliesTo; set { _appliesTo = value; } }
+
+            private Quantity? _high;
+        [JsonPropertyName("high")]
+        public Quantity? High { get => _high; set { _high = value; } }
+
+            private Quantity? _low;
+        [JsonPropertyName("low")]
+        public Quantity? Low { get => _low; set { _low = value; } }
+
+            private CodeableConcept? _normalValue;
+        [JsonPropertyName("normalValue")]
+        public CodeableConcept? NormalValue { get => _normalValue; set { _normalValue = value; } }
+
+            private FhirMarkdown? _text;
+        [JsonPropertyName("text")]
+        public FhirMarkdown? Text { get => _text; set { _text = value; } }
+
+            private CodeableConcept? _type;
+        [JsonPropertyName("type")]
+        public CodeableConcept? Type { get => _type; set { _type = value; } }
+
+        }
+
+        private ReferenceType? _specimen;
+        [JsonPropertyName("specimen")]
+        public ReferenceType? Specimen { get => _specimen; set { _specimen = value; OnPropertyChangedByClr(nameof(Specimen), value); } }
+
+        private FhirCode? _status;
+        [JsonPropertyName("status")]
+        public FhirCode Status { get => _status ?? throw new InvalidOperationException("Status is required"); set { _status = value; OnPropertyChangedByClr(nameof(Status), value); } }
+
+        private ReferenceType? _subject;
+        [JsonPropertyName("subject")]
+        public ReferenceType? Subject { get => _subject; set { _subject = value; OnPropertyChangedByClr(nameof(Subject), value); } }
+
+        private Narrative? _text;
+        [JsonPropertyName("text")]
+        public Narrative? Text { get => _text; set { _text = value; OnPropertyChangedByClr(nameof(Text), value); } }
+
+        private List<Observation_TriggeredBy>? _triggeredBy;
+        [JsonPropertyName("triggeredBy")]
+        public List<Observation_TriggeredBy>? TriggeredBy { get => _triggeredBy; set { _triggeredBy = value; OnPropertyChangedByClr(nameof(TriggeredBy), value); } }
+
+        /// <summary>
+        /// Triggering observation(s)
+        /// </summary>
+        public partial class Observation_TriggeredBy : BackboneElement<Observation_TriggeredBy>
+        {
+            public override string GetFhirTypeName(bool withCapital = true) => withCapital ? "Observation_TriggeredBy" : "observation_TriggeredBy";
+            private ReferenceType? _observation;
+        [JsonPropertyName("observation")]
+        public ReferenceType Observation { get => _observation ?? throw new InvalidOperationException("Observation is required"); set { _observation = value; } }
+
+            private FhirString? _reason;
+        [JsonPropertyName("reason")]
+        public FhirString? Reason { get => _reason; set { _reason = value; } }
+
+            private FhirCode? _type;
+        [JsonPropertyName("type")]
+        public FhirCode Type { get => _type ?? throw new InvalidOperationException("Type is required"); set { _type = value; } }
+
+        }
+
+        private Quantity? _valueQuantity;
+        [JsonPropertyName("valueQuantity")]
+        public Quantity? ValueQuantity { get => _valueQuantity; set { _valueQuantity = value; if (value != null) {{ _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueQuantity), value); } }
+
+        private CodeableConcept? _valueCodeableConcept;
+        [JsonPropertyName("valueCodeableConcept")]
+        public CodeableConcept? ValueCodeableConcept { get => _valueCodeableConcept; set { _valueCodeableConcept = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueCodeableConcept), value); } }
+
+        private FhirString? _valueString;
+        [JsonPropertyName("valueString")]
+        public FhirString? ValueString { get => _valueString; set { _valueString = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueString), value); } }
+
+        private FhirBoolean? _valueBoolean;
+        [JsonPropertyName("valueBoolean")]
+        public FhirBoolean? ValueBoolean { get => _valueBoolean; set { _valueBoolean = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueBoolean), value); } }
+
+        private FhirInteger? _valueInteger;
+        [JsonPropertyName("valueInteger")]
+        public FhirInteger? ValueInteger { get => _valueInteger; set { _valueInteger = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueInteger), value); } }
+
+        private DataTypeServices.DataTypes.ComplexTypes.Range? _valueRange;
+        [JsonPropertyName("valueRange")]
+        public DataTypeServices.DataTypes.ComplexTypes.Range? ValueRange { get => _valueRange; set { _valueRange = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueRange), value); } }
+
+        private Ratio? _valueRatio;
+        [JsonPropertyName("valueRatio")]
+        public Ratio? ValueRatio { get => _valueRatio; set { _valueRatio = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueRatio), value); } }
+
+        private SampledData? _valueSampledData;
+        [JsonPropertyName("valueSampledData")]
+        public SampledData? ValueSampledData { get => _valueSampledData; set { _valueSampledData = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueSampledData), value); } }
+
+        private FhirTime? _valueTime;
+        [JsonPropertyName("valueTime")]
+        public FhirTime? ValueTime { get => _valueTime; set { _valueTime = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueTime), value); } }
+
+        private FhirDateTime? _valueDateTime;
+        [JsonPropertyName("valueDateTime")]
+        public FhirDateTime? ValueDateTime { get => _valueDateTime; set { _valueDateTime = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueDateTime), value); } }
+
+        private Period? _valuePeriod;
+        [JsonPropertyName("valuePeriod")]
+        public Period? ValuePeriod { get => _valuePeriod; set { _valuePeriod = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValuePeriod), value); } }
+
+        private Attachment? _valueAttachment;
+        [JsonPropertyName("valueAttachment")]
+        public Attachment? ValueAttachment { get => _valueAttachment; set { _valueAttachment = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueReference = null; OnPropertyChangedByClr(nameof(ValueReference), null); }}; OnPropertyChangedByClr(nameof(ValueAttachment), value); } }
+
+        private ReferenceType? _valueReference;
+        [JsonPropertyName("valueReference")]
+        public ReferenceType? ValueReference { get => _valueReference; set { _valueReference = value; if (value != null) {{ _valueQuantity = null; OnPropertyChangedByClr(nameof(ValueQuantity), null); _valueCodeableConcept = null; OnPropertyChangedByClr(nameof(ValueCodeableConcept), null); _valueString = null; OnPropertyChangedByClr(nameof(ValueString), null); _valueBoolean = null; OnPropertyChangedByClr(nameof(ValueBoolean), null); _valueInteger = null; OnPropertyChangedByClr(nameof(ValueInteger), null); _valueRange = null; OnPropertyChangedByClr(nameof(ValueRange), null); _valueRatio = null; OnPropertyChangedByClr(nameof(ValueRatio), null); _valueSampledData = null; OnPropertyChangedByClr(nameof(ValueSampledData), null); _valueTime = null; OnPropertyChangedByClr(nameof(ValueTime), null); _valueDateTime = null; OnPropertyChangedByClr(nameof(ValueDateTime), null); _valuePeriod = null; OnPropertyChangedByClr(nameof(ValuePeriod), null); _valueAttachment = null; OnPropertyChangedByClr(nameof(ValueAttachment), null); }}; OnPropertyChangedByClr(nameof(ValueReference), value); } }
+
     }
 }

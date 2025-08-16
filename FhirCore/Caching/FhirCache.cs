@@ -22,11 +22,11 @@ namespace FhirCore.Caching
     {
         private readonly ConcurrentDictionary<string, CacheItem> _cache = new();
 
-        public async Task<T?> GetAsync<T>(string key) where T : class
+        public Task<T?> GetAsync<T>(string key) where T : class
         {
             if (_cache.TryGetValue(key, out var item) && !item.IsExpired)
             {
-                return item.Value as T;
+                return Task.FromResult(item.Value as T);
             }
 
             // 移除過期的項目
@@ -35,10 +35,10 @@ namespace FhirCore.Caching
                 _cache.TryRemove(key, out _);
             }
 
-            return null;
+            return Task.FromResult<T?>(null);
         }
 
-        public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null) where T : class
+        public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null) where T : class
         {
             var item = new CacheItem
             {
@@ -47,16 +47,19 @@ namespace FhirCore.Caching
             };
 
             _cache.AddOrUpdate(key, item, (_, _) => item);
+            return Task.CompletedTask;
         }
 
-        public async Task RemoveAsync(string key)
+        public Task RemoveAsync(string key)
         {
             _cache.TryRemove(key, out _);
+            return Task.CompletedTask;
         }
 
-        public async Task ClearAsync()
+        public Task ClearAsync()
         {
             _cache.Clear();
+            return Task.CompletedTask;
         }
 
         private class CacheItem
@@ -99,16 +102,16 @@ namespace FhirCore.Caching
             await _cache.SetStringAsync(key, data, options);
         }
 
-        public async Task RemoveAsync(string key)
+        public Task RemoveAsync(string key)
         {
-            await _cache.RemoveAsync(key);
+            return _cache.RemoveAsync(key);
         }
 
-        public async Task ClearAsync()
+        public Task ClearAsync()
         {
             // 注意：分散式快取通常不支援清除所有項目
             // 這需要實作特定的清除邏輯
-            throw new NotSupportedException("Clear operation is not supported for distributed cache");
+            return Task.FromException(new NotSupportedException("Clear operation is not supported for distributed cache"));
         }
     }
 

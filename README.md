@@ -114,6 +114,9 @@ extension.Value.SetBooleanValue(true);
 ```
 
 ## 📚 文件
+- CodeGen 管理員指南（生成新版本資源與內嵌範例）：docs/CodeGen-Admin-Guide.md
+- SDK 開發者指南（使用生成後的 SDK 與 Fluent API）：docs/SDK-User-Guide.md
+
 
 - [FHIR R5 Type Framework 實作文件](Fhir.TypeFramework/README_FHIR_R5_TypeFramework_Implementation.md)
 - [Choice Type 最佳解決方案](Fhir.TypeFramework/README_ChoiceType_Best_Solution.md)

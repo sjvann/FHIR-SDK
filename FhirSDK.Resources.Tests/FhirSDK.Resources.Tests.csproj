@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FhirSDK.Resources.Tests.Common\FhirSDK.Resources.Tests.Common.csproj" />
+    <!-- Reference the current resource version under test so its DLL and embedded examples are present at runtime -->
+    <ProjectReference Include="..\FhirSDK.Resources.R5\FhirSDK.Resources.R5.csproj" />
+  </ItemGroup>
+</Project>

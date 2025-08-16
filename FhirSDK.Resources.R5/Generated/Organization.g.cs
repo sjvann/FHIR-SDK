@@ -7,10 +7,13 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Linq;
 using FhirCore.Base;
-using FhirCore.Interfaces;
 using DataTypeServices.TypeFramework;
+using DataTypeServices.DataTypes.MetaTypes;
 namespace FhirSDK.Resources.R5
 {
+    /// <summary>
+    /// A grouping of people or organizations with a common purpose
+    /// </summary>
     public partial class Organization : ResourceBase
     {
         public override string ResourceType => "Organization";
@@ -18,52 +21,79 @@ namespace FhirSDK.Resources.R5
         public Organization() { }
         public Organization(string json) { SetRawFrom(JsonNode.Parse(json)); }
         public Organization(JsonNode? source) { SetRawFrom(source); }
-        // JSON handled by ResourceBase.UpdateRaw via OnPropertyChanged
+        protected override void OnPropertyChanged(string propertyName, object? newValue) { base.OnPropertyChanged(propertyName, newValue); }
+
+        private FhirBoolean? _active;
+        [JsonPropertyName("active")]
+        public FhirBoolean? Active { get => _active; set { _active = value; OnPropertyChangedByClr(nameof(Active), value); } }
+
+        private List<FhirString>? _alias;
+        [JsonPropertyName("alias")]
+        public List<FhirString>? Alias { get => _alias; set { _alias = value; OnPropertyChangedByClr(nameof(Alias), value); } }
+
+        private List<ExtendedContactDetail>? _contact;
+        [JsonPropertyName("contact")]
+        public List<ExtendedContactDetail>? Contact { get => _contact; set { _contact = value; OnPropertyChangedByClr(nameof(Contact), value); } }
+
+        private List<Resource>? _contained;
+        [JsonPropertyName("contained")]
+        public List<Resource>? Contained { get => _contained; set { _contained = value; OnPropertyChangedByClr(nameof(Contained), value); } }
+
+        private FhirMarkdown? _description;
+        [JsonPropertyName("description")]
+        public FhirMarkdown? Description { get => _description; set { _description = value; OnPropertyChangedByClr(nameof(Description), value); } }
+
+        private List<ReferenceType>? _endpoint;
+        [JsonPropertyName("endpoint")]
+        public List<ReferenceType>? Endpoint { get => _endpoint; set { _endpoint = value; OnPropertyChangedByClr(nameof(Endpoint), value); } }
 
         private List<Identifier>? _identifier;
         [JsonPropertyName("identifier")]
         public List<Identifier>? Identifier { get => _identifier; set { _identifier = value; OnPropertyChangedByClr(nameof(Identifier), value); } }
-        private FhirBoolean? _active;
-        [JsonPropertyName("active")]
-        public FhirBoolean? Active { get => _active; set { _active = value; OnPropertyChangedByClr(nameof(Active), value); } }
-        private List<CodeableConcept>? _type;
-        [JsonPropertyName("type")]
-        public List<CodeableConcept>? Type { get => _type; set { _type = value; OnPropertyChangedByClr(nameof(Type), value); } }
+
         private FhirString? _name;
         [JsonPropertyName("name")]
         public FhirString? Name { get => _name; set { _name = value; OnPropertyChangedByClr(nameof(Name), value); } }
-        private List<FhirString>? _alias;
-        [JsonPropertyName("alias")]
-        public List<FhirString>? Alias { get => _alias; set { _alias = value; OnPropertyChangedByClr(nameof(Alias), value); } }
-        private ContactPoint? _telecom;
-        [JsonPropertyName("telecom")]
-        public ContactPoint? Telecom { get => _telecom; set { _telecom = value; OnPropertyChangedByClr(nameof(Telecom), value); } }
-        private Address? _address;
-        [JsonPropertyName("address")]
-        public Address? Address { get => _address; set { _address = value; OnPropertyChangedByClr(nameof(Address), value); } }
+
         private ReferenceType? _partOf;
         [JsonPropertyName("partOf")]
         public ReferenceType? PartOf { get => _partOf; set { _partOf = value; OnPropertyChangedByClr(nameof(PartOf), value); } }
 
-        private List<Organization_Contact>? _contact;
-        [JsonPropertyName("contact")]
-        public List<Organization_Contact>? Contact { get => _contact; set { _contact = value; OnPropertyChangedByClr(nameof(Contact), value); } }
+        private List<Organization_Qualification>? _qualification;
+        [JsonPropertyName("qualification")]
+        public List<Organization_Qualification>? Qualification { get => _qualification; set { _qualification = value; OnPropertyChangedByClr(nameof(Qualification), value); } }
 
-        public partial class Organization_Contact : BackboneElement<Organization_Contact>
+        /// <summary>
+        /// Qualifications, certifications, accreditations, licenses, training, etc. pertaining to the provision of care
+        /// </summary>
+        public partial class Organization_Qualification : BackboneElement<Organization_Qualification>
         {
-            public override string GetFhirTypeName(bool withCapital = true) => withCapital ? "Contact" : "contact";
-            private CodeableConcept? _purpose;
-        [JsonPropertyName("purpose")]
-        public CodeableConcept? Purpose { get => _purpose; set { _purpose = value; OnPropertyChanged("purpose", value); } }
-            private HumanName? _name;
-        [JsonPropertyName("name")]
-        public HumanName? Name { get => _name; set { _name = value; OnPropertyChanged("name", value); } }
-            private ContactPoint? _telecom;
-        [JsonPropertyName("telecom")]
-        public ContactPoint? Telecom { get => _telecom; set { _telecom = value; OnPropertyChanged("telecom", value); } }
-            private Address? _address;
-        [JsonPropertyName("address")]
-        public Address? Address { get => _address; set { _address = value; OnPropertyChanged("address", value); } }
+            public override string GetFhirTypeName(bool withCapital = true) => withCapital ? "Organization_Qualification" : "organization_Qualification";
+            private CodeableConcept? _code;
+        [JsonPropertyName("code")]
+        public CodeableConcept Code { get => _code ?? throw new InvalidOperationException("Code is required"); set { _code = value; } }
+
+            private List<Identifier>? _identifier;
+        [JsonPropertyName("identifier")]
+        public List<Identifier>? Identifier { get => _identifier; set { _identifier = value; } }
+
+            private ReferenceType? _issuer;
+        [JsonPropertyName("issuer")]
+        public ReferenceType? Issuer { get => _issuer; set { _issuer = value; } }
+
+            private Period? _period;
+        [JsonPropertyName("period")]
+        public Period? Period { get => _period; set { _period = value; } }
+
         }
+
+        private Narrative? _text;
+        [JsonPropertyName("text")]
+        public Narrative? Text { get => _text; set { _text = value; OnPropertyChangedByClr(nameof(Text), value); } }
+
+        private List<CodeableConcept>? _type;
+        [JsonPropertyName("type")]
+        public List<CodeableConcept>? Type { get => _type; set { _type = value; OnPropertyChangedByClr(nameof(Type), value); } }
+
     }
 }

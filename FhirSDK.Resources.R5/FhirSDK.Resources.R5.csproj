@@ -17,4 +17,8 @@
     <ProjectReference Include="..\FhirCore\FhirCore.csproj" />
     <ProjectReference Include="..\DataTypeServices\DataTypeServices.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Examples\**\*.json" />
+  </ItemGroup>
+
 </Project>

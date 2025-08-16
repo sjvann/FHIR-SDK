@@ -12,7 +12,16 @@
     <PackageTags>FHIR;HL7;Healthcare;TypeFramework</PackageTags>
     <RepositoryUrl>https://github.com/your-org/FHIR-SDK</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
+
+  <!-- Exclude non-compilable template sources from build -->
+  <ItemGroup>
+    <Compile Remove="Templates\**\*.cs" />
+    <Compile Remove="Examples\**\*.cs" />
+    <Compile Remove="Development\**\*.cs" />
+    <Compile Remove="Performance\**\*.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
