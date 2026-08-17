@@ -171,7 +171,7 @@ dotnet ef database update --project Fhir.Terminology.Infrastructure --startup-pr
 
 ## 7. Terminology 操作（SHALL 端點）
 
-以下均為 **GET**（查詢參數傳遞）。完整路徑表亦可見 [HTTP API 速查](reference/http-api.md)。
+以下均為 **GET**（查詢參數傳遞）。完整路徑表亦可見 [HTTP API 速查](http-api.md)。
 
 ### 7.1 CodeSystem `$lookup`
 
@@ -322,7 +322,7 @@ dotnet ef database update --project Fhir.Terminology.Infrastructure --startup-pr
 
 - **巨型詞彙**（如 SNOMED CT、LOINC 全集）：**不預期**以 SQLite 承載完整詞庫；請透過 **upstream** 與／或 **Binding 登錄**管理 canonical 與驗證語境。
 - **ValueSet compose**：本機僅支援可於現有 CodeSystem 資料上完成的展開子集；複雜組合或大型語意請委派專用術語伺服器。
-- **誠實宣告**：請將 `CapabilityStatement`／`TerminologyCapabilities` 與實際部署之上游／資料同步維護；內部對照表可見 [`Fhir.Terminology.App/TerminologyConformance.md`](../../Fhir.Terminology.App/TerminologyConformance.md)。
+- **誠實宣告**：請將 `CapabilityStatement`／`TerminologyCapabilities` 與實際部署之上游／資料同步維護；內部對照表可見 [FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions) 內 `Fhir.Terminology.App/TerminologyConformance.md`。
 
 ---
 
@@ -399,4 +399,4 @@ curl -sS "$BASE/fhir/ValueSet/\$validate-code?profile=http%3A%2F%2Fhl7.org%2Ffhi
 ## 16. 版本與文件維護
 
 - **FHIR 版本**：本應用程式目標為 **R5**（與 `Fhir.Resources.R5` 一致）。
-- **文件位置**：`Fhir.Docs/terminology/`（與程式同庫維護；行為以發行版本之程式碼為準）。
+- **文件位置**：`Fhir.Docs/application/terminology/`（行為以 FHIR.Solutions 發行版本之程式碼為準）。

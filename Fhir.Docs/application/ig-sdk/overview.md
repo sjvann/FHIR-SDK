@@ -1,5 +1,7 @@
 # FHIR IG SDK 整體架構
 
+> IG 產生器與 Profile 驗證執行期位於應用層儲庫 **[FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)**。本頁說明其與本 SDK（`Fhir.Sdk.{Line}`、`Fhir.Path`、`Fhir.Packages.Registry`）的邊界。
+
 ## 目標
 
 在既有 **TypeFramework / Sdk / FHIRPath / Terminology** 之上，提供以 **Implementation Guide（IG）與 Profile** 為中心的應用層能力：
@@ -114,7 +116,7 @@ artifacts/fhir-packages/{package-id}/{version}/
 
 ## 延伸閱讀
 
-- [IG SDK 使用手冊](../guides/ig-sdk-user-manual.md)
-- [IG 命名與發佈](../reference/ig-naming-and-packaging.md)
-- [ResourceCreator 架構](overview.md)
+- [IG SDK 使用手冊](user-manual.md)
+- [IG 命名與發佈](naming.md)
+- [資源產生架構](../../concepts/resource-generation.md)
 - 儲存庫根目錄 `AGENTS.md`

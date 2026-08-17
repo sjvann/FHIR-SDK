@@ -21,6 +21,10 @@
 
 不發佈：`Packages.Registry`、`ResourceCreator`、測試專案。應用仍應優先只引用 `Fhir.Sdk.R*`（會帶入 Path.R*）。
 
+## 文件
+
+公開文件只維護在 **`Fhir.Docs/`**（DocFX → GitHub Pages）。勿再新增根目錄 `docs/`。
+
 ## 應用層
 
 見獨立儲庫 **FHIR.Solutions**（QueryBuilder、Terminology、未來 CQL 等）。

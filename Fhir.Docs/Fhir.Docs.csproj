@@ -5,6 +5,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>$(NoWarn);CS2008</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="**/*.{md,yml,json}" Exclude="_site/**;obj/**;api/*.yml" />
+  </ItemGroup>
+
+  <Target Name="BuildDocs">
+    <Exec Command="dotnet tool restore" WorkingDirectory="$(MSBuildThisFileDirectory).." />
+    <Exec Command="dotnet docfx &quot;$(MSBuildThisFileDirectory)docfx.json&quot;" WorkingDirectory="$(MSBuildThisFileDirectory).." />
+  </Target>
 
 </Project>

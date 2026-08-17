@@ -67,5 +67,5 @@ MVP 的 `RegistryBindingCodeValidator` **不** 呼叫遠端 Terminology 展開 V
 
 ## 延伸閱讀
 
-- [IG SDK 使用手冊](ig-sdk-user-manual.md)
-- [一般疑難排解](troubleshooting.md)
+- [IG SDK 使用手冊](user-manual.md)
+- [一般疑難排解](../../guides/troubleshooting.md)

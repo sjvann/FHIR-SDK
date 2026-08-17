@@ -21,7 +21,7 @@
 ## 測試失敗
 
 - 先 **`dotnet build`** 資源組件專案，再 **`dotnet test`** 測試專案。
-- Smoke 測試僅驗證最小 JSON；若實際交換格式較複雜，請另外加入 **fixture** 與自訂断言（見 [測試手冊](testing-manual.md)）。
+- Smoke 測試僅驗證最小 JSON；若實際交換格式較複雜，請另外加入 **fixture** 與自訂断言（見 [測試手冊](testing.md)）。
 
 ## Excel 模式
 
@@ -36,4 +36,4 @@
 
 ## IG SDK
 
-Profile 驗證、`Fhir.IGCreator install`、命名與產物目錄等問題請見 **[IG SDK 疑難排解](ig-troubleshooting.md)**。
+Profile 驗證、`Fhir.IGCreator install`、命名與產物目錄等問題請見 **[IG SDK 疑難排解](../application/ig-sdk/troubleshooting.md)**。

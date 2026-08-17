@@ -1,0 +1,59 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "..",
+          "files": [
+            "Fhir.TypeFramework/Fhir.TypeFramework.csproj",
+            "Fhir.TypeFramework.Interop/Fhir.TypeFramework.Interop.csproj",
+            "Fhir.Path/Fhir.Path.csproj",
+            "Fhir.Path.R4/Fhir.Path.R4.csproj",
+            "Fhir.Path.R4B/Fhir.Path.R4B.csproj",
+            "Fhir.Path.R5/Fhir.Path.R5.csproj",
+            "Fhir.Sdk.R4/Fhir.Sdk.R4.csproj",
+            "Fhir.Sdk.R4B/Fhir.Sdk.R4B.csproj",
+            "Fhir.Sdk.R5/Fhir.Sdk.R5.csproj",
+            "Fhir.VersionManager/Fhir.VersionManager.csproj"
+          ]
+        }
+      ],
+      "dest": "api",
+      "includePrivateMembers": false,
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "**/*.{md,yml}"
+        ],
+        "exclude": [
+          "_site/**",
+          "obj/**",
+          "api/.gitignore"
+        ]
+      }
+    ],
+    "output": "_site",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appName": "FHIR SDK",
+      "_appTitle": "FHIR .NET SDK",
+      "_appFooter": "FHIR .NET SDK — MIT",
+      "_enableSearch": true,
+      "_enableNewTab": true,
+      "_disableContribution": false
+    },
+    "sitemap": {
+      "baseUrl": "https://sjvann.github.io/FHIR-SDK/",
+      "priority": 0.5,
+      "changefreq": "monthly"
+    }
+  }
+}

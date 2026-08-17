@@ -21,7 +21,7 @@ alwaysApply: true
 
 - **`Fhir.IGCreator`**：`install packageId@version` → `Fhir.IGCreator/generated/Fhir.Ig.{ShortName}/`（每 IG 一個 NuGet）。
 - **`Fhir.Ig.Core`**：通用 Profile 驗證；**`Fhir.Packages.Registry`** 與 ResourceCreator 共用套件快取（預設 `artifacts/fhir-packages`）。
-- 應用 DI：`Add{ShortName}IgWithPath()`（例 `AddUSCoreIgWithPath()`）；詳見 `Fhir.Docs/guides/ig-sdk-user-manual.md`。
+- 應用 DI：`Add{ShortName}IgWithPath()`（例 `AddUSCoreIgWithPath()`）；詳見 `Fhir.Docs/application/ig-sdk/user-manual.md`。
 
 ## 目前例外
 

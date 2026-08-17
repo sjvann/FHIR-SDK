@@ -1,0 +1,59 @@
+name: Publish docs
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "Fhir.Docs/**"
+      - "Fhir.TypeFramework/**"
+      - "Fhir.TypeFramework.Interop/**"
+      - "Fhir.Path/**"
+      - "Fhir.Path.R4/**"
+      - "Fhir.Path.R4B/**"
+      - "Fhir.Path.R5/**"
+      - "Fhir.Sdk.R4/**"
+      - "Fhir.Sdk.R4B/**"
+      - "Fhir.Sdk.R5/**"
+      - "Fhir.VersionManager/**"
+      - "dotnet-tools.json"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish-docs:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore DocFX
+        run: dotnet tool restore
+
+      - name: Build documentation
+        run: dotnet docfx Fhir.Docs/docfx.json
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: Fhir.Docs/_site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

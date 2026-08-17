@@ -1,5 +1,7 @@
 # FHIR IG SDK 使用手冊
 
+> CLI 與產生器位於 **[FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)**。本手冊說明如何產生 `Fhir.Ig.{ShortName}`，並在應用中透過 `Fhir.Ig.Core` 驗證 Profile。
+
 本手冊說明如何以 **`Fhir.IGCreator`** 從 Registry IG 套件產生 **`Fhir.Ig.{ShortName}`**，並在應用程式中透過 **`Fhir.Ig.Core`** 執行 Profile 驗證。
 
 ## 前置需求
@@ -106,7 +108,7 @@ Fhir.IGCreator install <packageId@version>
 
 ## 產生器設定
 
-目前以程式內預設為主（[`IgInstallOptions`](../../Fhir.IGCreator/Pipeline/IgInstallOptions.cs)）；可於後續擴充 `appsettings.json`。
+目前以程式內預設為主（[`IgInstallOptions`](https://github.com/sjvann/FHIR.Solutions) 專案內 `Fhir.IGCreator/Pipeline/IgInstallOptions.cs`）；可於後續擴充 `appsettings.json`。
 
 | 項目 | 預設 | 說明 |
 |------|------|------|
@@ -229,7 +231,7 @@ services.AddFhirQueryBuilderIgValidation();
 
 ## 延伸閱讀
 
-- [IG SDK 架構](../architecture/ig-sdk-overview.md)
-- [IG 命名與發佈](../reference/ig-naming-and-packaging.md)
-- [IG 疑難排解](ig-troubleshooting.md)
-- [ResourceCreator 使用手冊](user-manual.md)
+- [IG SDK 架構](overview.md)
+- [IG 命名與發佈](naming.md)
+- [IG 疑難排解](troubleshooting.md)
+- [ResourceCreator 使用手冊](../../guides/resource-creator.md)

@@ -44,5 +44,5 @@ dotnet pack -c Release
 ## 延伸閱讀
 
 - `AGENTS.md`（儲存庫根目錄）
-- [整體架構](../architecture/overview.md)
-- [IG SDK 命名與發佈](ig-naming-and-packaging.md)（`Fhir.Ig.{ShortName}`）
+- [資源產生架構](../concepts/resource-generation.md)
+- [IG SDK 命名與發佈](../application/ig-sdk/naming.md)（`Fhir.Ig.{ShortName}`）

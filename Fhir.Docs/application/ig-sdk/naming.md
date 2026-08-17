@@ -11,7 +11,7 @@
 
 ## PackageId → ShortName 推斷
 
-由 [`GeneratedIgNaming`](../../Fhir.IGCreator/Configuration/GeneratedIgNaming.cs) 自 `package-id` 推導：
+由 FHIR.Solutions 內 `Fhir.IGCreator/Configuration/GeneratedIgNaming.cs` 自 `package-id` 推導：
 
 | Registry package-id | ShortName | 專案／NuGet | DI 前綴 |
 |---------------------|-----------|-------------|---------|
@@ -57,6 +57,6 @@ dotnet pack -c Release
 
 ## 延伸閱讀
 
-- [IG SDK 使用手冊](../guides/ig-sdk-user-manual.md)
-- [資源組件命名](naming-and-packaging.md)
+- [IG SDK 使用手冊](user-manual.md)
+- [資源組件命名](../../reference/naming-and-packaging.md)
 - `AGENTS.md`

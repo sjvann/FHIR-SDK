@@ -38,3 +38,9 @@ var result = runtime.Resolve(metadataJson, baseUrl, declared: FhirVersion.R5);
 ## 非目標
 
 VersionManager **不是** TypeFramework 套件的 SemVer 版控工具；基底型別異動仍依 NuGet／CHANGELOG 語意化版本管理。
+
+## 延伸閱讀
+
+- [套件分層](architecture.md)
+- [在應用中使用 SDK](../guides/consume-sdk.md)
+- [開始使用](../getting-started/index.md)

@@ -68,7 +68,7 @@ flowchart TB
 
 ## 延伸閱讀
 
-- [使用手冊](../guides/user-manual.md)
+- [ResourceCreator 使用手冊](../guides/resource-creator.md)
 - [命名與發佈](../reference/naming-and-packaging.md)
-- [FHIR IG SDK 架構](ig-sdk-overview.md)（Profile 驗證與 `Fhir.IGCreator`）
-- `.cursor/rules/fhir-sdk-architecture.mdc`（IDE 規則）
+- [FHIR IG SDK 架構](../application/ig-sdk/overview.md)（Profile 驗證與 `Fhir.IGCreator`）
+- [套件分層](architecture.md)

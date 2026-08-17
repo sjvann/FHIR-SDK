@@ -81,4 +81,4 @@
 | `/admin/bindings` | 綁定登錄表單與預覽 |
 | `/admin/upstreams` | 上游端點表單與預覽 |
 
-詳細語意、錯誤碼與範例請見 [使用手冊](../user-manual.md)。
+詳細語意、錯誤碼與範例請見 [使用手冊](user-manual.md)。

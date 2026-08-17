@@ -38,7 +38,7 @@ dotnet pack Fhir.Sdk.slnx -o LocalNuget
 dotnet run --project Fhir.ResourceCreator -- --help
 ```
 
-詳見 `Fhir.Docs/guides/user-manual.md`。
+詳見 [Fhir.Docs/guides/resource-creator.md](Fhir.Docs/guides/resource-creator.md)。
 
 ## 多線別使用（VersionManager）
 
@@ -48,7 +48,18 @@ services.AddFhirVersionManager();
 // 再以 IFhirCapabilityRuntime 取得跨線別 ICapabilityModel
 ```
 
-詳見 [docs/multi-version-dx.md](docs/multi-version-dx.md)。
+詳見 [Fhir.Docs/concepts/multi-version.md](Fhir.Docs/concepts/multi-version.md)。
+
+## 文件
+
+公開文件集中於 **`Fhir.Docs/`**（DocFX）。本機預覽：
+
+```bash
+dotnet tool restore
+dotnet docfx Fhir.Docs/docfx.json --serve
+```
+
+推送到預設分支後可由 GitHub Actions 發佈至 GitHub Pages。見 [Fhir.Docs/contribute/documentation.md](Fhir.Docs/contribute/documentation.md)。
 
 ## 授權
 

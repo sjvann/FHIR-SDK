@@ -35,7 +35,7 @@
 ## 執行產生
 
 ```powershell
-cd path\to\FHIR.Solutions\Fhir.ResourceCreator
+cd path\to\FHIR-SDK\Fhir.ResourceCreator
 dotnet run -c Release
 ```
 
@@ -75,7 +75,7 @@ dotnet pack -c Release
 
 ## 與 IG SDK 的關係
 
-產生 **核心資源**（`Fhir.Resources.R4` 等）後，方可對應線別產生 **Implementation Guide** 套件。IG 產生與 Profile 驗證請見 **[IG SDK 使用手冊](ig-sdk-user-manual.md)**。
+產生 **核心資源**（`Fhir.Resources.R4` 等）後，方可對應線別產生 **Implementation Guide** 套件。IG 產生與 Profile 驗證請見 **[IG SDK 使用手冊](../application/ig-sdk/user-manual.md)**。
 
 ## 常見調整
 

@@ -13,12 +13,12 @@
 
 產生之 **`Fhir.Resources.R5.Tests`** 若未加入方案，VS **不會**載入該專案，測試總管也無法探索其中的 xUnit 測試。
 
-本方案已在 **`Fhir.Solution.slnx`** 納入：
+本方案已在 **`Fhir.Sdk.slnx`** 納入：
 
 - `Fhir.ResourceCreator/generated/Fhir.Resources.R5/Fhir.Resources.R5.csproj`
 - `Fhir.ResourceCreator/generated/Fhir.Resources.R5/Fhir.Resources.R5.Tests/Fhir.Resources.R5.Tests.csproj`
 
-請以 **`Fhir.Solution.slnx`** 開啟方案後：
+請以 **`Fhir.Sdk.slnx`** 開啟方案後：
 
 1. 若尚未產生程式碼，請先於 `Fhir.ResourceCreator` 執行 `dotnet run`，使上述路徑存在且可建置。
 2. **建置方案**（Ctrl+Shift+B）或至少建置測試專案。
@@ -31,7 +31,7 @@
 於產生之測試專案目錄：
 
 ```powershell
-cd path\to\FHIR.Solutions\Fhir.ResourceCreator\generated\Fhir.Resources.R5\Fhir.Resources.R5.Tests
+cd path\to\FHIR-SDK\Fhir.ResourceCreator\generated\Fhir.Resources.R5\Fhir.Resources.R5.Tests
 dotnet test -c Release
 ```
 

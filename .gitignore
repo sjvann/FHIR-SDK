@@ -53,3 +53,9 @@ TestResults/
 
 # FHIR package cache
 artifacts/fhir-packages/
+
+# DocFX
+Fhir.Docs/_site/
+Fhir.Docs/obj/
+Fhir.Docs/api/*.yml
+Fhir.Docs/api/.manifest
