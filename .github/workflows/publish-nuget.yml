@@ -34,8 +34,11 @@ jobs:
       - name: Test
         run: dotnet test Fhir.Sdk.slnx --no-restore --verbosity minimal
 
+      - name: Build Release
+        run: dotnet build Fhir.Sdk.slnx -c Release --no-restore
+
       - name: Pack
-        run: dotnet pack Fhir.Sdk.slnx -c Release -o LocalNuget
+        run: dotnet pack Fhir.Sdk.slnx -c Release -o LocalNuget --no-build
 
       - name: Push to GitHub Packages
         run: |
