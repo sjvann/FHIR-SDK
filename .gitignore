@@ -34,7 +34,8 @@ project.fragment.lock.json
 artifacts/
 
 # Local feed (generated packages; optional to commit)
-# LocalNuget/*.nupkg
+LocalNuget/*
+!LocalNuget/.gitkeep
 
 # IDE
 .vs/

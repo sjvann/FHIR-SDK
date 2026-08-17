@@ -47,7 +47,9 @@ jobs:
         run: dotnet tool restore
 
       - name: Restore solution
-        run: dotnet restore Fhir.Sdk.slnx
+        run: |
+          mkdir -p LocalNuget
+          dotnet restore Fhir.Sdk.slnx
 
       - name: Build documentation
         run: dotnet docfx Fhir.Docs/docfx.json
