@@ -6,8 +6,11 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Fhir.Path.R4B</RootNamespace>
     <AssemblyName>Fhir.Path.R4B</AssemblyName>
-    <IsPackable>false</IsPackable>
-    <Description>R4B FHIRPath 門面（方案內組件；請透過 Fhir.Sdk.R4B 引用，不單獨發佈 NuGet）。</Description>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Fhir.Path.R4B</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Description>R4B FHIRPath 門面（一般請透過 Fhir.Sdk.R4B 引用）。</Description>
   </PropertyGroup>
 
   <ItemGroup>

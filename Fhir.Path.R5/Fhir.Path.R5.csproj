@@ -6,8 +6,11 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Fhir.Path.R5</RootNamespace>
     <AssemblyName>Fhir.Path.R5</AssemblyName>
-    <IsPackable>false</IsPackable>
-    <Description>R5 FHIRPath 門面（方案內組件；請透過 Fhir.Sdk.R5 引用，不單獨發佈 NuGet）。</Description>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Fhir.Path.R5</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Description>R5 FHIRPath 門面（一般請透過 Fhir.Sdk.R5 引用）。</Description>
   </PropertyGroup>
 
   <ItemGroup>
