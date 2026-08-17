@@ -55,8 +55,7 @@ flowchart TB
 
 ## 序列化與記憶體模型
 
-- 記憶體內為 **可變 POCO**，與 **FhirJsonSerializer**（System.Text.Json）一致之 JSON 邊界。
-- **FHIR XML** 尚未於 TypeFramework 完整實作；共用測試層預留 **線上格式編碼介面**，XML 為 stub／後續迭代。
+- 記憶體內為 **可變 POCO**，與 **FhirJsonSerializer**（System.Text.Json）及 **FhirXmlSerializer** 一致之 I/O 邊界（同一物件圖，禁止 JSON↔XML 字串對翻）。
 
 ## 產生物理位置
 

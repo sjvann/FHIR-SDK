@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Fhir.Validation</RootNamespace>
+    <AssemblyName>Fhir.Validation</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Fhir.Validation</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>FHIR SDK Team</Authors>
+    <Description>Runtime FHIR Profile validation against StructureDefinition snapshots (cardinality, type, binding policy, slicing, FHIRPath invariants). Terminology implementation is pluggable.</Description>
+    <PackageTags>FHIR;HL7;Validation;Profile</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fhir.TypeFramework\Fhir.TypeFramework.csproj" />
+    <ProjectReference Include="..\Fhir.Path\Fhir.Path.csproj" />
+  </ItemGroup>
+
+</Project>

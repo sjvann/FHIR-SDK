@@ -1,8 +1,6 @@
 # FHIR IG SDK 使用手冊
 
-> CLI 與產生器位於 **[FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)**。本手冊說明如何產生 `Fhir.Ig.{ShortName}`，並在應用中透過 `Fhir.Ig.Core` 驗證 Profile。
-
-本手冊說明如何以 **`Fhir.IGCreator`** 從 Registry IG 套件產生 **`Fhir.Ig.{ShortName}`**，並在應用程式中透過 **`Fhir.Ig.Core`** 執行 Profile 驗證。
+> **執行期驗證**請用本 SDK 的 [`Fhir.Validation`](../../guides/consume-sdk.md)（`FhirSdkR4.CreateValidator`）。下列 IG 產生器／每 IG NuGet 流程屬 **[FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)**（可選，不是 Profile Server 的必要路徑）。
 
 ## 前置需求
 

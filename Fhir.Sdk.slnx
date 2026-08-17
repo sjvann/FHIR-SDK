@@ -22,5 +22,7 @@
   <Project Path="Fhir.Sdk.R5/Fhir.Sdk.R5.csproj" />
   <Project Path="Fhir.VersionManager/Fhir.VersionManager.csproj" />
   <Project Path="Fhir.VersionManager.Tests/Fhir.VersionManager.Tests.csproj" />
+  <Project Path="Fhir.Validation/Fhir.Validation.csproj" />
+  <Project Path="Fhir.Validation.Tests/Fhir.Validation.Tests.csproj" />
   <Project Path="Fhir.Docs/Fhir.Docs.csproj" />
 </Solution>

@@ -1,13 +1,13 @@
 # FHIR IG SDK 整體架構
 
-> IG 產生器與 Profile 驗證執行期位於應用層儲庫 **[FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)**。本頁說明其與本 SDK（`Fhir.Sdk.{Line}`、`Fhir.Path`、`Fhir.Packages.Registry`）的邊界。
+> **執行期 Profile 驗證**在本 SDK 的 **`Fhir.Validation`**（由 `Fhir.Sdk.{Line}` 帶入）。IG 產生器（每 IG 一個 NuGet）仍可位於應用層儲庫 **[FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)**。本頁說明邊界。
 
 ## 目標
 
 在既有 **TypeFramework / Sdk / FHIRPath / Terminology** 之上，提供以 **Implementation Guide（IG）與 Profile** 為中心的應用層能力：
 
 - 由 Registry 套件（如 `hl7.fhir.us.core`）產生 **每 IG 一個** NuGet（`Fhir.Ig.{ShortName}`）。
-- 透過 **`Fhir.Ig.Core`** 執行通用 Profile 驗證（cardinality、fixed、binding、FHIRPath constraint、繼承鏈）。
+- 透過 **`Fhir.Validation`** 對已 Parse 的 POCO + StructureDefinition snapshot 做 cardinality、type、binding 政策、slicing、FHIRPath invariant。Terminology Server **不**在本庫（`ITerminologyService` 可外接）。
 - 應用程式僅需引用對應 IG 套件（例如 `Fhir.Ig.USCore`），即可取得 Profile URL 常數、規則表與 DI 註冊。
 
 本層**不是** FHIR Server；REST `$validate`、儲存前驗證等屬後續 Phase 3。
@@ -62,9 +62,9 @@ ResourceCreator 與 IGCreator **共用** `Fhir.Packages.Registry` 下載／解�
 
 | 層級 | 專案 | 職責 |
 |------|------|------|
-| **通用** | `Fhir.Ig.Core` | `IProfileConformanceValidator`、繼承鏈解析、binding 抽象、FHIRPath constraint runner |
-| **每 IG** | `Fhir.Ig.{ShortName}` | Profile URL 常數、`ProfileRules`、`Bindings`、DI `Add{ShortName}Ig()` |
-| **線別入口** | `Fhir.Sdk.{Line}` | POCO、FHIRPath（由 IG 套件 ProjectReference 帶入） |
+| **通用執行期** | `Fhir.Validation` | `IProfileValidator`、ProfileCatalog、binding 政策、slicing、FHIRPath invariant、`ITerminologyService` |
+| **每 IG（可選，Solutions）** | `Fhir.Ig.{ShortName}` | Profile URL 常數、規則表、DI |
+| **線別入口** | `Fhir.Sdk.{Line}` | POCO、FHIRPath、Parse／Serialize、`CreateValidator` |
 
 「專用」指的是 **每個已 install 的 IG 各產生一個套件**，不是 US Core 專屬架構；`hl7.fhir.uv.ips` 會產生 `Fhir.Ig.UvIps` 等。
 

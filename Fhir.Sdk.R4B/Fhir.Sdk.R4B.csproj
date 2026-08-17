@@ -10,7 +10,7 @@
     <PackageId>Fhir.Sdk.R4B</PackageId>
     <PackageVersion>1.0.0</PackageVersion>
     <Authors>FHIR SDK Team</Authors>
-    <Description>FHIR R4B 單一入口套件：TypeFramework、Interop、FHIRPath、Fhir.Resources.R4B。一般應用僅需引用本套件。</Description>
+    <Description>FHIR R4B 單一入口套件：TypeFramework、Interop、FHIRPath、Resources、Validation。一般應用僅需引用本套件。</Description>
     <PackageTags>FHIR;HL7;SDK;R4B;FHIRPath</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Fhir.Path\Fhir.Path.csproj" />
     <ProjectReference Include="..\Fhir.Path.R4B\Fhir.Path.R4B.csproj" />
     <ProjectReference Include="..\Fhir.ResourceCreator\generated\Fhir.Resources.R4B\Fhir.Resources.R4B.csproj" />
+    <ProjectReference Include="..\Fhir.Validation\Fhir.Validation.csproj" />
   </ItemGroup>
 
 </Project>

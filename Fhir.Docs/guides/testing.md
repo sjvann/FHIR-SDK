@@ -4,7 +4,7 @@
 
 | 層級 | 專案 | 職責 |
 |------|------|------|
-| 第一層 | **Fhir.Resource.Tests.Common** | JSON 回合輔助（`FhirJsonRoundTrip`）、線上格式編碼介面（JSON 實作／XML stub）、Fixture 讀檔等 |
+| 第一層 | **Fhir.Resource.Tests.Common** | JSON／XML 回合輔助（`FhirJsonRoundTrip`、`FhirXmlRoundTrip`）、線上格式編碼介面（JSON／XML）、Fixture 讀檔等 |
 | 第二層 | **各 `{OutputProjectName}.Tests`**（產生） | 每一資源一組薄測試：最小 JSON smoke、`FhirJsonRoundTrip` 反序列化／序列化 |
 
 產生器會為每個已產出之資源類型建立 `*SerializationTests.cs`，預設包含 **一個** `Deserialize_minimal_json_roundtrip` 事實測試。
@@ -61,7 +61,7 @@ dotnet build -c Release
 
 - **Smoke 測試**：以最小合法 JSON（含 `resourceType` 與 `id`）做 round-trip，確認 **型別可反序列化** 且序列化後仍帶有 `resourceType`；**不**保證與官方範例或 Profile 的欄位完整度一致。
 - **非驗證器**：不取代 FHIR 官方 Validator；不保證與所有 Profile 或業務規則一致。
-- **XML**：第一版僅 JSON；XML 編解碼預留於 Tests.Common，完整實作在 TypeFramework 演進後再接。
+- **XML**：`FhirXmlSerializer` 與 JSON 寫入同一 POCO；Tests.Common 的 `FhirXmlWireCodec<T>` 已接上真實編解碼。
 
 ## 擴充測試（建議）
 

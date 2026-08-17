@@ -4,10 +4,10 @@
 
 | 套件 | Packable | 說明 |
 |------|----------|------|
-| `Fhir.Ig.Core` | 是 | 通用驗證；應用通常 **不需** 單獨引用（由 `Fhir.Ig.{ShortName}` 帶入） |
-| `Fhir.Ig.{ShortName}` | 是 | 每 IG 一個；例 `Fhir.Ig.USCore` |
+| `Fhir.Validation` | 是（本 SDK） | 執行期 Profile 驗證；由 `Fhir.Sdk.{Line}` 帶入 |
+| `Fhir.Ig.{ShortName}` | 是（Solutions，可選） | 每 IG 一個；例 `Fhir.Ig.USCore` |
 | `Fhir.IGCreator` | 否 | CLI 工具，不發佈 |
-| `Fhir.Packages.Registry` | 否 | 內部共用，不發佈 |
+| `Fhir.Packages.Registry` | 否 | 內部共用，不發佈。Server 執行期勿引用 |
 
 ## PackageId → ShortName 推斷
 

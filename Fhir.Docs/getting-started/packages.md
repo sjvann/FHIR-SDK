@@ -19,8 +19,9 @@
 | `Fhir.Path` / `Fhir.Path.R*` | 由 `Fhir.Sdk.{Line}` 帶入；`Path.R*` 為線別門面 |
 | `Fhir.Resources.R*` | 同上；資源 POCO 隨入口套件提供 |
 | `Fhir.TypeFramework` | 同上；需要時仍可直接引用 |
+| `Fhir.Validation` | 由 `Fhir.Sdk.{Line}` 帶入；亦可單獨引用 |
 | `Fhir.ResourceCreator` | 產生器，不發佈給應用 |
-| `Fhir.Packages.Registry` | 工具用，不發佈 |
+| `Fhir.Packages.Registry` | 工具用，不發佈。執行期 IG `.tgz` 由應用自建，或用 `Fhir.Validation.Packages.FhirPackageArtifactReader` 讀本機檔 |
 
 新大版本尚未出現在上表時，代表本庫尚未產生該線別。維護流程見 [新增或升級 FHIR 線別](../guides/add-fhir-line.md)；完成發佈後，應用改引用對應的 `Fhir.Sdk.{Line}` 即可。
 
