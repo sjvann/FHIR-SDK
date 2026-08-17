@@ -9,6 +9,8 @@
 
 ## 安裝（NuGet）
 
+套件在 **GitHub Packages**。應用的 `nuget.config` 與登入步驟見 [在應用中使用 SDK](../guides/consume-sdk.md)。
+
 擇一：
 
 ```xml

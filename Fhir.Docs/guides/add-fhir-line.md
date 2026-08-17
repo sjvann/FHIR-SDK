@@ -172,7 +172,9 @@ dotnet pack Fhir.Sdk.slnx -c Release -o LocalNuget
 
 應用要吃到的是 **`Fhir.Sdk.R6`**（會帶上 `Fhir.Resources.R6`、`Fhir.Path`、TypeFramework）。`Fhir.ResourceCreator` 與 `Fhir.Packages.Registry` **不發佈**。
 
-把 `LocalNuget` 裡的套件推到你們的 NuGet 來源（或 GitHub Packages），版本號與現有發行策略對齊。
+正式來源是 **GitHub Packages**（`https://nuget.pkg.github.com/sjvann/index.json`）。本機 `LocalNuget` 只是打包暫存。推送 `v*` 標籤或手動跑 **Publish NuGet** workflow（`.github/workflows/publish-nuget.yml`）會測試、打包並 `nuget push`。同一 `PackageVersion` 不能覆寫；發新版先改各專案版本再打新標籤。
+
+應用如何加來源與登入見 [在應用中使用 SDK](consume-sdk.md)。
 
 ## 4. 應用／前端如何引用新版本
 
