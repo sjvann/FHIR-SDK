@@ -60,3 +60,4 @@ flowchart TB
 - [開始使用](../getting-started/index.md)
 - [資源產生管線](resource-generation.md)
 - [多線別開發體驗](multi-version.md)
+- [新增或升級 FHIR 線別](../guides/add-fhir-line.md)

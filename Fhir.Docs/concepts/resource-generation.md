@@ -69,6 +69,7 @@ flowchart TB
 ## 延伸閱讀
 
 - [ResourceCreator 使用手冊](../guides/resource-creator.md)
+- [新增或升級 FHIR 線別](../guides/add-fhir-line.md)
 - [命名與發佈](../reference/naming-and-packaging.md)
 - [FHIR IG SDK 架構](../application/ig-sdk/overview.md)（Profile 驗證與 `Fhir.IGCreator`）
 - [套件分層](architecture.md)

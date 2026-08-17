@@ -1,5 +1,7 @@
 # 疑難排解與常見問題
 
+接上全新 FHIR 大版本（要下載哪個套件、指令、事後改 slnx／VersionManager）見 **[新增或升級 FHIR 線別](add-fhir-line.md)**。
+
 ## 產生器執行後沒有預期檔案
 
 - 確認於 **`Fhir.ResourceCreator`** 目錄執行 `dotnet run`，使 `OutputRoot`、`PackageCacheDirectory` 相對路徑正確。

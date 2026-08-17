@@ -44,5 +44,6 @@ dotnet pack -c Release
 ## 延伸閱讀
 
 - `AGENTS.md`（儲存庫根目錄）
+- [新增或升級 FHIR 線別](../guides/add-fhir-line.md)
 - [資源產生架構](../concepts/resource-generation.md)
 - [IG SDK 命名與發佈](../application/ig-sdk/naming.md)（`Fhir.Ig.{ShortName}`）

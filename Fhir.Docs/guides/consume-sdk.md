@@ -35,3 +35,5 @@ services.AddFhirVersionManager();
 ## 應用層產品
 
 QueryBuilder、IG Profile 驗證、Terminology 服務不在本庫。請見 [應用層文件](../application/index.md) 與 [FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)。
+
+HL7 發布新大版本後，維護者須先產生並發佈對應的 `Fhir.Sdk.{Line}`，應用再改 `PackageReference`。手順見 [新增或升級 FHIR 線別](add-fhir-line.md)。

@@ -94,7 +94,8 @@ public static class ChoiceHelperBatchEmitter
             var dir = start;
             for (var i = 0; i < 12 && !string.IsNullOrEmpty(dir); i++)
             {
-                if (File.Exists(Path.Combine(dir, "Fhir.Solution.slnx")))
+                if (File.Exists(Path.Combine(dir, "Fhir.Sdk.slnx")) ||
+                    File.Exists(Path.Combine(dir, "Fhir.Solution.slnx")))
                     return dir;
                 dir = Directory.GetParent(dir)?.FullName ?? "";
             }

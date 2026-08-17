@@ -22,4 +22,6 @@
 | `Fhir.ResourceCreator` | 產生器，不發佈給應用 |
 | `Fhir.Packages.Registry` | 工具用，不發佈 |
 
+新大版本尚未出現在上表時，代表本庫尚未產生該線別。維護流程見 [新增或升級 FHIR 線別](../guides/add-fhir-line.md)；完成發佈後，應用改引用對應的 `Fhir.Sdk.{Line}` 即可。
+
 詳見 [套件分層](../concepts/architecture.md)。

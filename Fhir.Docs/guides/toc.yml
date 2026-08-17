@@ -2,6 +2,8 @@
   href: consume-sdk.md
 - name: ResourceCreator
   href: resource-creator.md
+- name: 新增或升級 FHIR 線別
+  href: add-fhir-line.md
 - name: 測試
   href: testing.md
 - name: 疑難排解

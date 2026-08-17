@@ -14,6 +14,7 @@
 | 理解 Path／Sdk／Resources 為何拆開 | [套件分層](concepts/architecture.md) |
 | 切換 R4／R4B／R5 | [多線別開發體驗](concepts/multi-version.md) |
 | 重新產生資源 POCO | [ResourceCreator 手冊](guides/resource-creator.md) |
+| 接上新的 FHIR 大版本（如 R6） | [新增或升級 FHIR 線別](guides/add-fhir-line.md) |
 | 查公開 API | [API 參考](api/index.md) |
 
 ## 本庫與應用層

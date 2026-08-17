@@ -6,7 +6,7 @@
 |------|------|------|
 | 開始使用 | [getting-started/](getting-started/index.md) | 安裝、選擇 `Fhir.Sdk.R*` |
 | 概念 | [concepts/](concepts/architecture.md) | 套件分層、TypeFramework、多線別、產生管線 |
-| 指南 | [guides/](guides/consume-sdk.md) | 使用 SDK、ResourceCreator、測試、疑難排解 |
+| 指南 | [guides/](guides/consume-sdk.md) | 使用 SDK、ResourceCreator、新線別、測試、疑難排解 |
 | 參考 | [reference/](reference/configuration.md) | 設定鍵、命名與發佈 |
 | API | [api/](api/index.md) | DocFX 自公開專案抽出 |
 | 應用層 | [application/](application/index.md) | IG SDK、Terminology（實作在 FHIR.Solutions） |

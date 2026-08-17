@@ -38,7 +38,7 @@ dotnet pack Fhir.Sdk.slnx -o LocalNuget
 dotnet run --project Fhir.ResourceCreator -- --help
 ```
 
-詳見 [Fhir.Docs/guides/resource-creator.md](Fhir.Docs/guides/resource-creator.md)。
+詳見 [Fhir.Docs/guides/resource-creator.md](Fhir.Docs/guides/resource-creator.md)。接上新的 FHIR 大版本（取得套件、指令、融入方案、應用如何引用）見 [Fhir.Docs/guides/add-fhir-line.md](Fhir.Docs/guides/add-fhir-line.md)。
 
 ## 多線別使用（VersionManager）
 

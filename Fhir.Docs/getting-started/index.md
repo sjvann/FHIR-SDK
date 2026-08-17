@@ -56,3 +56,4 @@ services.AddFhirSdkR4();
 - [選擇線別與套件](packages.md) — 何時用 R4／R4B／R5，以及不必引用 Path
 - [套件分層](../concepts/architecture.md) — Sdk、Path、Resources 的職責
 - [在應用中使用 SDK](../guides/consume-sdk.md)
+- [新增或升級 FHIR 線別](../guides/add-fhir-line.md)（維護者：接 R6 等新版本）
