@@ -17,9 +17,9 @@
 
 ## 發佈套件
 
-`Fhir.TypeFramework`、`Fhir.TypeFramework.Interop`、`Fhir.Path`、`Fhir.Resources.R*`、`Fhir.Sdk.R*`、`Fhir.VersionManager`。
+`Fhir.TypeFramework`、`Fhir.TypeFramework.Interop`、`Fhir.Path`、`Fhir.Path.R*`、`Fhir.Resources.R*`、`Fhir.Sdk.R*`、`Fhir.VersionManager`。
 
-不發佈：`Packages.Registry`、`ResourceCreator`、`Path.R*`（由 Sdk 帶入）、測試專案。
+不發佈：`Packages.Registry`、`ResourceCreator`、測試專案。應用仍應優先只引用 `Fhir.Sdk.R*`（會帶入 Path.R*）。
 
 ## 應用層
 
