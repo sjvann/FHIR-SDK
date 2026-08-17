@@ -1,162 +1,60 @@
-using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.DataTypes;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Fhir.TypeFramework.Bases;
 
 namespace Fhir.TypeFramework.Serialization;
 
-/// <summary>
-/// FHIR JSON 序列化器
-/// 支援 FHIR R5 的 JSON 序列化格式
-/// </summary>
-/// <remarks>
-/// 提供 FHIR 專用的 JSON 序列化和反序列化功能，支援簡化格式、完整格式和 FHIR 格式。
-/// </remarks>
-public class FhirJsonSerializer
+public static class FhirJsonSerializer
 {
-    private readonly JsonSerializerOptions _options;
+    private static readonly JsonSerializerOptions _options = CreateDefaultOptions();
+
+    public static JsonSerializerOptions Options => _options;
+
+    public static string Serialize(Base instance)
+        => JsonSerializer.Serialize(instance, instance.GetType(), _options);
+
+    public static string Serialize<T>(T instance) where T : Base
+        => JsonSerializer.Serialize(instance, _options);
+
+    public static T? Deserialize<T>(string json) where T : Base
+        => JsonSerializer.Deserialize<T>(json, _options);
 
     /// <summary>
-    /// 初始化 FhirJsonSerializer
+    /// 複製預設 FHIR JSON 選項並附加依 <paramref name="resourceTypes"/> 分派的 <see cref="Resource"/> 多型別反序列化。
     /// </summary>
-    /// <remarks>
-    /// 設定預設的 JSON 序列化選項，包括駝峰命名、縮排和 null 值忽略。
-    /// </remarks>
-    public FhirJsonSerializer()
+    public static JsonSerializerOptions OptionsWithPolymorphicResources(IReadOnlyDictionary<string, Type> resourceTypes)
     {
-        _options = new JsonSerializerOptions
+        var options = new JsonSerializerOptions(_options);
+        options.Converters.Add(new FhirResourcePolymorphicJsonConverterFactory(resourceTypes));
+        return options;
+    }
+
+    /// <summary>
+    /// 將任意資源 JSON（須含 resourceType）解析為具體 <see cref="Resource"/> 子類別。
+    /// </summary>
+    public static Resource? DeserializeResource(string json, IReadOnlyDictionary<string, Type> resourceTypes)
+        => JsonSerializer.Deserialize<Resource>(json, OptionsWithPolymorphicResources(resourceTypes));
+
+    /// <summary>
+    /// 序列化含 <see cref="Resource"/> 多型欄位（例如 Bundle.entry.resource）的圖形。
+    /// </summary>
+    public static string SerializeWithResourcePolymorphism<T>(T instance, IReadOnlyDictionary<string, Type> resourceTypes)
+        where T : Base
+        => JsonSerializer.Serialize(instance, instance.GetType(), OptionsWithPolymorphicResources(resourceTypes));
+
+    private static JsonSerializerOptions CreateDefaultOptions()
+    {
+        var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            WriteIndented = true
         };
+
+        options.Converters.Add(new FhirPrimitiveJsonConverterFactory());
+        options.Converters.Add(new FhirExtensionListJsonConverterFactory());
+
+        return options;
     }
+}
 
-    /// <summary>
-    /// 序列化為簡化 JSON（只包含值）
-    /// </summary>
-    /// <param name="primitiveType">Primitive Type 實例</param>
-    /// <returns>JSON 字串</returns>
-    public string SerializeSimple(IPrimitiveType<IConvertible> primitiveType)
-    {
-        var jsonValue = primitiveType.ToJsonValue();
-        return jsonValue?.ToString() ?? "null";
-    }
-
-    /// <summary>
-    /// 序列化為完整 JSON（包含 Extension）
-    /// </summary>
-    /// <param name="primitiveType">Primitive Type 實例</param>
-    /// <returns>JSON 字串</returns>
-    public string SerializeFull(IPrimitiveType<IConvertible> primitiveType)
-    {
-        var jsonObject = primitiveType.ToFullJsonObject();
-        return jsonObject?.ToJsonString() ?? "null";
-    }
-
-    /// <summary>
-    /// 序列化為 FHIR 格式 JSON
-    /// 包含主值和完整物件
-    /// </summary>
-    /// <param name="propertyName">屬性名稱</param>
-    /// <param name="primitiveType">Primitive Type 實例</param>
-    /// <returns>JSON 字串</returns>
-    public string SerializeFhirFormat(string propertyName, IPrimitiveType<IConvertible> primitiveType)
-    {
-        var jsonObject = new JsonObject();
-
-        // 添加主值（簡化表示）
-        var jsonValue = primitiveType.ToJsonValue();
-        if (jsonValue != null)
-        {
-            jsonObject.Add(propertyName, jsonValue);
-        }
-
-        // 添加完整物件（包含 Extension）
-        var fullObject = primitiveType.ToFullJsonObject();
-        if (fullObject != null && (fullObject.ContainsKey("id") || fullObject.ContainsKey("extension")))
-        {
-            var underscorePropertyName = $"_{propertyName}";
-            jsonObject.Add(underscorePropertyName, fullObject);
-        }
-
-        return jsonObject.ToJsonString(_options);
-    }
-
-    /// <summary>
-    /// 反序列化簡化 JSON
-    /// </summary>
-    /// <typeparam name="T">Primitive Type 型別</typeparam>
-    /// <param name="json">JSON 字串</param>
-    /// <returns>Primitive Type 實例，如果反序列化失敗則為 null</returns>
-    public T? DeserializeSimple<T>(string json) where T : IPrimitiveType<IConvertible>, new()
-    {
-        try
-        {
-            var jsonValue = JsonValue.Parse(json);
-            var primitiveType = new T();
-            primitiveType.FromJsonValue(jsonValue);
-            return primitiveType;
-        }
-        catch
-        {
-            return default;
-        }
-    }
-
-    /// <summary>
-    /// 反序列化完整 JSON
-    /// </summary>
-    /// <typeparam name="T">Primitive Type 型別</typeparam>
-    /// <param name="json">JSON 字串</param>
-    /// <returns>Primitive Type 實例，如果反序列化失敗則為 null</returns>
-    public T? DeserializeFull<T>(string json) where T : IPrimitiveType<IConvertible>, new()
-    {
-        try
-        {
-            var jsonObject = JsonObject.Parse(json);
-            var primitiveType = new T();
-            primitiveType.FromFullJsonObject(jsonObject);
-            return primitiveType;
-        }
-        catch
-        {
-            return default;
-        }
-    }
-
-    /// <summary>
-    /// 反序列化 FHIR 格式 JSON
-    /// </summary>
-    /// <typeparam name="T">Primitive Type 型別</typeparam>
-    /// <param name="propertyName">屬性名稱</param>
-    /// <param name="json">JSON 字串</param>
-    /// <returns>Primitive Type 實例，如果反序列化失敗則為 null</returns>
-    public T? DeserializeFhirFormat<T>(string propertyName, string json) where T : IPrimitiveType<IConvertible>, new()
-    {
-        try
-        {
-            var jsonObject = JsonObject.Parse(json);
-            var primitiveType = new T();
-
-            // 解析主值
-            if (jsonObject.TryGetPropertyValue(propertyName, out var valueElement))
-            {
-                primitiveType.FromJsonValue(valueElement as JsonValue);
-            }
-
-            // 解析完整物件
-            var underscorePropertyName = $"_{propertyName}";
-            if (jsonObject.TryGetPropertyValue(underscorePropertyName, out var fullObjectElement))
-            {
-                primitiveType.FromFullJsonObject(fullObjectElement as JsonObject);
-            }
-
-            return primitiveType;
-        }
-        catch
-        {
-            return default;
-        }
-    }
-} 

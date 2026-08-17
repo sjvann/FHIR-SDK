@@ -1,29 +1,14 @@
-﻿using Fhir.TypeFramework.Bases;
-using Fhir.TypeFramework.Validation;
-using System.Text.Json.Serialization;
+using Fhir.TypeFramework.Bases;
 
-namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+namespace Fhir.TypeFramework.DataTypes;
 
-/// <summary>
-/// FHIR markdown primitive type.
-/// A string that may contain markdown syntax for optional processing by a markdown presentation engine.
-/// </summary>
-/// <remarks>
-/// FHIR R5 markdown PrimitiveType
-/// A string that may contain markdown syntax for optional processing by a markdown presentation engine.
-/// </remarks>
-public class FhirMarkdown : UnifiedPrimitiveTypeBase<string>
+public class FhirMarkdown : StringPrimitiveTypeBase
 {
-    [JsonIgnore]
-    public string? MarkdownValue { get => Value; set => Value = value; }
-
     public FhirMarkdown() { }
-    public FhirMarkdown(string? value) : base(value) { }
+    public FhirMarkdown(string? v) : base(v) { }
+    public static implicit operator FhirMarkdown?(string? s) => s is null ? null : new FhirMarkdown(s);
+    public static implicit operator string?(FhirMarkdown? s) => s?.StringValue;
 
-    public static implicit operator FhirMarkdown?(string? value) => CreateFromString<FhirMarkdown>(value);
-    public static implicit operator string?(FhirMarkdown? fhirMarkdown) => GetStringValue<FhirMarkdown>(fhirMarkdown);
-
-    protected override string? ParseValueFromString(string value) => value;
-    protected override string? ValueToString(string? value) => value;
-    protected override bool ValidateValue(string value) => ValidationFramework.ValidateStringByteSize(value, 1024 * 1024);
+    protected override bool ValidateStringValue(string value) => true;
 }
+

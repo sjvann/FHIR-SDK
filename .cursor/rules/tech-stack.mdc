@@ -1,0 +1,33 @@
+---
+description: 技術棧基準 — .NET 版本、專案對齊與 ResourceCreator 例外
+alwaysApply: true
+---
+
+# 技術架構（FHIR.Solutions）
+
+## .NET 與專案對齊
+
+- **預設目標框架**：**`net10.0`**。新増程式庫或測試專案一律對齊 `Fhir.TypeFramework` / `Fhir.TypeFramework.Tests`。
+- **C# 專案**：`ImplicitUsings` 與 `Nullable` 維持 **enable**，與現有 `.csproj` 一致。
+- **方案**：`Fhir.Solution.slnx`。
+
+## FHIRPath / SDK 易用性
+
+- **`Fhir.Sdk.{Line}`**（R4 / R4B / R5）：對外唯一套件；`Fhir.Path.{Line}` 為 `IsPackable=false` 內部組件。
+- ResourceCreator 產生資源後會 scaffold `Fhir.Path.*` + `Fhir.Sdk.*`（或執行 `--scaffold-fhir-lines`）；未來 R6 對齊同一流程。
+- **Query Builder 應用**：`Fhir.QueryBuilder.Core` + `AddFhirQueryBuilderMultiVersionWithPath`。
+
+## FHIR IG SDK
+
+- **`Fhir.IGCreator`**：`install packageId@version` → `Fhir.IGCreator/generated/Fhir.Ig.{ShortName}/`（每 IG 一個 NuGet）。
+- **`Fhir.Ig.Core`**：通用 Profile 驗證；**`Fhir.Packages.Registry`** 與 ResourceCreator 共用套件快取（預設 `artifacts/fhir-packages`）。
+- 應用 DI：`Add{ShortName}IgWithPath()`（例 `AddUSCoreIgWithPath()`）；詳見 `Fhir.Docs/guides/ig-sdk-user-manual.md`。
+
+## 目前例外
+
+- **`Fhir.ResourceCreator`** 目標框架為 **`net10.0`**；Excel 模式仍依 **`System.Data.OleDb`**（主要為 Windows）。
+- 新增套件參考時，版本宜與**同方案內最近似專案**對齊。
+
+## 與文件來源
+
+- 較長說明與「為何不用 skill」請見 repository 根目錄 **`AGENTS.md`**；若兩處衝突，以 **`.csproj` 實際設定為準**，並應回寫更新文件。

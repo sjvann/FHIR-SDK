@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Fhir.Path</RootNamespace>
+    <AssemblyName>Fhir.Path</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Fhir.Path</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>FHIR SDK Team</Authors>
+    <Description>FHIRPath parser, POCO navigator, and evaluation engine for FHIR TypeFramework.</Description>
+    <PackageTags>FHIR;HL7;FHIRPath</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fhir.TypeFramework\Fhir.TypeFramework.csproj" />
+  </ItemGroup>
+
+</Project>

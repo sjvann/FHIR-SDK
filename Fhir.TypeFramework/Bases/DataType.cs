@@ -1,4 +1,3 @@
-using Fhir.TypeFramework.Abstractions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Fhir.TypeFramework.Bases;

@@ -1,81 +1,37 @@
-﻿using Fhir.TypeFramework.Bases;
-using Fhir.TypeFramework.Validation;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using System.Globalization;
+using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Interface;
 
-namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// FHIR instant primitive type.
-/// An instant in time - known at least to the second.
+/// FHIR R5 <c>instant</c> primitive（必含時區資訊之時間點）。
 /// </summary>
 /// <remarks>
-/// FHIR R5 instant PrimitiveType
-/// An instant in time - known at least to the second.
-/// 
-/// JSON Representation:
-/// - Simple: "instant" : "2023-12-25T10:30:00Z"
-/// - Full: "instant" : "2023-12-25T10:30:00Z", "_instant" : { "id" : "a1", "extension" : [...] }
+/// 交換字串仍以 <see cref="Bases.PrimitiveType{DateTime}.StringValue"/> 為準；由 <see cref="DateTime"/> 寫回時，UTC 以 <c>Z</c> 結尾，其餘以 ISO 8601 延伸格式輸出。
+/// 代表樣本可參考 <see cref="FhirTemporalLexicalExamples.FhirInstantLexical"/>。
 /// </remarks>
-public class FhirInstant : DateTimePrimitiveTypeBase<DateTime>
+public class FhirInstant : DateTimePrimitiveTypeBase<DateTime>, IDateTimeValue
 {
-    /// <summary>
-    /// Gets or sets the Instant value.
-    /// </summary>
-    [JsonIgnore]
-    public DateTime? InstantValue { get => Value; set => Value = value; }
-
-    /// <summary>
-    /// Initializes a new instance of the FhirInstant class.
-    /// </summary>
     public FhirInstant() { }
+    public FhirInstant(DateTime v) : base(v) { }
+    public FhirInstant(string? v) : base(v) { }
 
-    /// <summary>
-    /// Initializes a new instance of the FhirInstant class with the specified value.
-    /// </summary>
-    /// <param name="value">The Instant value.</param>
-    public FhirInstant(DateTime? value) : base(value) { }
+    public static implicit operator FhirInstant?(DateTime? value) => CreateFromDateTime<FhirInstant>(value);
+    public static implicit operator DateTime?(FhirInstant? instance) => GetDateTimeValue(instance);
+    public static implicit operator FhirInstant?(string? value) => value is null ? null : new FhirInstant(value);
+    public static implicit operator string?(FhirInstant? instance) => instance?.StringValue;
 
-    /// <summary>
-    /// Implicitly converts a DateTime to a FhirInstant.
-    /// </summary>
-    /// <param name="value">The DateTime value to convert.</param>
-    /// <returns>A FhirInstant instance.</returns>
-    public static implicit operator FhirInstant?(DateTime? value)
+    protected override string? ConvertToStringValue(DateTime value)
     {
-        return CreateFromDateTime<FhirInstant>(value);
+        if (value.Kind == DateTimeKind.Utc)
+            return value.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture);
+        return value.ToString("O", CultureInfo.InvariantCulture);
     }
 
-    /// <summary>
-    /// Implicitly converts a FhirInstant to a DateTime.
-    /// </summary>
-    /// <param name="fhirInstant">The FhirInstant to convert.</param>
-    /// <returns>The DateTime value.</returns>
-    public static implicit operator DateTime?(FhirInstant? fhirInstant)
-    {
-        return GetDateTimeValue<FhirInstant>(fhirInstant);
-    }
+    protected override bool ValidateDateTimeValue(DateTime value) => true;
 
-    /// <summary>
-    /// Parses a string value to a DateTime (instant).
-    /// </summary>
-    /// <param name="value">The string value to parse.</param>
-    /// <returns>The parsed DateTime value, or null if parsing fails.</returns>
-    protected override DateTime? ParseDateTimeValue(string value)
-    {
-        if (DateTime.TryParse(value, out var result))
-            return result.ToUniversalTime();
-        return null;
-    }
-
-    /// <summary>
-    /// Validates the Instant value according to FHIR specifications.
-    /// </summary>
-    /// <param name="value">The Instant value to validate.</param>
-    /// <returns>True if the value is valid; otherwise, false.</returns>
-    protected override bool ValidateDateTimeValue(DateTime value)
-    {
-        // FHIR instant has no additional validation rules beyond being a valid DateTime
-        return true;
-    }
+    DateTime? IValue<DateTime?>.Value => HasValue ? Value : null;
+    public bool HasValue => !IsNull;
 }
+

@@ -1,14 +1,19 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.DataTypes.ComplexTypes;
+using Fhir.TypeFramework.DataTypes;
+// using Fhir.TypeFramework.DataTypes.ComplexTypes; // 暫時註解，ComplexTypes 目錄已刪除
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-
 namespace Fhir.TypeFramework.Bases;
 
 /// <summary>
-/// FHIR Primitive Type 基礎類別
+/// FHIR R5 PrimitiveType（抽象，非泛型層）— 對應規格中 <c>DataType &lt;| PrimitiveType</c>。
+/// 所有具體 primitive 皆透過 <see cref="PrimitiveType{T}"/> 繼承此類別。
+/// </summary>
+public abstract class PrimitiveType : DataType;
+
+/// <summary>
+/// FHIR Primitive Type 泛型基礎類別
 /// 提供所有 FHIR 基本型別的通用功能
 /// </summary>
 /// <remarks>
@@ -16,12 +21,23 @@ namespace Fhir.TypeFramework.Bases;
 /// Base definition for all primitive types in FHIR.
 /// PrimitiveType 繼承自 DataType，因此具有 id 和 extension 屬性
 /// </remarks>
-public abstract class PrimitiveType : DataType, ITypeFramework
+public abstract class PrimitiveType<T> : PrimitiveType
 {
     /// <summary>
     /// 原始值（字串形式）
     /// </summary>
     protected string? _stringValue;
+
+    /// <summary>
+    /// 強型別值
+    /// </summary>
+    protected T? _typedValue;
+
+    /// <summary>
+    /// 當 <see cref="PrimitiveTypeOptions.TypedParseTiming"/> 為 <see cref="PrimitiveTypedParseTiming.Deferred"/> 時，
+    /// 表示字串自上次與強型別同步後已變更，需延遲至讀取 <see cref="Value"/> 或呼叫 <see cref="EnsureTypedValueParsed"/> 再解析。
+    /// </summary>
+    private bool _typedValueStale;
 
     /// <summary>
     /// 字串值
@@ -32,8 +48,38 @@ public abstract class PrimitiveType : DataType, ITypeFramework
         get => _stringValue;
         set
         {
-            _stringValue = value;
-            OnStringValueChanged(value);
+            var normalized = NormalizeStringInput(value);
+            _stringValue = normalized;
+            if (PrimitiveTypeOptions.TypedParseTiming == PrimitiveTypedParseTiming.Eager)
+            {
+                _typedValue = ParseTypedValue(normalized);
+                _typedValueStale = false;
+            }
+            else
+            {
+                _typedValueStale = true;
+            }
+
+            OnStringValueChanged(normalized);
+        }
+    }
+
+    /// <summary>
+    /// 強型別值
+    /// </summary>
+    [JsonIgnore]
+    public T? Value
+    {
+        get
+        {
+            SyncTypedValueFromStringIfNeeded();
+            return _typedValue;
+        }
+        set
+        {
+            _typedValue = value;
+            _stringValue = ConvertToStringValue(value);
+            _typedValueStale = false;
         }
     }
 
@@ -58,6 +104,38 @@ public abstract class PrimitiveType : DataType, ITypeFramework
     }
 
     /// <summary>
+    /// 在指派 <see cref="StringValue"/> 前對輸入字串做輕量正規化（預設不變更）。
+    /// 完整 FHIR 規則仍在 <see cref="Validate(ValidationContext)"/> 與型別專屬驗證中處理。
+    /// </summary>
+    protected virtual string? NormalizeStringInput(string? value) => value;
+
+    /// <summary>
+    /// 若目前為延遲解析模式且強型別尚未與字串同步，則立即執行 <see cref="ParseTypedValue"/>。
+    /// </summary>
+    public void EnsureTypedValueParsed() => SyncTypedValueFromStringIfNeeded();
+
+    private void SyncTypedValueFromStringIfNeeded()
+    {
+        if (PrimitiveTypeOptions.TypedParseTiming != PrimitiveTypedParseTiming.Deferred)
+            return;
+        if (!_typedValueStale)
+            return;
+        _typedValue = ParseTypedValue(_stringValue);
+        _typedValueStale = false;
+    }
+
+    private void ThrowIfPrimitiveValueInvalidForJsonWrite()
+    {
+        if (!PrimitiveTypeOptions.ValidateBeforeJsonWrite)
+            return;
+        if (_stringValue == null)
+            return;
+        var parsed = ParseValue(_stringValue);
+        if (!IsValidValue(parsed))
+            throw new InvalidOperationException($"Invalid value for {GetType().Name}: {_stringValue}");
+    }
+
+    /// <summary>
     /// 從字串解析值
     /// </summary>
     /// <param name="value">要解析的字串</param>
@@ -79,11 +157,26 @@ public abstract class PrimitiveType : DataType, ITypeFramework
     public abstract bool IsValidValue(object? value);
 
     /// <summary>
+    /// 從字串解析為強型別值
+    /// </summary>
+    /// <param name="value">要解析的字串</param>
+    /// <returns>解析後的強型別值</returns>
+    protected abstract T? ParseTypedValue(string? value);
+
+    /// <summary>
+    /// 將強型別值轉換為字串
+    /// </summary>
+    /// <param name="value">要轉換的強型別值</param>
+    /// <returns>字串表示</returns>
+    protected abstract string? ConvertToStringValue(T? value);
+
+    /// <summary>
     /// 轉換為 JSON 值（簡化表示）
     /// </summary>
     /// <returns>JSON 值</returns>
     public virtual JsonValue? ToJsonValue()
     {
+        ThrowIfPrimitiveValueInvalidForJsonWrite();
         return JsonValue.Create(_stringValue);
     }
 
@@ -102,6 +195,8 @@ public abstract class PrimitiveType : DataType, ITypeFramework
     /// <returns>完整的 JSON 物件</returns>
     public virtual JsonObject? ToFullJsonObject()
     {
+        ThrowIfPrimitiveValueInvalidForJsonWrite();
+
         var jsonObject = new JsonObject();
         
         if (!string.IsNullOrEmpty(_stringValue))
@@ -156,9 +251,9 @@ public abstract class PrimitiveType : DataType, ITypeFramework
         var elementKey = "_" + GetType().Name.ToLowerInvariant();
         if (jsonObject.TryGetPropertyValue(elementKey, out var elementNode) && elementNode is JsonObject elementObject)
         {
-            if (elementObject.TryGetPropertyValue("id", out var idNode))
+            if (elementObject.TryGetPropertyValue("id", out var idNode) && idNode is JsonValue idJv)
             {
-                Id = idNode?.GetValue<string>();
+                Id = idJv.GetValue<string>();
             }
 
             if (elementObject.TryGetPropertyValue("extension", out var extensionNode) && extensionNode is JsonArray extensionArray)
@@ -182,12 +277,15 @@ public abstract class PrimitiveType : DataType, ITypeFramework
     /// <returns>PrimitiveType 的深層複本</returns>
     public override Base DeepCopy()
     {
-        var copy = (PrimitiveType)MemberwiseClone();
+        var copy = (PrimitiveType<T>)MemberwiseClone();
         copy._stringValue = _stringValue;
-        
+        copy._typedValue = _typedValue;
+        copy._typedValueStale = _typedValueStale;
+        copy.Id = Id?.DeepCopy() as FhirString;
+
         if (Extension != null)
         {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            copy.Extension = Extension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
         }
 
         return copy;
@@ -200,10 +298,11 @@ public abstract class PrimitiveType : DataType, ITypeFramework
     /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
     public override bool IsExactly(Base other)
     {
-        if (other is not PrimitiveType otherPrimitive)
+        if (other is not PrimitiveType<T> otherPrimitive)
             return false;
 
-        return base.IsExactly(other) && 
+        // Primitive 的規範表示以字串為準；延遲解析時 _typedValue 可能尚未同步，故不比對強型別。
+        return base.IsExactly(other) &&
                _stringValue == otherPrimitive._stringValue;
     }
 
@@ -220,8 +319,8 @@ public abstract class PrimitiveType : DataType, ITypeFramework
             yield return result;
         }
 
-        // 驗證值
-        if (!IsValidValue(ParseValue(_stringValue)))
+        // 驗證值（允許 null 代表未設定）
+        if (_stringValue != null && !IsValidValue(ParseValue(_stringValue)))
         {
             yield return new ValidationResult($"Invalid value for {GetType().Name}: {_stringValue}");
         }
@@ -231,5 +330,5 @@ public abstract class PrimitiveType : DataType, ITypeFramework
     /// 轉換為字串表示
     /// </summary>
     /// <returns>字串表示</returns>
-    public override string? ToString() => _stringValue;
+    public override string ToString() => _stringValue ?? string.Empty;
 } 

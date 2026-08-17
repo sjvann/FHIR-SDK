@@ -1,5 +1,6 @@
-using Fhir.TypeFramework.Abstractions;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using Fhir.TypeFramework.Abstractions;
 
 namespace Fhir.TypeFramework.Bases;
 
@@ -12,12 +13,13 @@ namespace Fhir.TypeFramework.Bases;
 /// This is the root of the FHIR type hierarchy.
 /// 提供所有 FHIR 型別的基本功能，包括型別名稱、深層複製、相等性比較和驗證。
 /// </remarks>
-public abstract class Base : ITypeFramework
+public abstract class Base : ITypeFramework, IValidatableObject
 {
     /// <summary>
     /// 取得型別名稱
     /// </summary>
     /// <returns>型別的名稱</returns>
+    [JsonIgnore]
     public virtual string TypeName => GetType().Name;
 
     /// <summary>
@@ -44,7 +46,7 @@ public abstract class Base : ITypeFramework
     /// </summary>
     /// <param name="other">要比較的 ITypeFramework 物件</param>
     /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
-    bool ITypeFramework.IsExactly(ITypeFramework other) => other is Base baseOther && IsExactly(baseOther);
+    bool ITypeFramework.IsExactly(ITypeFramework? other) => other is Base baseOther && IsExactly(baseOther);
 
     /// <summary>
     /// 基礎驗證 - 子類別可以覆寫以提供特定驗證邏輯

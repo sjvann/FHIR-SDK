@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Fhir.TypeFramework.Interop</RootNamespace>
+    <AssemblyName>Fhir.TypeFramework.Interop</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Fhir.TypeFramework.Interop</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>FHIR SDK Team</Authors>
+    <Description>Interop extensions for converting .NET types to FHIR TypeFramework primitives and common complex types.</Description>
+    <PackageTags>FHIR;HL7;Interop;Extensions</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fhir.TypeFramework\Fhir.TypeFramework.csproj" />
+  </ItemGroup>
+
+</Project>

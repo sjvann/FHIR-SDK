@@ -1,28 +1,18 @@
-﻿using Fhir.TypeFramework.Bases;
-using System.Text.Json.Serialization;
+using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Validation;
 
-namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+namespace Fhir.TypeFramework.DataTypes;
 
-/// <summary>
-/// FHIR code primitive type.
-/// A coded value from a code system.
-/// </summary>
-/// <remarks>
-/// FHIR R5 code PrimitiveType
-/// A coded value from a code system.
-/// </remarks>
-public class FhirCode : UnifiedPrimitiveTypeBase<string>
+public class FhirCode : StringPrimitiveTypeBase
 {
-    [JsonIgnore]
-    public string? CodeValue { get => Value; set => Value = value; }
-
     public FhirCode() { }
-    public FhirCode(string? value) : base(value) { }
+    public FhirCode(string? v) : base(v) { }
+    public static implicit operator FhirCode?(string? s) => s is null ? null : new FhirCode(s);
+    public static implicit operator string?(FhirCode? s) => s?.StringValue;
 
-    public static implicit operator FhirCode?(string? value) => CreateFromString<FhirCode>(value);
-    public static implicit operator string?(FhirCode? fhirCode) => GetStringValue<FhirCode>(fhirCode);
+    public override bool IsValidValue(object? value)
+        => value is null || (value is string s && ValidationFramework.ValidateFhirCode(s) && base.IsValidValue(value));
 
-    protected override string? ParseValueFromString(string value) => value;
-    protected override string? ValueToString(string? value) => value;
-    protected override bool ValidateValue(string value) => true;
+    protected override bool ValidateStringValue(string value) => ValidationFramework.ValidateFhirCode(value);
 }
+

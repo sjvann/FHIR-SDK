@@ -1,0 +1,26 @@
+<Solution>
+  <Project Path="Fhir.TypeFramework/Fhir.TypeFramework.csproj" />
+  <Project Path="Fhir.TypeFramework.Tests/Fhir.TypeFramework.Tests.csproj" />
+  <Project Path="Fhir.TypeFramework.Interop/Fhir.TypeFramework.Interop.csproj" />
+  <Project Path="Fhir.TypeFramework.Interop.Tests/Fhir.TypeFramework.Interop.Tests.csproj" />
+  <Project Path="Fhir.Packages.Registry/Fhir.Packages.Registry.csproj" />
+  <Project Path="Fhir.ResourceCreator/Fhir.ResourceCreator.csproj" />
+  <Project Path="Fhir.Resource.Tests.Common/Fhir.Resource.Tests.Common.csproj" />
+  <Project Path="Fhir.ResourceCreator/generated/Fhir.Resources.R4/Fhir.Resources.R4.csproj" />
+  <Project Path="Fhir.ResourceCreator/generated/Fhir.Resources.R4/Fhir.Resources.R4.Tests/Fhir.Resources.R4.Tests.csproj" />
+  <Project Path="Fhir.ResourceCreator/generated/Fhir.Resources.R4B/Fhir.Resources.R4B.csproj" />
+  <Project Path="Fhir.ResourceCreator/generated/Fhir.Resources.R4B/Fhir.Resources.R4B.Tests/Fhir.Resources.R4B.Tests.csproj" />
+  <Project Path="Fhir.ResourceCreator/generated/Fhir.Resources.R5/Fhir.Resources.R5.csproj" />
+  <Project Path="Fhir.ResourceCreator/generated/Fhir.Resources.R5/Fhir.Resources.R5.Tests/Fhir.Resources.R5.Tests.csproj" />
+  <Project Path="Fhir.Path/Fhir.Path.csproj" />
+  <Project Path="Fhir.Path.R4/Fhir.Path.R4.csproj" />
+  <Project Path="Fhir.Path.R4B/Fhir.Path.R4B.csproj" />
+  <Project Path="Fhir.Path.R5/Fhir.Path.R5.csproj" />
+  <Project Path="Fhir.Path.Tests/Fhir.Path.Tests.csproj" />
+  <Project Path="Fhir.Sdk.R4/Fhir.Sdk.R4.csproj" />
+  <Project Path="Fhir.Sdk.R4B/Fhir.Sdk.R4B.csproj" />
+  <Project Path="Fhir.Sdk.R5/Fhir.Sdk.R5.csproj" />
+  <Project Path="Fhir.VersionManager/Fhir.VersionManager.csproj" />
+  <Project Path="Fhir.VersionManager.Tests/Fhir.VersionManager.Tests.csproj" />
+  <Project Path="Fhir.Docs/Fhir.Docs.csproj" />
+</Solution>

@@ -1,89 +1,25 @@
-using System.ComponentModel.DataAnnotations;
+#nullable enable
+
 using Fhir.TypeFramework.DataTypes;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 
 namespace Fhir.TypeFramework.Abstractions;
 
 /// <summary>
-/// Interface for FHIR Metadata Resources
-/// 元資料資源介面，定義具有元資料性質的 FHIR 資源
+/// FHIR R5 Metadata Resource 共通欄位（對應規格介面 <c>MetadataResource</c>）。
 /// </summary>
 /// <remarks>
-/// FHIR R5 MetadataResource Interface
-/// Metadata resources are those that contain metadata about other resources or the system.
-/// They include resources like StructureDefinition, ValueSet, CodeSystem, etc.
+/// 含知識資產相關作者／審查者與 <c>topic</c> 等；具體資源應實作此介面。
 /// </remarks>
-public interface IMetadataResource : IDomainResource
+public interface IMetadataResource
 {
-    /// <summary>
-    /// When the resource was approved by publisher
-    /// FHIR Path: MetadataResource.approvalDate
-    /// Cardinality: 0..1
-    /// Type: date
-    /// </summary>
     FhirDate? ApprovalDate { get; set; }
-
-    /// <summary>
-    /// When the resource was last reviewed
-    /// FHIR Path: MetadataResource.lastReviewDate
-    /// Cardinality: 0..1
-    /// Type: date
-    /// </summary>
     FhirDate? LastReviewDate { get; set; }
-
-    /// <summary>
-    /// When the resource is expected to be used
-    /// FHIR Path: MetadataResource.effectivePeriod
-    /// Cardinality: 0..1
-    /// Type: Period
-    /// </summary>
     Period? EffectivePeriod { get; set; }
-
-    /// <summary>
-    /// E.g. Education, Treatment, Assessment, etc.
-    /// FHIR Path: MetadataResource.topic
-    /// Cardinality: 0..*
-    /// Type: CodeableConcept[]
-    /// </summary>
-    IList<CodeableConcept>? Topic { get; set; }
-
-    /// <summary>
-    /// Who authored the resource
-    /// FHIR Path: MetadataResource.author
-    /// Cardinality: 0..*
-    /// Type: ContactDetail[]
-    /// </summary>
-    IList<ContactDetail>? Author { get; set; }
-
-    /// <summary>
-    /// Who edited the resource
-    /// FHIR Path: MetadataResource.editor
-    /// Cardinality: 0..*
-    /// Type: ContactDetail[]
-    /// </summary>
-    IList<ContactDetail>? Editor { get; set; }
-
-    /// <summary>
-    /// Who reviewed the resource
-    /// FHIR Path: MetadataResource.reviewer
-    /// Cardinality: 0..*
-    /// Type: ContactDetail[]
-    /// </summary>
-    IList<ContactDetail>? Reviewer { get; set; }
-
-    /// <summary>
-    /// Who endorsed the resource
-    /// FHIR Path: MetadataResource.endorser
-    /// Cardinality: 0..*
-    /// Type: ContactDetail[]
-    /// </summary>
-    IList<ContactDetail>? Endorser { get; set; }
-
-    /// <summary>
-    /// Additional documentation, citations, etc.
-    /// FHIR Path: MetadataResource.relatedArtifact
-    /// Cardinality: 0..*
-    /// Type: RelatedArtifact[]
-    /// </summary>
-    IList<RelatedArtifact>? RelatedArtifact { get; set; }
-} 
+    List<Contributor>? Author { get; set; }
+    List<Contributor>? Editor { get; set; }
+    List<Contributor>? Reviewer { get; set; }
+    List<Contributor>? Endorser { get; set; }
+    List<RelatedArtifact>? RelatedArtifact { get; set; }
+    List<CodeableConcept>? Topic { get; set; }
+}

@@ -1,5 +1,5 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.DataTypes.ComplexTypes;
+using Fhir.TypeFramework.Performance;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -7,7 +7,7 @@ namespace Fhir.TypeFramework.Bases;
 
 /// <summary>
 /// Complex Type 基礎類別
-/// 提供所有 Complex Type 的通用實作
+/// 提供所有 Complex Type 的通用實作（對應 FHIR R5 之一般／特殊用途 DataType，不含 PrimitiveType）。
 /// </summary>
 /// <remarks>
 /// 這個基礎類別提供：
@@ -15,8 +15,10 @@ namespace Fhir.TypeFramework.Bases;
 /// - 統一的相等性比較
 /// - 基礎驗證框架
 /// - 擴展功能管理
+/// 
+/// 繼承 <see cref="DataType"/> 使 Complex Type 與 Primitive Type 並列為 FHIR DataType，便於 API 與序列化一致。
 /// </remarks>
-public abstract class ComplexTypeBase : Element, IExtensibleTypeFramework
+public abstract class ComplexTypeBase : DataType, IExtensibleTypeFramework
 {
     /// <summary>
     /// 預設建構函式
@@ -30,16 +32,18 @@ public abstract class ComplexTypeBase : Element, IExtensibleTypeFramework
     public override Base DeepCopy()
     {
         var copy = (ComplexTypeBase)MemberwiseClone();
-        
+
+        copy.Id = Id?.DeepCopy() as FhirString;
+
         // 深層複製擴展
         if (Extension != null)
         {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            copy.Extension = Extension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
         }
-        
+
         // 呼叫子類別的深層複製邏輯
         DeepCopyInternal(copy);
-        
+
         return copy;
     }
 
@@ -110,18 +114,19 @@ public abstract class ComplexTypeBase : Element, IExtensibleTypeFramework
     /// <typeparam name="T">列表元素型別</typeparam>
     /// <param name="source">來源列表</param>
     /// <returns>深層複製的列表</returns>
-    protected static IList<T>? DeepCopyList<T>(IList<T>? source) where T : Base
+    protected static List<T>? DeepCopyList<T>(IList<T>? source) where T : Base
     {
-        // 使用效能優化器（如果可用）
+        if (source == null) return null;
+
+        // 優先使用可選的效能優化；失敗時回退到原有邏輯以保持相容性。
         try
         {
-            return Fhir.TypeFramework.Performance.DeepCopyOptimizer.OptimizedDeepCopyList(source);
+            var optimized = DeepCopyOptimizer.OptimizedDeepCopyList(source);
+            return optimized?.ToList();
         }
         catch
         {
-            // 回退到原有邏輯
-            if (source == null) return null;
-            return source.Select(item => item.DeepCopy() as T).ToList();
+            return source.Select(item => (item.DeepCopy() as T)!).ToList();
         }
     }
 
@@ -179,4 +184,10 @@ public abstract class ComplexTypeBase : Element, IExtensibleTypeFramework
             yield return result;
         }
     }
+
+    /// <summary>
+    /// 比較兩個皆繼承 <see cref="Base"/> 的執行個體是否語意相等（皆為 null 視為相等）。
+    /// </summary>
+    protected static bool ValueEquals<T>(T? a, T? b) where T : Base =>
+        (a == null && b == null) || (a != null && b != null && a.IsExactly(b));
 } 

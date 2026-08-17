@@ -1,196 +1,44 @@
-using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.Bases;
-using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Fhir.TypeFramework.Bases;
 
 namespace Fhir.TypeFramework.DataTypes;
 
-/// <summary>
-/// Quantity - 數量型別
-/// 用於在 FHIR 資源中表示數量
-/// </summary>
-/// <remarks>
-/// FHIR R5 Quantity (Complex Type)
-/// A measured amount (or an amount that can potentially be measured).
-/// 
-/// Structure:
-/// - value: decimal (0..1) - Numerical value (with implicit precision)
-/// - comparator: code (0..1) - &lt; | &lt;= | &gt;= | &gt; - how to understand the value
-/// - unit: string (0..1) - Unit representation
-/// - system: uri (0..1) - System that defines coded unit form
-/// - code: code (0..1) - Coded form of the unit
-/// - id: string (0..1) - inherited from Element
-/// - extension: Extension[] (0..*) - inherited from Element
-/// </remarks>
-public class Quantity : UnifiedComplexTypeBase<Quantity>
+/// <summary>FHIR R5 Datatype Quantity。</summary>
+public class Quantity : ComplexTypeBase
 {
-    /// <summary>
-    /// 數值（具有隱含精度）
-    /// FHIR Path: Quantity.value
-    /// Cardinality: 0..1
-    /// Type: decimal
-    /// </summary>
-    [JsonPropertyName("value")]
-    public FhirDecimal? Value { get; set; }
+    [JsonPropertyName("value")] public FhirDecimal? Value { get; set; }
+    [JsonPropertyName("comparator")] public FhirCode? Comparator { get; set; }
+    [JsonPropertyName("unit")] public FhirString? Unit { get; set; }
+    [JsonPropertyName("system")] public FhirUri? System { get; set; }
+    [JsonPropertyName("code")] public FhirCode? Code { get; set; }
 
-    /// <summary>
-    /// 比較器 - 如何理解值
-    /// FHIR Path: Quantity.comparator
-    /// Cardinality: 0..1
-    /// Type: code
-    /// </summary>
-    [JsonPropertyName("comparator")]
-    public FhirCode? Comparator { get; set; }
-
-    /// <summary>
-    /// 單位表示
-    /// FHIR Path: Quantity.unit
-    /// Cardinality: 0..1
-    /// Type: string
-    /// </summary>
-    [JsonPropertyName("unit")]
-    public FhirString? Unit { get; set; }
-
-    /// <summary>
-    /// 定義編碼單位形式的系統
-    /// FHIR Path: Quantity.system
-    /// Cardinality: 0..1
-    /// Type: uri
-    /// </summary>
-    [JsonPropertyName("system")]
-    public FhirUri? System { get; set; }
-
-    /// <summary>
-    /// 單位的編碼形式
-    /// FHIR Path: Quantity.code
-    /// Cardinality: 0..1
-    /// Type: code
-    /// </summary>
-    [JsonPropertyName("code")]
-    public FhirCode? Code { get; set; }
-
-    /// <summary>
-    /// 檢查是否有值
-    /// </summary>
-    /// <returns>如果存在值則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasValue => Value?.Value != null;
-
-    /// <summary>
-    /// 檢查是否有比較器
-    /// </summary>
-    /// <returns>如果存在比較器則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasComparator => !string.IsNullOrEmpty(Comparator?.Value);
-
-    /// <summary>
-    /// 檢查是否有單位
-    /// </summary>
-    /// <returns>如果存在單位則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasUnit => !string.IsNullOrEmpty(Unit?.Value);
-
-    /// <summary>
-    /// 檢查是否有系統
-    /// </summary>
-    /// <returns>如果存在系統則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasSystem => !string.IsNullOrEmpty(System?.Value);
-
-    /// <summary>
-    /// 檢查是否有編碼
-    /// </summary>
-    /// <returns>如果存在編碼則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasCode => !string.IsNullOrEmpty(Code?.Value);
-
-    /// <summary>
-    /// 取得顯示文字
-    /// </summary>
-    /// <returns>顯示文字</returns>
-    [JsonIgnore]
-    public string? DisplayText
+    protected override void DeepCopyInternal(ComplexTypeBase copy)
     {
-        get
-        {
-            var parts = new List<string>();
-            
-            if (HasValue)
-            {
-                var valueText = Value?.Value?.ToString();
-                if (HasComparator)
-                {
-                    valueText = $"{Comparator?.Value}{valueText}";
-                }
-                parts.Add(valueText);
-            }
-            
-            if (HasUnit)
-            {
-                parts.Add(Unit?.Value);
-            }
-            else if (HasCode)
-            {
-                parts.Add(Code?.Value);
-            }
-            
-            return parts.Any() ? string.Join(" ", parts) : null;
-        }
+        var c = (Quantity)copy;
+        c.Value = Value?.DeepCopy() as FhirDecimal;
+        c.Comparator = Comparator?.DeepCopy() as FhirCode;
+        c.Unit = Unit?.DeepCopy() as FhirString;
+        c.System = System?.DeepCopy() as FhirUri;
+        c.Code = Code?.DeepCopy() as FhirCode;
     }
 
-    protected override void CopyFieldsTo(Quantity target)
+    protected override bool IsExactlyInternal(ComplexTypeBase other)
     {
-        target.Value = Value?.DeepCopy() as FhirDecimal;
-        target.Comparator = Comparator?.DeepCopy() as FhirCode;
-        target.Unit = Unit?.DeepCopy() as FhirString;
-        target.System = System?.DeepCopy() as FhirUri;
-        target.Code = Code?.DeepCopy() as FhirCode;
+        var o = (Quantity)other;
+        return ValueEquals(Value, o.Value)
+               && ValueEquals(Comparator, o.Comparator)
+               && ValueEquals(Unit, o.Unit)
+               && ValueEquals(System, o.System)
+               && ValueEquals(Code, o.Code);
     }
 
-    protected override bool FieldsAreExactly(Quantity other)
+    protected override IEnumerable<ValidationResult> ValidateInternal(ValidationContext validationContext)
     {
-        return DeepEqualityComparer.AreEqual(Value, other.Value) &&
-               DeepEqualityComparer.AreEqual(Comparator, other.Comparator) &&
-               DeepEqualityComparer.AreEqual(Unit, other.Unit) &&
-               DeepEqualityComparer.AreEqual(System, other.System) &&
-               DeepEqualityComparer.AreEqual(Code, other.Code);
+        foreach (var r in ValidateItem(Value, validationContext)) yield return r;
+        foreach (var r in ValidateItem(Comparator, validationContext)) yield return r;
+        foreach (var r in ValidateItem(Unit, validationContext)) yield return r;
+        foreach (var r in ValidateItem(System, validationContext)) yield return r;
+        foreach (var r in ValidateItem(Code, validationContext)) yield return r;
     }
-
-    protected override IEnumerable<ValidationResult> ValidateFields(ValidationContext validationContext)
-    {
-        var results = new List<ValidationResult>();
-
-        // 驗證 Value
-        if (Value != null)
-        {
-            results.AddRange(Value.Validate(validationContext));
-        }
-
-        // 驗證 Comparator
-        if (Comparator != null)
-        {
-            results.AddRange(Comparator.Validate(validationContext));
-        }
-
-        // 驗證 Unit
-        if (Unit != null)
-        {
-            results.AddRange(Unit.Validate(validationContext));
-        }
-
-        // 驗證 System
-        if (System != null)
-        {
-            results.AddRange(System.Validate(validationContext));
-        }
-
-        // 驗證 Code
-        if (Code != null)
-        {
-            results.AddRange(Code.Validate(validationContext));
-        }
-
-        return results;
-    }
-} 
+}

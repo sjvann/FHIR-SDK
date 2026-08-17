@@ -1,81 +1,38 @@
-﻿using Fhir.TypeFramework.Bases;
-using Fhir.TypeFramework.Validation;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using System.Globalization;
+using Fhir.TypeFramework.Bases;
 
-namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+namespace Fhir.TypeFramework.DataTypes;
 
 /// <summary>
-/// FHIR time primitive type.
-/// A time during the day, with no date specified.
+/// FHIR R5 <c>time</c> primitive（一日內之時刻，字串與 <see cref="TimeSpan"/> 投影）。
 /// </summary>
 /// <remarks>
-/// FHIR R5 time PrimitiveType
-/// A time during the day, with no date specified.
-/// 
-/// JSON Representation:
-/// - Simple: "time" : "10:30:00"
-/// - Full: "time" : "10:30:00", "_time" : { "id" : "a1", "extension" : [...] }
+/// 交換字串請以 <see cref="Bases.PrimitiveType{TimeSpan}.StringValue"/> 為準；由 <see cref="TimeSpan"/> 寫回時為不變文化之固定格式（見 <see cref="ConvertToStringValue"/>）。
+/// 代表樣本可參考 <see cref="FhirTemporalLexicalExamples.FhirTimeLexical"/>。
 /// </remarks>
 public class FhirTime : DateTimePrimitiveTypeBase<TimeSpan>
 {
-    /// <summary>
-    /// Gets or sets the Time value.
-    /// </summary>
-    [JsonIgnore]
-    public TimeSpan? TimeValue { get => Value; set => Value = value; }
-
-    /// <summary>
-    /// Initializes a new instance of the FhirTime class.
-    /// </summary>
     public FhirTime() { }
+    public FhirTime(TimeSpan v) : base(v) { }
+    public FhirTime(string? v) : base(v) { }
 
-    /// <summary>
-    /// Initializes a new instance of the FhirTime class with the specified value.
-    /// </summary>
-    /// <param name="value">The Time value.</param>
-    public FhirTime(TimeSpan? value) : base(value) { }
+    public static implicit operator FhirTime?(TimeSpan? value) => CreateFromDateTime<FhirTime>(value);
+    public static implicit operator TimeSpan?(FhirTime? instance) => GetDateTimeValue(instance);
+    public static implicit operator FhirTime?(string? value) => value is null ? null : new FhirTime(value);
+    public static implicit operator string?(FhirTime? instance) => instance?.StringValue;
 
-    /// <summary>
-    /// Implicitly converts a TimeSpan to a FhirTime.
-    /// </summary>
-    /// <param name="value">The TimeSpan value to convert.</param>
-    /// <returns>A FhirTime instance.</returns>
-    public static implicit operator FhirTime?(TimeSpan? value)
+    /// <summary>將一日內之時刻格式化為與文化無關之字串（必要時含小數秒）。</summary>
+    protected override string? ConvertToStringValue(TimeSpan value)
     {
-        return CreateFromDateTime<FhirTime>(value);
+        var t = value;
+        if (t < TimeSpan.Zero)
+            t = TimeSpan.Zero;
+        if (t >= TimeSpan.FromDays(1))
+            t = TimeSpan.FromTicks(t.Ticks % TimeSpan.TicksPerDay);
+        var s = t.ToString(@"hh\:mm\:ss\.fffffff", CultureInfo.InvariantCulture);
+        return s.TrimEnd('0').TrimEnd('.');
     }
 
-    /// <summary>
-    /// Implicitly converts a FhirTime to a TimeSpan.
-    /// </summary>
-    /// <param name="fhirTime">The FhirTime to convert.</param>
-    /// <returns>The TimeSpan value.</returns>
-    public static implicit operator TimeSpan?(FhirTime? fhirTime)
-    {
-        return GetDateTimeValue<FhirTime>(fhirTime);
-    }
-
-    /// <summary>
-    /// Parses a string value to a TimeSpan.
-    /// </summary>
-    /// <param name="value">The string value to parse.</param>
-    /// <returns>The parsed TimeSpan value, or null if parsing fails.</returns>
-    protected override TimeSpan? ParseDateTimeValue(string value)
-    {
-        if (TimeSpan.TryParse(value, out var result))
-            return result;
-        return null;
-    }
-
-    /// <summary>
-    /// Validates the Time value according to FHIR specifications.
-    /// </summary>
-    /// <param name="value">The Time value to validate.</param>
-    /// <returns>True if the value is valid; otherwise, false.</returns>
-    protected override bool ValidateDateTimeValue(TimeSpan value)
-    {
-        // FHIR time has no additional validation rules beyond being a valid TimeSpan
-        return true;
-    }
+    protected override bool ValidateDateTimeValue(TimeSpan value) => true;
 }
+

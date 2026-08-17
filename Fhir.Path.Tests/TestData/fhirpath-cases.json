@@ -1,0 +1,12 @@
+[
+  { "expression": "true", "expected": true },
+  { "expression": "false", "expected": false },
+  { "expression": "1 + 2", "expected": 3 },
+  { "expression": "'a' = 'a'", "expected": true },
+  { "expression": "'a' != 'b'", "expected": true },
+  { "expression": "Patient.name.empty()", "context": "Patient", "expected": false },
+  { "expression": "Patient.name.given", "context": "Patient", "expectedCount": 3 },
+  { "expression": "Patient.name.family", "context": "Patient", "expectedCount": 2 },
+  { "expression": "Patient.active", "context": "Patient", "expected": true },
+  { "expression": "Patient.name.where(family = 'Doe').given", "context": "Patient", "expectedCount": 2 }
+]

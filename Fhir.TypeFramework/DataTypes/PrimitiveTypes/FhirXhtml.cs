@@ -1,29 +1,14 @@
-﻿using Fhir.TypeFramework.Bases;
-using Fhir.TypeFramework.Validation;
-using System.Text.Json.Serialization;
+using Fhir.TypeFramework.Bases;
 
-namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+namespace Fhir.TypeFramework.DataTypes;
 
-/// <summary>
-/// FHIR xhtml primitive type.
-/// XHTML content, restricted to only the body, div, span, br, p, and a elements.
-/// </summary>
-/// <remarks>
-/// FHIR R5 xhtml PrimitiveType
-/// XHTML content, restricted to only the body, div, span, br, p, and a elements.
-/// </remarks>
-public class FhirXhtml : UnifiedPrimitiveTypeBase<string>
+public class FhirXhtml : StringPrimitiveTypeBase
 {
-    [JsonIgnore]
-    public string? XhtmlValue { get => Value; set => Value = value; }
-
     public FhirXhtml() { }
-    public FhirXhtml(string? value) : base(value) { }
+    public FhirXhtml(string? v) : base(v) { }
+    public static implicit operator FhirXhtml?(string? s) => s is null ? null : new FhirXhtml(s);
+    public static implicit operator string?(FhirXhtml? s) => s?.StringValue;
 
-    public static implicit operator FhirXhtml?(string? value) => CreateFromString<FhirXhtml>(value);
-    public static implicit operator string?(FhirXhtml? fhirXhtml) => GetStringValue<FhirXhtml>(fhirXhtml);
-
-    protected override string? ParseValueFromString(string value) => value;
-    protected override string? ValueToString(string? value) => value;
-    protected override bool ValidateValue(string value) => ValidationFramework.ValidateStringByteSize(value, 1024 * 1024);
+    protected override bool ValidateStringValue(string value) => true;
 }
+

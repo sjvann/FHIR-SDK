@@ -1,8 +1,6 @@
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.DataTypes;
-using Fhir.TypeFramework.DataTypes.ComplexTypes;
-using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Fhir.TypeFramework.Bases;
@@ -13,8 +11,8 @@ namespace Fhir.TypeFramework.Bases;
 /// </summary>
 /// <remarks>
 /// FHIR R5 Element (Abstract)
-/// Base definition for all elements that are defined inside a resource - but not those in a data type.
-/// 提供 id 和 extension 屬性，支援擴展功能。
+/// 規格階層中為 <c>DataType</c>、<c>BackboneElement</c> 等之上層（見 UML：<c>Base → Element</c>）。
+/// 提供 id 與 extension；巢狀 backbone 元素請使用 <see cref="BackboneElement"/>。
 /// 
 /// Structure:
 /// - id: string (0..1) - Unique id for the element within a resource
@@ -30,76 +28,16 @@ public abstract class Element : Base, IIdentifiableTypeFramework, IExtensibleTyp
     /// </summary>
     [JsonPropertyName("id")]
     public FhirString? Id { get; set; }
-    
-    /// <summary>
-    /// Additional information that is not part of the basic definition of the element.
-    /// FHIR Path: Element.extension
-    /// Cardinality: 0..*
-    /// Type: Extension[]
-    /// </summary>
-    [JsonPropertyName("extension")]
-    public IList<IExtension>? Extension { get; set; }
-    
-    /// <summary>
-    /// 檢查是否有 extensions
-    /// </summary>
-    /// <returns>如果存在 extensions 則為 true，否則為 false</returns>
-    [JsonIgnore]
-    public bool HasExtensions => Extension?.Any() == true;
-    
-    /// <summary>
-    /// 取得指定 URL 的 extension
-    /// </summary>
-    /// <param name="url">要查詢的擴展 URL</param>
-    /// <returns>找到的擴展，如果不存在則為 null</returns>
-    public IExtension? GetExtension(string url)
-    {
-        return Extension?.FirstOrDefault(ext => ext.Url == url);
-    }
-    
-    /// <summary>
-    /// 添加 extension（使用新的 ChoiceType 實作）
-    /// </summary>
-    /// <param name="url">擴展的 URL</param>
-    /// <param name="value">擴展的值（使用 ChoiceType）</param>
-    public void AddExtension(string url, ExtensionValueChoice value)
-    {
-        Extension ??= new List<IExtension>();
-        var extension = new Extension { Url = url, Value = value };
-        Extension.Add(extension);
-    }
 
     /// <summary>
-    /// 添加 extension（泛型版本）
+    /// Additional content defined by implementations
+    /// FHIR Path: Element.extension
+    /// Cardinality: 0..*
+    /// Type: Extension
     /// </summary>
-    /// <typeparam name="T">擴展值的型別</typeparam>
-    /// <param name="url">擴展的 URL</param>
-    /// <param name="value">擴展的值</param>
-    public void AddExtension<T>(string url, T value) where T : class
-    {
-        Extension ??= new List<IExtension>();
-        var extension = new Extension { Url = url, Value = value };
-        Extension.Add(extension);
-    }
-    
-    /// <summary>
-    /// 移除指定 URL 的 extension
-    /// </summary>
-    /// <param name="url">要移除的擴展 URL</param>
-    /// <returns>如果成功移除則為 true，否則為 false</returns>
-    public bool RemoveExtension(string url)
-    {
-        if (Extension == null) return false;
-        
-        var toRemove = Extension.Where(ext => ext.Url == url).ToList();
-        foreach (var ext in toRemove)
-        {
-            Extension.Remove(ext);
-        }
-        
-        return toRemove.Any();
-    }
-    
+    [JsonPropertyName("extension")]
+    public List<IExtension>? Extension { get; set; }
+
     /// <summary>
     /// 建立物件的深層複本
     /// </summary>
@@ -107,18 +45,18 @@ public abstract class Element : Base, IIdentifiableTypeFramework, IExtensibleTyp
     public override Base DeepCopy()
     {
         var copy = (Element)MemberwiseClone();
-        
-        // 深層複製 Extension
+        copy.Id = Id?.DeepCopy() as FhirString;
+
         if (Extension != null)
         {
-            copy.Extension = Extension.Select(e => e.DeepCopy() as IExtension).ToList();
+            copy.Extension = Extension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
         }
-        
+
         return copy;
     }
-    
+
     /// <summary>
-    /// 判斷與另一個 Element 物件是否相等
+    /// 判斷與另一個物件是否相等
     /// </summary>
     /// <param name="other">要比較的物件</param>
     /// <returns>如果兩個物件相等則為 true，否則為 false</returns>
@@ -127,12 +65,30 @@ public abstract class Element : Base, IIdentifiableTypeFramework, IExtensibleTyp
         if (other is not Element otherElement)
             return false;
 
-        return Equals(Id, otherElement.Id) &&
-               Extension?.Count == otherElement.Extension?.Count &&
-               (Extension?.Zip(otherElement.Extension ?? new List<IExtension>(), 
-                             (a, b) => a.IsExactly(b)).All(x => x) ?? true);
+        // 檢查 Id
+        if (!((Id == null && otherElement.Id == null) ||
+              (Id != null && otherElement.Id != null && Id.IsExactly(otherElement.Id))))
+            return false;
+
+        // 檢查 Extension
+        if (Extension == null && otherElement.Extension == null)
+            return true;
+
+        if (Extension == null || otherElement.Extension == null)
+            return false;
+
+        if (Extension.Count != otherElement.Extension.Count)
+            return false;
+
+        for (int i = 0; i < Extension.Count; i++)
+        {
+            if (!Extension[i].IsExactly(otherElement.Extension[i] as ITypeFramework))
+                return false;
+        }
+
+        return true;
     }
-    
+
     /// <summary>
     /// 驗證 Element 是否符合 FHIR 規範
     /// </summary>
@@ -140,33 +96,28 @@ public abstract class Element : Base, IIdentifiableTypeFramework, IExtensibleTyp
     /// <returns>驗證結果集合</returns>
     public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        // Element ID 驗證 - 使用 FhirString 的內建驗證
+        // 驗證 Id
         if (Id != null)
         {
-            var idValidationContext = new ValidationContext(Id);
-            foreach (var result in Id.Validate(idValidationContext))
+            foreach (var result in Id.Validate(validationContext))
             {
                 yield return result;
             }
         }
-        
-        // Extension 驗證
+
+        // 驗證 Extension
         if (Extension != null)
         {
-            foreach (var extension in Extension)
+            foreach (var ext in Extension)
             {
-                var extensionValidationContext = new ValidationContext(extension);
-                foreach (var result in extension.Validate(extensionValidationContext))
+                var extCtx = new ValidationContext(ext);
+                foreach (var result in ext.Validate(extCtx))
                 {
                     yield return result;
                 }
             }
         }
-        
-        // 呼叫基礎驗證
-        foreach (var result in base.Validate(validationContext))
-        {
-            yield return result;
-        }
     }
+
+    public virtual JsonNode? GetJsonNode() => null;
 }

@@ -1,6 +1,4 @@
-using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.Abstractions;
-using Fhir.TypeFramework.DataTypes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -77,14 +75,14 @@ public abstract class BackboneType : DataType
     public override Base DeepCopy()
     {
         var copy = (BackboneType)Activator.CreateInstance(GetType())!;
-        copy.Id = Id;
+        copy.Id = Id?.DeepCopy() as FhirString;
         if (Extension != null)
         {
-            copy.Extension = Extension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            copy.Extension = Extension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
         }
         if (ModifierExtension != null)
         {
-            copy.ModifierExtension = ModifierExtension.Select(ext => ext.DeepCopy() as IExtension).ToList();
+            copy.ModifierExtension = ModifierExtension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
         }
         return copy;
     }
@@ -100,7 +98,7 @@ public abstract class BackboneType : DataType
             return false;
         return base.IsExactly(other)
             && ModifierExtension?.Count == otherBackbone.ModifierExtension?.Count
-            && (ModifierExtension?.Zip(otherBackbone.ModifierExtension ?? new List<IExtension>(), (a, b) => a.IsExactly(b)).All(x => x) ?? true);
+            && (ModifierExtension?.Zip(otherBackbone.ModifierExtension ?? new List<IExtension>(), (a, b) => a.IsExactly(b as ITypeFramework)).All(x => x) ?? true);
     }
 
     /// <summary>

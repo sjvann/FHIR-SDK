@@ -1,30 +1,15 @@
-﻿using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Bases;
 using Fhir.TypeFramework.Validation;
-using System.Text.Json.Serialization;
 
-namespace Fhir.TypeFramework.DataTypes.PrimitiveTypes;
+namespace Fhir.TypeFramework.DataTypes;
 
-/// <summary>
-/// FHIR base64Binary primitive type.
-/// A stream of bytes, base64 encoded.
-/// </summary>
-/// <remarks>
-/// FHIR R5 base64Binary PrimitiveType
-/// A stream of bytes, base64 encoded.
-/// </remarks>
-public class FhirBase64Binary : UnifiedPrimitiveTypeBase<string>
+public class FhirBase64Binary : StringPrimitiveTypeBase
 {
-    [JsonIgnore]
-    public string? Base64BinaryValue { get => Value; set => Value = value; }
-
     public FhirBase64Binary() { }
-    public FhirBase64Binary(string? value) : base(value) { }
+    public FhirBase64Binary(string? v) : base(v) { }
+    public static implicit operator FhirBase64Binary?(string? s) => s is null ? null : new FhirBase64Binary(s);
+    public static implicit operator string?(FhirBase64Binary? s) => s?.StringValue;
 
-    public static implicit operator FhirBase64Binary?(string? value) => CreateFromString<FhirBase64Binary>(value);
-    public static implicit operator string?(FhirBase64Binary? fhirBase64Binary) => GetStringValue<FhirBase64Binary>(fhirBase64Binary);
-
-    protected override string? ParseValueFromString(string value) => value;
-    protected override string? ValueToString(string? value) => value;
-    protected override bool ValidateValue(string value) => ValidationFramework.ValidateBase64Binary(value);
+    protected override bool ValidateStringValue(string value) => ValidationFramework.ValidateFhirBase64Binary(value);
 }
 

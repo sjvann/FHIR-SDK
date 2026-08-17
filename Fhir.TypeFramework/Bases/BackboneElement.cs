@@ -15,6 +15,18 @@ namespace Fhir.TypeFramework.Bases;
 /// </remarks>
 public abstract class BackboneElement : Element
 {
+    /// <inheritdoc />
+    public override Base DeepCopy()
+    {
+        var copy = (BackboneElement)base.DeepCopy();
+        if (ModifierExtension != null)
+        {
+            copy.ModifierExtension = ModifierExtension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
+        }
+
+        return copy;
+    }
+
     /// <summary>
     /// May be used to represent additional information that is not part of the basic definition of the element and that modifies the understanding of the element in which it is contained and/or the understanding of the containing element's descendants.
     /// FHIR Path: BackboneElement.modifierExtension
@@ -83,7 +95,7 @@ public abstract class BackboneElement : Element
         return base.IsExactly(other) &&
                ModifierExtension?.Count == otherBackbone.ModifierExtension?.Count &&
                (ModifierExtension?.Zip(otherBackbone.ModifierExtension ?? new List<IExtension>(), 
-                                    (a, b) => a.IsExactly(b)).All(x => x) ?? true);
+                                    (a, b) => a.IsExactly(b as ITypeFramework)).All(x => x) ?? true);
     }
 
     /// <summary>
