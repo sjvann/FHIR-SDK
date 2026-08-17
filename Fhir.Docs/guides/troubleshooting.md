@@ -25,11 +25,6 @@
 - 先 **`dotnet build`** 資源組件專案，再 **`dotnet test`** 測試專案。
 - Smoke 測試僅驗證最小 JSON；若實際交換格式較複雜，請另外加入 **fixture** 與自訂断言（見 [測試手冊](testing.md)）。
 
-## Excel 模式
-
-- 需本機可讀取 **`ExcelDefinitionsPath`** 下之 **`.xlsx`**，且 OleDb 環境可用（多為 Windows）。
-- 與 Registry 主線產物可能不一致；新功能以 Registry 為準。
-
 ## 取得協助時建議附上的資訊
 
 - `appsettings.json` 中 **`Generator`** 區段（可遮罩敏感 URL）。

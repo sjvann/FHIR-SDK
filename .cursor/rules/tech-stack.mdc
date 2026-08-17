@@ -25,7 +25,7 @@ alwaysApply: true
 
 ## 目前例外
 
-- **`Fhir.ResourceCreator`** 目標框架為 **`net10.0`**；Excel 模式仍依 **`System.Data.OleDb`**（主要為 Windows）。
+- **`Fhir.ResourceCreator`** 目標框架為 **`net10.0`**；定義來源為 FHIR Package Registry（`hl7.fhir.r*.core`），不使用 Excel／OleDb。
 - 新增套件參考時，版本宜與**同方案內最近似專案**對齊。
 
 ## 與文件來源

@@ -16,7 +16,7 @@ flowchart LR
 
 ## 1. 要取得什麼
 
-**不要**再下載 Excel 定義檔（`Mode: Excel` 僅供舊流程）。主線輸入是 FHIR Package Registry 的 **NPM 風格 `.tgz`**。
+輸入是 FHIR Package Registry 的 **NPM 風格 `.tgz`**（`hl7.fhir.r{n}.core`），不是 Excel，也不是 NuGet 規格套件。
 
 | 要取得的東西 | 哪裡找 | 用途 |
 |--------------|--------|------|

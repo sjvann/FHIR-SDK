@@ -253,39 +253,4 @@ public static class GenerationOrchestrator
     }
 
     static string SanitizePath(string packageId) => packageId.Replace('/', '-').Replace('\\', '-');
-
-    public static void RunExcelLegacy(GeneratorOptions options)
-    {
-        var templateSec = options.ExcelDefinitionsPath
-            ?? throw new InvalidOperationException("ExcelDefinitionsPath is required for Excel mode.");
-        var saveTo = options.OutputRoot;
-        var ns = string.IsNullOrWhiteSpace(options.RootNamespace)
-            ? "Fhir.Resources.Excel"
-            : options.RootNamespace;
-        Directory.CreateDirectory(saveTo);
-        RemoveGeneratedFiles(saveTo);
-
-        var filter = options.Packages.FirstOrDefault()?.ResourcesInclude;
-        foreach (var file in Directory.GetFiles(templateSec, "*.xlsx", SearchOption.TopDirectoryOnly))
-        {
-            var name = Path.GetFileNameWithoutExtension(file);
-            if (filter is { Count: > 0 } && !filter.Contains(name, StringComparer.OrdinalIgnoreCase))
-                continue;
-
-            var rm = new ResourceModel(file, saveTo, ns);
-            if (rm.ResourceName is null)
-                continue;
-            var code = PocoResourceGenerator.Generate(rm, ns);
-            var outPath = Path.Combine(saveTo, $"{rm.ResourceName}.generated.cs");
-            File.WriteAllText(outPath, code);
-        }
-    }
-
-    static void RemoveGeneratedFiles(string saveTo)
-    {
-        if (!Directory.Exists(saveTo))
-            return;
-        foreach (var f in Directory.GetFiles(saveTo, "*.generated.cs", SearchOption.TopDirectoryOnly))
-            File.Delete(f);
-    }
 }

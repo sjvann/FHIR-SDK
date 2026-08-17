@@ -1,16 +1,8 @@
 namespace FhirResourceCreator.Configuration;
 
-public enum GeneratorInputMode
-{
-    Registry,
-    Excel
-}
-
 public sealed class GeneratorOptions
 {
     public const string SectionName = "Generator";
-
-    public GeneratorInputMode Mode { get; set; } = GeneratorInputMode.Registry;
 
     /// <summary>Primary FHIR NPM registry (trailing slash optional).</summary>
     public string RegistryBaseUrl { get; set; } = "https://packages.fhir.org";
@@ -22,9 +14,6 @@ public sealed class GeneratorOptions
 
     /// <summary>Where generated solution folders are written.</summary>
     public string OutputRoot { get; set; } = "generated";
-
-    /// <summary>Legacy Excel pipeline: folder containing *.xlsx definitions.</summary>
-    public string? ExcelDefinitionsPath { get; set; }
 
     /// <summary>
     /// Optional global namespace root. Leave empty or use <see cref="GeneratedResourceNaming.LegacySentinelGlobalNamespace"/> so each package defaults to its emitted assembly name (e.g. <c>Fhir.Resources.R5</c>). Do not use suffix <c>Core</c> for generated resource assemblies — that implies a shared foundation; cross-version shared code lives in <c>Fhir.TypeFramework</c> only.

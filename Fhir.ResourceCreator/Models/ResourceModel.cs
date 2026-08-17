@@ -1,11 +1,5 @@
 using FhirResourceCreator.Fhir;
-using System;
-using System.Collections.Generic;
-using System.Data.OleDb;
-using System.Linq;
-using System.Runtime.Versioning;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FhirResourceCreator.Models
 {
@@ -15,24 +9,12 @@ namespace FhirResourceCreator.Models
         const string RescourceFolderSub = "Sub";
 
         private readonly string? _RootNamespace;
-        private string? _ResourceName;
-        private readonly string? _FilePath;
+        private readonly string? _ResourceName;
         private readonly string? _SaveTo;
-        private List<ElementRecord>? _Elements;
-
-        [SupportedOSPlatform("windows")]
-        public ResourceModel(string filePath, string saveTo, string? rootNamespace)
-        {
-
-            _FilePath = filePath;
-            LoadElement();
-            _SaveTo = $"{saveTo}\\{_ResourceName}{RescourceFolderSub}";
-            _RootNamespace = rootNamespace;
-
-        }
+        private readonly List<ElementRecord>? _Elements;
 
         /// <summary>
-        /// Builds a resource model from pre-parsed elements (e.g. StructureDefinition.snapshot).
+        /// Builds a resource model from StructureDefinition.snapshot elements.
         /// </summary>
         public ResourceModel(string resourceName, string saveTo, string? rootNamespace, IEnumerable<ElementRecord> elements)
         {
@@ -40,7 +22,6 @@ namespace FhirResourceCreator.Models
             _Elements = elements.ToList();
             _SaveTo = $"{saveTo}\\{resourceName}{RescourceFolderSub}";
             _RootNamespace = rootNamespace;
-            _FilePath = null;
         }
 
         #region Public Method
@@ -115,37 +96,6 @@ namespace FhirResourceCreator.Models
             };
         }
 
-        #endregion
-        #region Private Method
-        [SupportedOSPlatform("windows")]
-        private void LoadElement()
-        {
-            List<ElementRecord> elementSet = new();
-            string con = @"Provider=Microsoft.ACE.OLEDB.12.0;;Data Source=" + _FilePath + ";Extended Properties='Excel 12.0 Xml;HDR=YES;IMEX = 1;'";
-
-            using (OleDbConnection connect = new(con))
-            {
-                connect.Open();
-                OleDbCommand cmd = new("select * from [Elements$]", connect);
-                using OleDbDataReader dr = cmd.ExecuteReader();
-                while (dr.Read())
-                {
-                    if (dr[1] is string dt1 && dr[5] is string dt2 && dr[6] is string dt3)
-                    {
-                        if (dr[10] is string dt4)
-                        {
-                            ElementRecord elementRecord = new(dt1, dt2, dt3, dt4.Replace("\n", ""));
-                            elementSet.Add(elementRecord);
-                        }
-                        else
-                        {
-                            _ResourceName = dt1;
-                        }
-                    }
-                }
-            }
-            _Elements = elementSet;
-        }
         #endregion
     }
 }

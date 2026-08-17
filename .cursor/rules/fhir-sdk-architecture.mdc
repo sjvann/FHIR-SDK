@@ -13,7 +13,7 @@ alwaysApply: false
 
 ## Fhir.ResourceCreator（產生器）
 
-- 定義來源主線為 **FHIR Package Registry**（`packages.fhir.org`，備援 `packages2.fhir.org`）：下載 NPM 風格套件、解析 **StructureDefinition**（優先 `snapshot.element`），而非依賴本機 Excel 作為唯一輸入。
+- 定義來源為 **FHIR Package Registry**（`packages.fhir.org`，備援 `packages2.fhir.org`）：下載 NPM 風格套件、解析 **StructureDefinition**（優先 `snapshot.element`）。不使用 Excel 或 NuGet 規格套件。
 - **每一組** `package-id` + `version` 對應**獨立**產出專案／NuGet；設定檔驅動套件清單、Registry URL、命名空間與輸出路徑。
 - 產生的資源組件皆 **`PackageReference` 同一條** `Fhir.TypeFramework`（版本依發行策略鎖定）；R4/R5 差異由**產生器與 SD**，不由重複的 Primitive 框架承擔。
 

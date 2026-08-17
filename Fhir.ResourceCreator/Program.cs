@@ -45,9 +45,6 @@ var config = new ConfigurationBuilder()
 var opts = config.GetSection(GeneratorOptions.SectionName).Get<GeneratorOptions>()
            ?? new GeneratorOptions();
 
-if (opts.Mode == GeneratorInputMode.Registry)
-    await GenerationOrchestrator.RunRegistryPackagesAsync(opts).ConfigureAwait(false);
-else
-    GenerationOrchestrator.RunExcelLegacy(opts);
+await GenerationOrchestrator.RunRegistryPackagesAsync(opts).ConfigureAwait(false);
 
 Console.WriteLine("Fhir.ResourceCreator finished.");

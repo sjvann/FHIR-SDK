@@ -19,7 +19,7 @@
 - **網路**：Registry 模式需能連線 `packages.fhir.org`（或設定之備援 URL）。
 - **工作目錄**：請在 **`Fhir.ResourceCreator`** 專案目錄執行 `dotnet run`，以便 `appsettings.json`、`OutputRoot`、`PackageCacheDirectory` 等相對路徑正確。
 
-輸入是 Registry 上的 **`hl7.fhir.r*.core` `.tgz`**（內含 StructureDefinition snapshot），不是 Excel。`Mode: Excel` 僅供舊流程。
+輸入是 Registry 上的 **`hl7.fhir.r*.core` `.tgz`**（內含 StructureDefinition snapshot）。定義不從 Excel 或 NuGet 讀取。
 
 ## 設定檔
 
@@ -27,7 +27,6 @@
 
 | 鍵 | 說明 |
 |----|------|
-| `Mode` | `Registry`（主線）或 `Excel`（舊版 Excel） |
 | `RegistryBaseUrl` | 主 Registry，預設 `https://packages.fhir.org` |
 | `RegistryFallbackUrl` | 選用；主站失敗時改試 `packages2` 等 |
 | `PackageCacheDirectory` | 解包快取根目錄，預設 `artifacts/fhir-packages` |

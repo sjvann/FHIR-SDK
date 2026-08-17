@@ -4,7 +4,7 @@ using FhirResourceCreator.Models;
 namespace FhirResourceCreator.StructureDefinition;
 
 /// <summary>
-/// Converts StructureDefinition.snapshot.element rows into <see cref="ElementRecord"/> rows compatible with the generator (same shape as legacy Excel).
+/// Converts StructureDefinition.snapshot.element rows into <see cref="ElementRecord"/> rows for the generator.
 /// </summary>
 public static class SnapshotToElementRecords
 {
