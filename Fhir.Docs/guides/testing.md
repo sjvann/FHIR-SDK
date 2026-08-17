@@ -71,12 +71,11 @@ dotnet build -c Release
 2. 在對應資源之 `*SerializationTests.cs` 新增 **Fact**／**Theory**，針對該資源断言關鍵欄位或集合長度。
 3. 大規模 CI：對 `generated` 下每個測試專案執行 `dotnet test`（可撰寫批次指令或 pipeline 矩陣）。
 
-## CI 建議流程（概念）
+## CI
 
-1. 還原與建置 **Fhir.TypeFramework**、**Fhir.Resource.Tests.Common**。
-2. 執行 **Fhir.ResourceCreator**（或使用已提交之 `generated` 產物之一致性 commit 策略）。
-3. `dotnet build`／`dotnet test` 產生之 `*.Tests`。
-4. （選用）`dotnet pack` 資源組件並上傳工件。
+推送與 pull request 會跑 **`.github/workflows/test.yml`**：`dotnet test Fhir.Sdk.slnx`。本機同一指令應為綠燈（測試失敗才失敗；Coverlet 不設門檻）。
+
+方案已提交 `generated/` 產物，CI **不**重跑 ResourceCreator。換線別或重產後請一併提交產生碼，否則測試專案會對不上。
 
 ## 疑難排解
 

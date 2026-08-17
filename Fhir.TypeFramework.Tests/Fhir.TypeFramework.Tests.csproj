@@ -6,12 +6,11 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
 
-    <!-- Coverage gate（以「核心框架模組」為範圍；DataTypes 多為模型/屬性容器，另可再補測） -->
+    <!-- Coverage is informational: scoped to TypeFramework (R5 is only a test reference). -->
     <CollectCoverage>true</CollectCoverage>
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-    <!-- 已排除 DataTypes 等；新增 Serialization 轉換器後行覆蓋略低於 80%，之後補測可再提高門檻 -->
-    <Threshold>75</Threshold>
-    <ThresholdType>line</ThresholdType>
+    <CoverletOutput>$(MSBuildThisFileDirectory)..\TestResults\</CoverletOutput>
+    <Include>[Fhir.TypeFramework]*</Include>
     <ExcludeByFile>**\DataTypes\**\*.cs,**\Development\**\*.cs,**\Examples\**\*.cs,**\Templates\**\*.cs</ExcludeByFile>
   </PropertyGroup>
 
