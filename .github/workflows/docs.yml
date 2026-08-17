@@ -46,6 +46,9 @@ jobs:
       - name: Restore DocFX
         run: dotnet tool restore
 
+      - name: Restore solution
+        run: dotnet restore Fhir.Sdk.slnx
+
       - name: Build documentation
         run: dotnet docfx Fhir.Docs/docfx.json
 

@@ -226,6 +226,10 @@ public sealed class FhirPath{lineLabel}
         sb.AppendLine("  </PropertyGroup>");
         sb.AppendLine();
         sb.AppendLine("  <ItemGroup>");
+        sb.AppendLine("    <PackageReference Include=\"Microsoft.Extensions.DependencyInjection.Abstractions\" />");
+        sb.AppendLine("  </ItemGroup>");
+        sb.AppendLine();
+        sb.AppendLine("  <ItemGroup>");
         sb.AppendLine($"    <ProjectReference Include=\"{tf}\" />");
         sb.AppendLine($"    <ProjectReference Include=\"{interop}\" />");
         sb.AppendLine($"    <ProjectReference Include=\"{pathCore}\" />");
