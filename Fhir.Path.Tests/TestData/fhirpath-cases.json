@@ -8,5 +8,9 @@
   { "expression": "Patient.name.given", "context": "Patient", "expectedCount": 3 },
   { "expression": "Patient.name.family", "context": "Patient", "expectedCount": 2 },
   { "expression": "Patient.active", "context": "Patient", "expected": true },
-  { "expression": "Patient.name.where(family = 'Doe').given", "context": "Patient", "expectedCount": 2 }
+  { "expression": "Patient.name.where(family = 'Doe').given", "context": "Patient", "expectedCount": 2 },
+  { "expression": "Patient.name.count()", "context": "Patient", "expected": 2 },
+  { "expression": "Patient.name.first().family", "context": "Patient", "expected": "Doe" },
+  { "expression": "'abc'.upper()", "expected": "ABC" },
+  { "expression": "1 + 2 = 3", "expected": true }
 ]

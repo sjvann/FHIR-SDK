@@ -89,7 +89,7 @@ internal class ComplexFhirNode : IFhirNode
             return ResolveContained();
 
         if (!_meta.Elements.TryGetValue(elementName, out var binding))
-            return [];
+            return ResolveOverflow(elementName);
 
         if (binding.IsChoice)
             return ResolveChoice(binding);
@@ -103,6 +103,11 @@ internal class ComplexFhirNode : IFhirNode
         var result = new List<IFhirNode>();
         foreach (var key in _meta.Elements.Keys)
             result.AddRange(Children(key));
+        if (Native is Base b && b.Overflow is not null)
+        {
+            foreach (var name in b.Overflow.Keys)
+                result.AddRange(ResolveOverflow(name));
+        }
         return result;
     }
 
@@ -139,6 +144,15 @@ internal class ComplexFhirNode : IFhirNode
             nodes.AddRange(ToChildNodes(binding.ElementName, value));
         }
         return nodes;
+    }
+
+    private IReadOnlyList<IFhirNode> ResolveOverflow(string elementName)
+    {
+        if (Native is not Base b || b.Overflow is null)
+            return [];
+        if (!b.Overflow.TryGetValue(elementName, out var el))
+            return [];
+        return [PocoElementNavigator.Wrap(el.ValueKind == System.Text.Json.JsonValueKind.String ? el.GetString() : el.GetRawText(), elementName, this)];
     }
 
     private IReadOnlyList<IFhirNode> ToChildNodes(string elementName, object? value)

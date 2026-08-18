@@ -23,7 +23,18 @@ public sealed class FhirPathFunctionRegistry
             ["empty"] = Empty,
             ["count"] = Count,
             ["distinct"] = Distinct,
+            ["isDistinct"] = IsDistinct,
             ["first"] = First,
+            ["last"] = Last,
+            ["tail"] = Tail,
+            ["skip"] = Skip,
+            ["take"] = Take,
+            ["single"] = Single,
+            ["all"] = All,
+            ["allTrue"] = AllTrue,
+            ["anyTrue"] = AnyTrue,
+            ["allFalse"] = AllFalse,
+            ["anyFalse"] = AnyFalse,
             ["iif"] = Iif,
             ["not"] = NotFunc,
             ["today"] = Today,
@@ -31,14 +42,29 @@ public sealed class FhirPathFunctionRegistry
             ["substring"] = Substring,
             ["startsWith"] = StartsWith,
             ["endsWith"] = EndsWith,
+            ["contains"] = Contains,
+            ["indexOf"] = IndexOf,
             ["matches"] = Matches,
             ["replace"] = Replace,
+            ["upper"] = Upper,
+            ["lower"] = Lower,
             ["toString"] = ToStringFunc,
+            ["toInteger"] = ToInteger,
+            ["toDecimal"] = ToDecimal,
+            ["toBoolean"] = ToBoolean,
+            ["hasValue"] = HasValue,
+            ["children"] = ChildrenFn,
+            ["descendants"] = Descendants,
+            ["combine"] = Combine,
             ["extension"] = Extension,
             ["resolve"] = Resolve,
             ["ofType"] = OfType,
             ["length"] = Length,
             ["item"] = Item,
+            ["abs"] = Abs,
+            ["ceiling"] = Ceiling,
+            ["floor"] = Floor,
+            ["round"] = Round,
             ["trace"] = Trace,
         };
     }
@@ -87,7 +113,11 @@ public sealed class FhirPathFunctionRegistry
         => Select(focus, args, ctx);
 
     private static object? Exists(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
-        => focus.Count > 0;
+    {
+        if (args.Count == 0)
+            return focus.Count > 0;
+        return Where(focus, args, ctx) is IReadOnlyList<IFhirNode> kept && kept.Count > 0;
+    }
 
     private static object? Empty(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
         => focus.Count == 0;
@@ -100,6 +130,54 @@ public sealed class FhirPathFunctionRegistry
 
     private static object? First(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
         => focus.Count == 0 ? new List<IFhirNode>() : new List<IFhirNode> { focus[0] };
+
+    private static object? Last(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Count == 0 ? new List<IFhirNode>() : new List<IFhirNode> { focus[^1] };
+
+    private static object? Tail(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Count <= 1 ? new List<IFhirNode>() : focus.Skip(1).ToList();
+
+    private static object? Skip(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+    {
+        var n = args.Count > 0 ? Convert.ToInt32(CoerceNumber(args[0])) : 0;
+        return focus.Skip(Math.Max(0, n)).ToList();
+    }
+
+    private static object? Take(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+    {
+        var n = args.Count > 0 ? Convert.ToInt32(CoerceNumber(args[0])) : 0;
+        return focus.Take(Math.Max(0, n)).ToList();
+    }
+
+    private static object? Single(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Count == 1 ? new List<IFhirNode> { focus[0] } : new List<IFhirNode>();
+
+    private static object? All(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+    {
+        if (args.Count == 0)
+            return focus.Count == 0 || focus.All(n => CoerceBool(n.GetValue()));
+        var predicate = GetLambda(args, 0);
+        var evaluator = new FhirPathEvaluator(CreateDefaultRegistry());
+        return focus.All(node => CoerceBool(evaluator.Evaluate(predicate, [node], ctx).FirstOrDefault()));
+    }
+
+    private static object? AllTrue(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Count > 0 && focus.All(n => CoerceBool(n.GetValue()));
+
+    private static object? AnyTrue(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Any(n => CoerceBool(n.GetValue()));
+
+    private static object? AllFalse(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Count > 0 && focus.All(n => !CoerceBool(n.GetValue()));
+
+    private static object? AnyFalse(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Any(n => !CoerceBool(n.GetValue()));
+
+    private static object? IsDistinct(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+    {
+        var keys = focus.Select(n => n.GetValue()?.ToString() ?? n.Native?.GetType().FullName).ToList();
+        return keys.Count == keys.Distinct().Count();
+    }
 
     private static object? Iif(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
     {
@@ -140,6 +218,73 @@ public sealed class FhirPathFunctionRegistry
 
     private static object? EndsWith(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
         => (focus.FirstOrDefault()?.GetValue()?.ToString() ?? "").EndsWith(args[0]?.ToString() ?? "", StringComparison.Ordinal);
+
+    private static object? Contains(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => (focus.FirstOrDefault()?.GetValue()?.ToString() ?? "").Contains(args[0]?.ToString() ?? "", StringComparison.Ordinal);
+
+    private static object? IndexOf(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => (focus.FirstOrDefault()?.GetValue()?.ToString() ?? "").IndexOf(args[0]?.ToString() ?? "", StringComparison.Ordinal);
+
+    private static object? Upper(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => (focus.FirstOrDefault()?.GetValue()?.ToString() ?? "").ToUpperInvariant();
+
+    private static object? Lower(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => (focus.FirstOrDefault()?.GetValue()?.ToString() ?? "").ToLowerInvariant();
+
+    private static object? ToInteger(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => int.TryParse(focus.FirstOrDefault()?.GetValue()?.ToString(), out var n) ? n : null;
+
+    private static object? ToDecimal(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => decimal.TryParse(focus.FirstOrDefault()?.GetValue()?.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : null;
+
+    private static object? ToBoolean(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+    {
+        var s = focus.FirstOrDefault()?.GetValue()?.ToString();
+        return s switch
+        {
+            "true" or "1" or "t" or "yes" or "y" => true,
+            "false" or "0" or "f" or "no" or "n" => false,
+            _ => null
+        };
+    }
+
+    private static object? HasValue(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Any(n => n.GetValue() is not null && n.GetValue()?.ToString() is { Length: > 0 });
+
+    private static object? ChildrenFn(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.SelectMany(n => n.AllChildren()).ToList();
+
+    private static object? Descendants(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+    {
+        var acc = new List<IFhirNode>();
+        var queue = new Queue<IFhirNode>(focus.SelectMany(n => n.AllChildren()));
+        while (queue.Count > 0)
+        {
+            var node = queue.Dequeue();
+            acc.Add(node);
+            foreach (var child in node.AllChildren())
+                queue.Enqueue(child);
+        }
+        return acc;
+    }
+
+    private static object? Combine(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+    {
+        var extra = args.Count > 0 ? CoerceNodesFromArg(args[0]) : [];
+        return focus.Concat(extra).ToList();
+    }
+
+    private static object? Abs(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => Math.Abs(CoerceNumber(focus.FirstOrDefault()?.GetValue()));
+
+    private static object? Ceiling(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => Math.Ceiling(CoerceNumber(focus.FirstOrDefault()?.GetValue()));
+
+    private static object? Floor(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => Math.Floor(CoerceNumber(focus.FirstOrDefault()?.GetValue()));
+
+    private static object? Round(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => Math.Round(CoerceNumber(focus.FirstOrDefault()?.GetValue()));
 
     private static object? Matches(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
         => System.Text.RegularExpressions.Regex.IsMatch(focus.FirstOrDefault()?.GetValue()?.ToString() ?? "", args[0]?.ToString() ?? "");
@@ -243,6 +388,26 @@ public sealed class FhirPathFunctionRegistry
 
     private static List<IFhirNode> CoerceNodesFromCollection(FhirPathCollection col)
         => col.Select(v => PocoElementNavigator.Wrap(v)).ToList();
+
+    private static List<IFhirNode> CoerceNodesFromArg(object? arg) => arg switch
+    {
+        IReadOnlyList<IFhirNode> nodes => nodes.ToList(),
+        FhirPathCollection col => CoerceNodesFromCollection(col),
+        IFhirNode node => [node],
+        null => [],
+        _ => [PocoElementNavigator.Wrap(arg)]
+    };
+
+    private static decimal CoerceNumber(object? value) => value switch
+    {
+        decimal d => d,
+        int i => i,
+        long l => l,
+        double db => (decimal)db,
+        IFhirNode n => CoerceNumber(n.GetValue()),
+        string s when decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var d) => d,
+        _ => 0
+    };
 
     public static FhirPathFunctionRegistry CreateDefaultRegistry() => new();
 }

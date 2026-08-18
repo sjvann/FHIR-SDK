@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Fhir.Artifacts</RootNamespace>
+    <AssemblyName>Fhir.Artifacts</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Fhir.Artifacts</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>FHIR SDK Team</Authors>
+    <Description>FHIR package / directory artifact resolver. Reads local .tgz or folders; no HTTP Registry.</Description>
+    <PackageTags>FHIR;HL7;Packages;Artifacts</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>

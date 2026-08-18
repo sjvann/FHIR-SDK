@@ -109,6 +109,10 @@ public static class GenerationOrchestrator
                     await File.WriteAllTextAsync(choicePath, choiceCode, ct).ConfigureAwait(false);
                 }
 
+                var metadataCode = ModelMetadataEmitter.Generate(model, rootNs);
+                var metadataPath = Path.Combine(projDir, $"{typeName}.Metadata.generated.cs");
+                await File.WriteAllTextAsync(metadataPath, metadataCode, ct).ConfigureAwait(false);
+
                 var testDir = Path.Combine(projDir, $"{outputName}.Tests");
                 Directory.CreateDirectory(testDir);
                 var testDataDir = Path.Combine(testDir, "TestData");

@@ -52,7 +52,7 @@ public abstract class Resource : Base, IIdentifiableTypeFramework
         copy.Meta = Meta?.DeepCopy() as Meta;
         copy.ImplicitRules = ImplicitRules?.DeepCopy() as FhirUri;
         copy.Language = Language?.DeepCopy() as FhirCode;
-
+        CopyOverflowTo(copy);
         return copy;
     }
 
@@ -65,7 +65,8 @@ public abstract class Resource : Base, IIdentifiableTypeFramework
         return ValueEq(Id, otherResource.Id)
                && ValueEq(Meta, otherResource.Meta)
                && ValueEq(ImplicitRules, otherResource.ImplicitRules)
-               && ValueEq(Language, otherResource.Language);
+               && ValueEq(Language, otherResource.Language)
+               && OverflowEquals(otherResource);
     }
 
     private static bool ValueEq<T>(T? a, T? b) where T : Base =>

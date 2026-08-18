@@ -52,6 +52,7 @@ public abstract class Element : Base, IIdentifiableTypeFramework, IExtensibleTyp
             copy.Extension = Extension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
         }
 
+        CopyOverflowTo(copy);
         return copy;
     }
 
@@ -72,7 +73,7 @@ public abstract class Element : Base, IIdentifiableTypeFramework, IExtensibleTyp
 
         // 檢查 Extension
         if (Extension == null && otherElement.Extension == null)
-            return true;
+            return OverflowEquals(otherElement);
 
         if (Extension == null || otherElement.Extension == null)
             return false;
@@ -86,7 +87,7 @@ public abstract class Element : Base, IIdentifiableTypeFramework, IExtensibleTyp
                 return false;
         }
 
-        return true;
+        return OverflowEquals(otherElement);
     }
 
     /// <summary>

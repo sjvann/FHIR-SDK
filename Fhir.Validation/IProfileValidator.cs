@@ -8,4 +8,7 @@ public interface IProfileValidator
         Base instance,
         IReadOnlyList<string> profileCanonicals,
         ProfileValidationOptions? options = null);
+
+    ProfileValidationReport Validate(Base instance, ProfileValidationOptions? options = null)
+        => Validate(instance, Array.Empty<string>(), options);
 }

@@ -24,11 +24,12 @@ public sealed class ProfileValidator : IProfileValidator
     {
         var opts = options ?? _defaults;
         var issues = new List<ProfileValidationIssue>();
+        var canonicals = MergeCanonicals(instance, profileCanonicals, opts);
 
-        if (profileCanonicals.Count == 0)
+        if (canonicals.Count == 0)
             return new ProfileValidationReport(true, issues);
 
-        foreach (var canonical in profileCanonicals)
+        foreach (var canonical in canonicals)
         {
             if (!_catalog.TryGetProfile(canonical, out var snapshot))
             {
@@ -66,6 +67,8 @@ public sealed class ProfileValidator : IProfileValidator
             CheckCardinality(element, path, nodes.Count, issues);
             CheckTypes(element, path, nodes, issues);
             CheckBinding(element, path, nodes, options, issues);
+            if (options.EvaluateFixedPattern)
+                CheckFixedPattern(element, path, nodes, issues);
 
             if (options.EvaluateSlicing && element.Slicing is not null)
                 CheckSlicing(instance, snapshot, element, path, nodes, issues);
@@ -73,6 +76,95 @@ public sealed class ProfileValidator : IProfileValidator
 
         if (options.EvaluateInvariants && options.PathEngine is not null)
             CheckInvariants(instance, snapshot, options.PathEngine, issues);
+    }
+
+    private static List<string> MergeCanonicals(
+        Base instance,
+        IReadOnlyList<string> profileCanonicals,
+        ProfileValidationOptions options)
+    {
+        var list = new List<string>();
+        foreach (var c in profileCanonicals)
+        {
+            if (!string.IsNullOrWhiteSpace(c) && !list.Contains(c, StringComparer.Ordinal))
+                list.Add(c);
+        }
+
+        if (!options.IncludeMetaProfile || instance is not Resource resource || resource.Meta?.Profile is null)
+            return list;
+
+        foreach (var profile in resource.Meta.Profile)
+        {
+            var url = profile.StringValue;
+            if (!string.IsNullOrWhiteSpace(url) && !list.Contains(url, StringComparer.Ordinal))
+                list.Add(url);
+        }
+
+        return list;
+    }
+
+    private static void CheckFixedPattern(
+        ElementDefinition element,
+        string path,
+        IReadOnlyList<IFhirNode> nodes,
+        List<ProfileValidationIssue> issues)
+    {
+        foreach (var (kind, expected) in CollectFixedOrPattern(element))
+        {
+            foreach (var node in nodes)
+            {
+                if (MatchesFixedOrPattern(node, expected))
+                    continue;
+                issues.Add(new ProfileValidationIssue(
+                    "error",
+                    kind,
+                    $"Element '{path}' does not match {kind} value.",
+                    path,
+                    path));
+            }
+        }
+    }
+
+    private static IEnumerable<(string Kind, object Expected)> CollectFixedOrPattern(ElementDefinition element)
+    {
+        if (element.FixedCode is not null) yield return ("fixed", element.FixedCode);
+        if (element.FixedUri is not null) yield return ("fixed", element.FixedUri);
+        if (element.FixedString is not null) yield return ("fixed", element.FixedString);
+        if (element.FixedBoolean is not null) yield return ("fixed", element.FixedBoolean);
+        if (element.FixedInteger is not null) yield return ("fixed", element.FixedInteger);
+        if (element.PatternCoding is not null) yield return ("pattern", element.PatternCoding);
+        if (element.PatternCodeableConcept is not null) yield return ("pattern", element.PatternCodeableConcept);
+        if (element.PatternString is not null) yield return ("pattern", element.PatternString);
+    }
+
+    private static bool MatchesFixedOrPattern(IFhirNode node, object expected)
+    {
+        if (expected is PrimitiveType prim)
+        {
+            var actual = node.GetValue()?.ToString();
+            return string.Equals(actual, prim.GetType().GetProperty("StringValue")?.GetValue(prim) as string, StringComparison.Ordinal);
+        }
+
+        if (expected is Coding coding)
+        {
+            var code = node.Children("code").FirstOrDefault()?.GetValue()?.ToString()
+                       ?? node.GetValue()?.ToString();
+            return coding.Code?.StringValue is null
+                   || string.Equals(code, coding.Code.StringValue, StringComparison.Ordinal);
+        }
+
+        if (expected is CodeableConcept cc && cc.Coding is { Count: > 0 })
+        {
+            var expectedCode = cc.Coding[0].Code?.StringValue;
+            var codes = node.Children("coding")
+                .Select(c => c.Children("code").FirstOrDefault()?.GetValue()?.ToString())
+                .ToList();
+            if (codes.Count == 0)
+                codes.Add(node.Children("code").FirstOrDefault()?.GetValue()?.ToString());
+            return expectedCode is null || codes.Contains(expectedCode);
+        }
+
+        return true;
     }
 
     private static void CheckCardinality(

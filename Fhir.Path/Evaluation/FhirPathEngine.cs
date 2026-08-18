@@ -25,7 +25,7 @@ public sealed class FhirPathEngine : IFhirPathEngine
                 "=", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/",
                 "and", "or", "xor", "implies", "|", "in", "is", "as", "not"
             ],
-            Version = "1.0-mvp"
+            Version = "2.0"
         };
     }
 

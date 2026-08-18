@@ -43,6 +43,7 @@ public abstract class ComplexTypeBase : DataType, IExtensibleTypeFramework
 
         // 呼叫子類別的深層複製邏輯
         DeepCopyInternal(copy);
+        CopyOverflowTo(copy);
 
         return copy;
     }
@@ -57,7 +58,7 @@ public abstract class ComplexTypeBase : DataType, IExtensibleTypeFramework
         if (other is not ComplexTypeBase otherComplex)
             return false;
 
-        return base.IsExactly(other) && IsExactlyInternal(otherComplex);
+        return base.IsExactly(other) && IsExactlyInternal(otherComplex) && OverflowEquals(otherComplex);
     }
 
     /// <summary>

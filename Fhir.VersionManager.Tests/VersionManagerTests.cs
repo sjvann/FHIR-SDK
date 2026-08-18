@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Fhir.VersionManager.Capability;
+using Fhir.VersionManager.Runtime;
 
 namespace Fhir.VersionManager.Tests;
 
@@ -67,5 +68,22 @@ public class FhirCapabilityRuntimeTests
         var r = _runtime.ParseMetadata(json, "https://example.com", FhirVersion.R5, FhirVersionResolutionStrategy.PreferDetected);
         r.Model.ServerResources.Should().ContainSingle(x => x.Type == "Patient");
         r.Model.ServerResources[0].SearchParams.Should().Contain(x => x.Name == "_id");
+    }
+}
+
+public class FhirLineRuntimeTests
+{
+    [Theory]
+    [InlineData(FhirVersion.R4)]
+    [InlineData(FhirVersion.R4B)]
+    [InlineData(FhirVersion.R5)]
+    public void Factory_parses_patient_json(FhirVersion version)
+    {
+        var factory = new FhirLineRuntimeFactory();
+        var runtime = factory.Get(version);
+        var resource = runtime.ParseJson("""{"resourceType":"Patient","id":"p1","active":true}""");
+        resource.Should().NotBeNull();
+        resource!.Id!.StringValue.Should().Be("p1");
+        runtime.SerializeJson(resource).Should().Contain("Patient");
     }
 }

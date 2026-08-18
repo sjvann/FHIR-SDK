@@ -22,8 +22,12 @@ public class ElementDefinition : ComplexTypeBase
     [JsonPropertyName("slicing")] public ElementDefinitionSlicingComponent? Slicing { get; set; }
     [JsonPropertyName("patternCodeableConcept")] public CodeableConcept? PatternCodeableConcept { get; set; }
     [JsonPropertyName("patternCoding")] public Coding? PatternCoding { get; set; }
+    [JsonPropertyName("patternString")] public FhirString? PatternString { get; set; }
     [JsonPropertyName("fixedCode")] public FhirCode? FixedCode { get; set; }
     [JsonPropertyName("fixedUri")] public FhirUri? FixedUri { get; set; }
+    [JsonPropertyName("fixedString")] public FhirString? FixedString { get; set; }
+    [JsonPropertyName("fixedBoolean")] public FhirBoolean? FixedBoolean { get; set; }
+    [JsonPropertyName("fixedInteger")] public FhirInteger? FixedInteger { get; set; }
 
     protected override void DeepCopyInternal(ComplexTypeBase copy)
     {
@@ -41,8 +45,12 @@ public class ElementDefinition : ComplexTypeBase
         c.Slicing = Slicing?.DeepCopy() as ElementDefinitionSlicingComponent;
         c.PatternCodeableConcept = PatternCodeableConcept?.DeepCopy() as CodeableConcept;
         c.PatternCoding = PatternCoding?.DeepCopy() as Coding;
+        c.PatternString = PatternString?.DeepCopy() as FhirString;
         c.FixedCode = FixedCode?.DeepCopy() as FhirCode;
         c.FixedUri = FixedUri?.DeepCopy() as FhirUri;
+        c.FixedString = FixedString?.DeepCopy() as FhirString;
+        c.FixedBoolean = FixedBoolean?.DeepCopy() as FhirBoolean;
+        c.FixedInteger = FixedInteger?.DeepCopy() as FhirInteger;
     }
 
     protected override bool IsExactlyInternal(ComplexTypeBase other)
@@ -61,8 +69,12 @@ public class ElementDefinition : ComplexTypeBase
                && ValueEquals(Slicing, o.Slicing)
                && ValueEquals(PatternCodeableConcept, o.PatternCodeableConcept)
                && ValueEquals(PatternCoding, o.PatternCoding)
+               && ValueEquals(PatternString, o.PatternString)
                && ValueEquals(FixedCode, o.FixedCode)
-               && ValueEquals(FixedUri, o.FixedUri);
+               && ValueEquals(FixedUri, o.FixedUri)
+               && ValueEquals(FixedString, o.FixedString)
+               && ValueEquals(FixedBoolean, o.FixedBoolean)
+               && ValueEquals(FixedInteger, o.FixedInteger);
     }
 
     protected override IEnumerable<ValidationResult> ValidateInternal(ValidationContext validationContext)
@@ -80,7 +92,11 @@ public class ElementDefinition : ComplexTypeBase
         foreach (var r in ValidateItem(Slicing, validationContext)) yield return r;
         foreach (var r in ValidateItem(PatternCodeableConcept, validationContext)) yield return r;
         foreach (var r in ValidateItem(PatternCoding, validationContext)) yield return r;
+        foreach (var r in ValidateItem(PatternString, validationContext)) yield return r;
         foreach (var r in ValidateItem(FixedCode, validationContext)) yield return r;
         foreach (var r in ValidateItem(FixedUri, validationContext)) yield return r;
+        foreach (var r in ValidateItem(FixedString, validationContext)) yield return r;
+        foreach (var r in ValidateItem(FixedBoolean, validationContext)) yield return r;
+        foreach (var r in ValidateItem(FixedInteger, validationContext)) yield return r;
     }
 }

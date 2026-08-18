@@ -2,12 +2,16 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Fhir.TypeFramework.Choices;
+using Fhir.TypeFramework.Metadata;
 
 namespace Fhir.Path.Navigation;
 
 public static class ElementMetadataCache
 {
     private static readonly ConcurrentDictionary<Type, TypeMetadata> Cache = new();
+
+    /// <summary>可選。提供產生式元素表時，仍以 CLR 屬性綁定取值。</summary>
+    public static IModelMetadataProvider? Provider { get; set; }
 
     public static TypeMetadata Get(Type type) => Cache.GetOrAdd(type, Build);
 

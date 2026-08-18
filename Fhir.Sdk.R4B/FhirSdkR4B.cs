@@ -20,13 +20,14 @@ public static class FhirSdkR4B
     public static IReadOnlyDictionary<string, Type> CreateResourceTypes()
         => FhirResourceTypeMap.FromResourceAssembly(typeof(Patient).Assembly, typeof(Resource));
 
-    public static string SerializeJson(Base instance) => FhirJsonSerializer.Serialize(instance);
+    public static string SerializeJson(Base instance, FhirSerializerOptions? options = null)
+        => FhirJsonSerializer.Serialize(instance, options ?? FhirSerializerOptions.Lenient);
 
-    public static T? ParseJson<T>(string json) where T : Base
-        => FhirJsonSerializer.Deserialize<T>(json);
+    public static T? ParseJson<T>(string json, FhirSerializerOptions? options = null) where T : Base
+        => FhirJsonSerializer.Deserialize<T>(json, options ?? FhirSerializerOptions.Lenient);
 
-    public static Resource? ParseJson(string json)
-        => FhirJsonSerializer.DeserializeResource(json, CreateResourceTypes());
+    public static Resource? ParseJson(string json, FhirSerializerOptions? options = null)
+        => FhirJsonSerializer.DeserializeResource(json, CreateResourceTypes(), options ?? FhirSerializerOptions.Lenient);
 
     public static string SerializeXml(Base instance) => FhirXmlSerializer.Serialize(instance);
 
@@ -49,7 +50,9 @@ public static class FhirSdkR4B
                 Terminology = options.Terminology,
                 PathEngine = CreatePathEngine(),
                 EvaluateInvariants = options.EvaluateInvariants,
-                EvaluateSlicing = options.EvaluateSlicing
+                EvaluateSlicing = options.EvaluateSlicing,
+                EvaluateFixedPattern = options.EvaluateFixedPattern,
+                IncludeMetaProfile = options.IncludeMetaProfile
             }
             : options;
     }

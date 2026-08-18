@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Fhir.TypeFramework\Fhir.TypeFramework.csproj" />
     <ProjectReference Include="..\Fhir.Path\Fhir.Path.csproj" />
+    <ProjectReference Include="..\Fhir.Artifacts\Fhir.Artifacts.csproj" />
   </ItemGroup>
 
 </Project>

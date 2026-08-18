@@ -1,4 +1,5 @@
 using System.Reflection;
+using Fhir.Artifacts;
 using Fhir.Path.Abstractions;
 using Fhir.Path.Navigation;
 using Fhir.TypeFramework.Bases;
@@ -14,6 +15,16 @@ public sealed class ProfileCatalog
 
     public IReadOnlyDictionary<string, ProfileSnapshot> Profiles => _profiles;
     public IReadOnlyDictionary<string, ValueSetExpansion> ValueSets => _valueSets;
+
+    public void AddFrom(IArtifactResolver resolver, Func<string, Base?> parse)
+    {
+        foreach (var doc in resolver.Enumerate())
+        {
+            var parsed = parse(doc.Json);
+            if (parsed is not null)
+                Add(parsed);
+        }
+    }
 
     public void Add(Base resource)
     {

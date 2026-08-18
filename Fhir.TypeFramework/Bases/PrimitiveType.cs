@@ -288,6 +288,7 @@ public abstract class PrimitiveType<T> : PrimitiveType
             copy.Extension = Extension.Select(ext => (ext.DeepCopy() as IExtension)!).ToList();
         }
 
+        CopyOverflowTo(copy);
         return copy;
     }
 
@@ -303,7 +304,8 @@ public abstract class PrimitiveType<T> : PrimitiveType
 
         // Primitive 的規範表示以字串為準；延遲解析時 _typedValue 可能尚未同步，故不比對強型別。
         return base.IsExactly(other) &&
-               _stringValue == otherPrimitive._stringValue;
+               _stringValue == otherPrimitive._stringValue &&
+               OverflowEquals(otherPrimitive);
     }
 
     /// <summary>

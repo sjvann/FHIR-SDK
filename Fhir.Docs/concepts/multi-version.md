@@ -27,12 +27,18 @@ var result = runtime.Resolve(metadataJson, baseUrl, declared: FhirVersion.R5);
 
 切換線別時：優先改設定或偵測結果，再透過窄化模型消費；僅在使用線別專屬資源型別時才調整強型別程式碼。
 
+```csharp
+var factory = sp.GetRequiredService<IFhirLineRuntimeFactory>();
+var line = factory.Get(result.SelectedVersion);
+var resource = line.ParseJson(json);
+```
+
 ## 路線圖
 
 | 階段 | 內容 |
 |------|------|
 | 短期（已提供） | VersionManager 偵測／宣告 + Capability 窄化 |
-| 中期 | 減少應用硬綁單一 `Fhir.Sdk.R5`；查詢／驗證介面更多走跨線別契約 |
+| 中期（已提供） | `IFhirLineRuntime`／`IFhirLineRuntimeFactory`：Parse／Serialize 走跨線別契約 |
 | 長期 | 應用主要依賴跨線別契約 + 選定線別的 Sdk 實作 |
 
 ## 非目標

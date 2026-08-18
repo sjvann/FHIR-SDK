@@ -7,6 +7,9 @@
 - **不要**依 FHIR 大版本再拆 TypeFramework。線別差異落在產生的 `Fhir.Resources.{Line}`，不是再做一份「R5 專用 TypeFramework」。
 - 複合型別或資源基底不足時，優先在同一 TypeFramework 內擴充。
 - `Fhir.TypeFramework.Interop` 提供 POCO 建構與 choice 存取輔助。
+- `Base.Overflow`、`TryGetValue`／`SetValue`／`EnumerateElements` 保留未知元素。
+- Primitive 預設延遲解析（`PrimitiveTypeOptions.TypedParseTiming = Deferred`）。
+- `Fhir.TypeFramework.Metadata` 為產生式／反射 metadata 契約。
 
 ## 與資源組件的邊界
 

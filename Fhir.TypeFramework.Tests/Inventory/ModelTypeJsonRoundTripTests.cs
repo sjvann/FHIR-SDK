@@ -58,7 +58,9 @@ public sealed class ModelTypeJsonRoundTripTests
     {
         var method = typeof(FhirJsonSerializer)
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .Single(m => m.Name == nameof(FhirJsonSerializer.Deserialize) && m.IsGenericMethodDefinition);
+            .Single(m => m.Name == nameof(FhirJsonSerializer.Deserialize)
+                         && m.IsGenericMethodDefinition
+                         && m.GetParameters().Length == 1);
         var gm = method.MakeGenericMethod(type);
         return (Base?)gm.Invoke(null, [json]);
     }

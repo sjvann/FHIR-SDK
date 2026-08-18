@@ -37,6 +37,8 @@ flowchart TB
 | 資源 POCO | `Fhir.Resources.R4`／`R4B`／`R5` | ResourceCreator 自 StructureDefinition **產生** | 是（由 Sdk 帶入） |
 | 線別入口 | `Fhir.Sdk.R4`／`R4B`／`R5` | ResourceCreator scaffold | **對外唯一入口** |
 | 線別偵測 | `Fhir.VersionManager` | 手寫 | 是 |
+| 套件解析 | `Fhir.Artifacts` | 手寫 | 是 |
+| 官方 CLI | `Fhir.Cli`（`fhir`） | 手寫 | 是（dotnet tool） |
 | 產生器 | `Fhir.ResourceCreator` | 手寫工具 | 否 |
 
 ## ResourceCreator 做了什麼
@@ -54,6 +56,14 @@ flowchart TB
 - **Sdk**：給應用的單一 NuGet，把該線別需要的一切捆在一起。
 
 維護本 SDK 時才需要跑 ResourceCreator（重新產生資源或新增 R6）。應用開發者選對 `Fhir.Sdk.*` 即可。
+
+## 與 Firely 對齊但不複製的機制
+
+- **POCO + overflow**：未知／跨版本元素保留於 `Base.Overflow`，Lenient 可 round-trip；Strict 拒絕未知非 companion 元素。既有無參數 Parse 維持 Lenient。
+- **產生式 ModelMetadata**：ResourceCreator 產出 `*.Metadata.generated.cs`；執行期可用 `ReflectionModelMetadataProvider` 回落。
+- **Artifacts**：`IArtifactResolver` + `FhirPackageArtifactReader` 只讀本機 `.tgz`／目錄。
+- **跨線別契約**：`IFhirLineRuntime`／`IFhirLineRuntimeFactory` 讓應用依 `FhirVersion` 解析，不必硬綁單一 `Fhir.Sdk.R*`。
+- **CLI**：`fhir parse|serialize|path|validate|snapshot|package|metadata`。
 
 ## 延伸閱讀
 

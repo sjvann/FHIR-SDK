@@ -21,4 +21,10 @@ public sealed class ProfileValidationOptions
     public bool EvaluateInvariants { get; init; } = true;
 
     public bool EvaluateSlicing { get; init; } = true;
+
+    /// <summary>元素級 fixed[x]／pattern[x]。</summary>
+    public bool EvaluateFixedPattern { get; init; } = true;
+
+    /// <summary>將 <c>meta.profile</c> 與呼叫端 canonical 合併。</summary>
+    public bool IncludeMetaProfile { get; init; } = true;
 }

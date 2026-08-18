@@ -231,6 +231,53 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
+    public void Meta_profile_is_used_when_canonicals_omitted()
+    {
+        var obs = ValidObservation();
+        obs.Meta = new Meta
+        {
+            Profile = [new FhirCanonical(ObservationProfile)]
+        };
+        var report = CreateValidator(ObservationSd()).Validate(obs);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+    }
+
+    [Fact]
+    public void Fixed_string_fails_when_value_differs()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.First(e => e.Path?.StringValue == "Observation.status").FixedCode = new FhirCode("final");
+        var obs = ValidObservation();
+        obs.Status = new FhirCode("registered");
+        var report = CreateValidator(sd).Validate(obs, [ObservationProfile]);
+        Assert.False(report.Passed);
+        Assert.Contains(report.Issues, i => i.Code == "fixed");
+        Assert.NotEmpty(report.ToOperationOutcomeIssues());
+    }
+
+    [Fact]
+    public void Snapshot_generator_copies_differential_when_no_base()
+    {
+        var sd = new StructureDefinition
+        {
+            Url = new FhirUri("http://example.org/sd"),
+            Type = new FhirUri("Observation"),
+            Differential = new StructureDefinition.DifferentialComponent
+            {
+                Element =
+                [
+                    new ElementDefinition { Path = new FhirString("Observation.status"), Min = new FhirUnsignedInt(1) }
+                ]
+            }
+        };
+
+        var generator = new Fhir.Validation.Snapshot.SnapshotGenerator();
+        generator.Generate(sd);
+        Assert.NotNull(sd.Snapshot);
+        Assert.Contains(sd.Snapshot!.Element!, e => e.Path?.StringValue == "Observation.status");
+    }
+
+    [Fact]
     public void Package_reader_enumerates_structuredefinition_json()
     {
         var json = """{"resourceType":"StructureDefinition","url":"http://example.org/sd"}""";

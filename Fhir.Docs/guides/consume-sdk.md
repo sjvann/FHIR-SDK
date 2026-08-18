@@ -135,7 +135,9 @@ var report = validator.Validate(observation, ["http://hl7.org/fhir/StructureDefi
 
 - **執行期 IG 載入**（例如 FHIR Profile Server）由應用自建解壓，見消費端 ADR-0012。**不要**把未發佈的 `Fhir.Packages.Registry` 當 PackageReference。
 - **ResourceCreator** 繼續用本倉內部 `Fhir.Packages.Registry` 下載 `hl7.fhir.r*.core`（工具用、不發佈）。
-- **`Fhir.Validation.Packages.FhirPackageArtifactReader`** 只讀本機 `.tgz` 並列舉 conformance JSON，不做 HTTP Registry。
+- **`Fhir.Artifacts`**（`IArtifactResolver`、`FhirPackageArtifactReader`、`DirectoryArtifactSource`）只讀本機 `.tgz`／目錄並列舉 conformance JSON，不做 HTTP Registry。`Fhir.Validation.Packages.FhirPackageArtifactReader` 為相容別名。
+- **官方 CLI**：安裝 `Fhir.Cli` 後使用 `fhir parse|path|validate|snapshot|package|metadata`。
+- **序列化模式**：`FhirSerializerOptions.Strict`／`Lenient`。無參數 `ParseJson` 維持 Lenient。
 
 ## 應用層產品
 

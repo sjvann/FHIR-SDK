@@ -24,5 +24,7 @@
   <Project Path="Fhir.VersionManager.Tests/Fhir.VersionManager.Tests.csproj" />
   <Project Path="Fhir.Validation/Fhir.Validation.csproj" />
   <Project Path="Fhir.Validation.Tests/Fhir.Validation.Tests.csproj" />
+  <Project Path="Fhir.Artifacts/Fhir.Artifacts.csproj" />
+  <Project Path="Fhir.Cli/Fhir.Cli.csproj" />
   <Project Path="Fhir.Docs/Fhir.Docs.csproj" />
 </Solution>
