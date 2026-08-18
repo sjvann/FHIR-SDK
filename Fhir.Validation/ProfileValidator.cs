@@ -119,7 +119,6 @@ public sealed class ProfileValidator : IProfileValidator
                     "error",
                     kind,
                     $"Element '{path}' does not match {kind} value.",
-                    path,
                     path));
             }
         }

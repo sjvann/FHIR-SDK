@@ -256,6 +256,32 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
+    public void ToOperationOutcomeIssues_does_not_copy_location_into_expression()
+    {
+        var report = new ProfileValidationReport(false,
+        [
+            new ProfileValidationIssue("error", "required", "missing", "Observation.status")
+        ]);
+
+        var issue = Assert.Single(report.ToOperationOutcomeIssues());
+        Assert.Equal(["Observation.status"], issue.Location);
+        Assert.Null(issue.Expression);
+    }
+
+    [Fact]
+    public void ToOperationOutcomeIssues_keeps_expression_when_present()
+    {
+        var report = new ProfileValidationReport(false,
+        [
+            new ProfileValidationIssue("error", "invariant", "failed", "Observation", "status = 'final'")
+        ]);
+
+        var issue = Assert.Single(report.ToOperationOutcomeIssues());
+        Assert.Equal(["Observation"], issue.Location);
+        Assert.Equal(["status = 'final'"], issue.Expression);
+    }
+
+    [Fact]
     public void Snapshot_generator_copies_differential_when_no_base()
     {
         var sd = new StructureDefinition

@@ -24,5 +24,5 @@ public sealed record ProfileValidationReport(
             i.Code,
             i.Diagnostics,
             i.Location is null ? null : [i.Location],
-            i.Expression is null && i.Location is null ? null : [i.Expression ?? i.Location!])).ToList();
+            i.Expression is null ? null : [i.Expression])).ToList();
 }
