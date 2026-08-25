@@ -1,0 +1,26 @@
+@inject LocaleState Locale
+
+@if (string.IsNullOrWhiteSpace(FhirName))
+{
+    <span class="badge @(Source == TranslationSource.Pending ? "warn" : "ok")">@Label</span>
+}
+else
+{
+    <a class="badge @(Source == TranslationSource.Pending ? "warn" : "ok")"
+       href="@($"/translate/{Uri.EscapeDataString(FhirName)}")"
+       @onclick:stopPropagation>
+        @Label
+    </a>
+}
+
+@code {
+    [Parameter, EditorRequired] public TranslationSource Source { get; set; }
+    [Parameter] public string? FhirName { get; set; }
+
+    private string Label => Source switch
+    {
+        TranslationSource.Glossary => UiText.T(Locale.Locale, "source.glossary"),
+        TranslationSource.OfficialEnglish => UiText.T(Locale.Locale, "source.official"),
+        _ => UiText.T(Locale.Locale, "source.pending")
+    };
+}

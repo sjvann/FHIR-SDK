@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Fhir.TypeFramework.Bases;
 
 namespace Fhir.TypeFramework.Serialization;
@@ -120,16 +121,52 @@ public static class FhirJsonSerializer
 
     private static JsonSerializerOptions CreateDefaultOptions(bool indented)
     {
+        var resolver = new DefaultJsonTypeInfoResolver();
+        resolver.Modifiers.Add(ApplyFhirJsonContract);
+
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            WriteIndented = indented
+            WriteIndented = indented,
+            TypeInfoResolver = resolver
         };
 
         options.Converters.Add(new FhirPrimitiveJsonConverterFactory());
         options.Converters.Add(new FhirExtensionListJsonConverterFactory());
 
         return options;
+    }
+
+    /// <summary>
+    /// FHIR 線上 JSON：<c>resourceType</c> 必須最先寫出；choice 的 <c>Has*</c> 輔助屬性不得出現。
+    /// </summary>
+    private static void ApplyFhirJsonContract(JsonTypeInfo typeInfo)
+    {
+        if (typeInfo.Kind != JsonTypeInfoKind.Object)
+            return;
+
+        foreach (var prop in typeInfo.Properties)
+        {
+            if (string.Equals(prop.Name, "resourceType", StringComparison.Ordinal))
+            {
+                prop.Order = int.MinValue;
+                continue;
+            }
+
+            if (IsChoiceHelperProperty(prop))
+                prop.ShouldSerialize = static (_, _) => false;
+        }
+    }
+
+    private static bool IsChoiceHelperProperty(JsonPropertyInfo prop)
+    {
+        if (prop.PropertyType != typeof(bool))
+            return false;
+        if (prop.AttributeProvider?.GetCustomAttributes(typeof(JsonPropertyNameAttribute), true) is { Length: > 0 })
+            return false;
+        return prop.Name.StartsWith("has", StringComparison.Ordinal)
+               && prop.Name.Length > 3
+               && char.IsUpper(prop.Name[3]);
     }
 }

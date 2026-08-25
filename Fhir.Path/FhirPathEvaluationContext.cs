@@ -22,13 +22,13 @@ public sealed class FhirPathEvaluationContext
 
     public void SetVariable(string name, IFhirNode node)
     {
-        var key = name.TrimStart('%');
+        var key = name.TrimStart('%', '$');
         _variables[key] = node;
     }
 
     public bool TryGetVariable(string name, out IFhirNode? node)
     {
-        var key = name.TrimStart('%');
+        var key = name.TrimStart('%', '$');
         return _variables.TryGetValue(key, out node);
     }
 }

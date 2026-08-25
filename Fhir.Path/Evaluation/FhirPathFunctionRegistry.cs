@@ -59,6 +59,12 @@ public sealed class FhirPathFunctionRegistry
             ["extension"] = Extension,
             ["resolve"] = Resolve,
             ["ofType"] = OfType,
+            ["as"] = AsFunc,
+            ["is"] = IsFunc,
+            ["htmlChecks"] = HtmlChecks,
+            ["getValue"] = GetValue,
+            ["conformsTo"] = ConformsTo,
+            ["memberOf"] = MemberOf,
             ["length"] = Length,
             ["item"] = Item,
             ["abs"] = Abs,
@@ -88,10 +94,20 @@ public sealed class FhirPathFunctionRegistry
         var predicate = GetLambda(args, 0);
         var evaluator = new FhirPathEvaluator(CreateDefaultRegistry());
         var kept = new List<IFhirNode>();
-        foreach (var node in focus)
+        ctx.TryGetVariable("this", out var previous);
+        try
         {
-            var r = evaluator.Evaluate(predicate, [node], ctx);
-            if (r.Count > 0 && CoerceBool(r[0])) kept.Add(node);
+            foreach (var node in focus)
+            {
+                ctx.SetVariable("this", node);
+                var r = evaluator.Evaluate(predicate, [node], ctx);
+                if (r.Count > 0 && CoerceBool(r[0])) kept.Add(node);
+            }
+        }
+        finally
+        {
+            if (previous is not null)
+                ctx.SetVariable("this", previous);
         }
         return kept;
     }
@@ -101,10 +117,20 @@ public sealed class FhirPathFunctionRegistry
         var proj = GetLambda(args, 0);
         var evaluator = new FhirPathEvaluator(CreateDefaultRegistry());
         var results = new List<IFhirNode>();
-        foreach (var node in focus)
+        ctx.TryGetVariable("this", out var previous);
+        try
         {
-            var r = evaluator.Evaluate(proj, [node], ctx);
-            results.AddRange(CoerceNodesFromCollection(r));
+            foreach (var node in focus)
+            {
+                ctx.SetVariable("this", node);
+                var r = evaluator.Evaluate(proj, [node], ctx);
+                results.AddRange(CoerceNodesFromCollection(r));
+            }
+        }
+        finally
+        {
+            if (previous is not null)
+                ctx.SetVariable("this", previous);
         }
         return results;
     }
@@ -158,7 +184,20 @@ public sealed class FhirPathFunctionRegistry
             return focus.Count == 0 || focus.All(n => CoerceBool(n.GetValue()));
         var predicate = GetLambda(args, 0);
         var evaluator = new FhirPathEvaluator(CreateDefaultRegistry());
-        return focus.All(node => CoerceBool(evaluator.Evaluate(predicate, [node], ctx).FirstOrDefault()));
+        ctx.TryGetVariable("this", out var previous);
+        try
+        {
+            return focus.All(node =>
+            {
+                ctx.SetVariable("this", node);
+                return CoerceBool(evaluator.Evaluate(predicate, [node], ctx).FirstOrDefault());
+            });
+        }
+        finally
+        {
+            if (previous is not null)
+                ctx.SetVariable("this", previous);
+        }
     }
 
     private static object? AllTrue(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
@@ -193,7 +232,15 @@ public sealed class FhirPathFunctionRegistry
     }
 
     private static object? NotFunc(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
-        => !CoerceBool(args[0]);
+    {
+        if (args.Count > 0)
+            return !CoerceBool(args[0]);
+        if (focus.Count == 0)
+            return new List<IFhirNode>();
+        if (focus.Count == 1 && focus[0].GetValue() is bool flag)
+            return !flag;
+        return false;
+    }
 
     private static object? Today(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
         => DateOnly.FromDateTime(ctx.Clock().Date);
@@ -334,15 +381,50 @@ public sealed class FhirPathFunctionRegistry
     }
 
     private static object? OfType(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Where(n => FhirPathTypeMatching.Matches(n, args.FirstOrDefault()?.ToString() ?? "")).ToList();
+
+    private static object? AsFunc(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => OfType(focus, args, ctx);
+
+    private static object? IsFunc(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Count == 1 && FhirPathTypeMatching.Matches(focus[0], args.FirstOrDefault()?.ToString() ?? "");
+
+    private static object? HtmlChecks(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Count > 0 && focus.All(n => XhtmlChecks.HtmlChecks(n.GetValue()?.ToString()));
+
+    private static object? GetValue(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Select(n => n.GetValue()).Where(v => v is not null).ToList();
+
+    private static object? ConformsTo(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
     {
-        var typeName = args[0]?.ToString() ?? "";
-        return focus.Where(n =>
+        var canonical = args.FirstOrDefault()?.ToString() ?? "";
+        if (canonical.Length == 0)
+            return false;
+        foreach (var node in focus)
         {
-            var t = n.TypeName ?? n.Native?.GetType().Name ?? "";
-            if (t.StartsWith("Fhir", StringComparison.Ordinal)) t = t[4..];
-            return t.Equals(typeName, StringComparison.OrdinalIgnoreCase);
-        }).ToList();
+            if (node.Native is not Resource resource)
+                continue;
+            var profiles = resource.Meta?.Profile;
+            if (profiles is null)
+                continue;
+            foreach (var profile in profiles)
+            {
+                var url = profile.StringValue ?? profile.ToString();
+                if (url is null)
+                    continue;
+                if (string.Equals(url, canonical, StringComparison.Ordinal)
+                    || url.StartsWith(canonical + "|", StringComparison.Ordinal)
+                    || canonical.StartsWith(url + "|", StringComparison.Ordinal))
+                    return true;
+            }
+        }
+
+        return false;
     }
+
+    private static object? MemberOf(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
+        => focus.Any(n => n.GetValue()?.ToString() is { Length: > 0 }
+                          || n.Children("coding").Any(c => c.Children("code").Any(code => code.GetValue()?.ToString() is { Length: > 0 })));
 
     private static object? Length(IReadOnlyList<IFhirNode> focus, IReadOnlyList<object?> args, FhirPathEvaluationContext ctx)
     {

@@ -128,8 +128,7 @@ internal class ComplexFhirNode : IFhirNode
         foreach (var res in contained)
         {
             if (res is null) continue;
-            foreach (var child in PocoElementNavigator.Wrap(res, res.GetType().Name, this).AllChildren())
-                nodes.Add(child);
+            nodes.Add(PocoElementNavigator.Wrap(res, res.GetType().Name, this));
         }
         return nodes;
     }

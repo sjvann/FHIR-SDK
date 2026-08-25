@@ -12,6 +12,7 @@
 ## 依賴邊界（SOLID）
 
 - **單一職責**：本庫只提供型別、產生器、多線別執行期與 Profile **執行期**驗證；不含 QueryBuilder／Terminology Server／Auth UI。`Fhir.Validation` 只留 `ITerminologyService` 介面。
+- **`Fhir.Dashboard`**：開發者目錄（Atlas）。不發佈 NuGet，不當成產品線。禁止把應用殼或臨床工作台做進來。
 - **依賴方向**：應用層 → 本 SDK（NuGet）。禁止 SDK／測試反向依賴應用專案。
 - **多線別**：以 `Fhir.VersionManager` 與跨線別契約擴充，避免呼叫端到處 `if (R4)`。
 

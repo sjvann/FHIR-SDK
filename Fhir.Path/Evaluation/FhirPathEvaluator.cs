@@ -1,3 +1,4 @@
+using System.Collections;
 using Fhir.Path.Abstractions;
 using Fhir.Path.Ast;
 using Fhir.Path.Exceptions;
@@ -21,7 +22,7 @@ internal sealed class FhirPathEvaluator(FhirPathFunctionRegistry functions)
         return expr switch
         {
             LiteralExpression lit => lit.Value,
-            IdentifierExpression id when id.Name.StartsWith('%') =>
+            IdentifierExpression id when id.Name.StartsWith('%') || id.Name.StartsWith('$') =>
                 ctx.TryGetVariable(id.Name, out var varNode) && varNode is not null
                     ? varNode
                     : throw FhirPathException.Runtime($"Unknown context variable '{id.Name}'"),
@@ -96,19 +97,64 @@ internal sealed class FhirPathEvaluator(FhirPathFunctionRegistry functions)
         return expected;
     }
 
+    private static readonly HashSet<string> LambdaFunctions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "where", "select", "repeat", "exists", "all"
+    };
+
+    private static readonly HashSet<string> TypeArgFunctions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "as", "is", "ofType"
+    };
+
     private object? EvaluateFunction(FunctionInvocationExpression fn, IReadOnlyList<IFhirNode> input, FhirPathEvaluationContext ctx)
     {
         IReadOnlyList<IFhirNode> focus = fn.Left is null
             ? input
             : CoerceToNodes(EvaluateExpression(fn.Left, input, ctx));
 
-        var args = fn.Arguments.Cast<object?>().ToList();
+        if (fn.FunctionName.Equals("iif", StringComparison.OrdinalIgnoreCase))
+            return EvaluateIif(fn, focus, ctx);
+
+        var args = new List<object?>();
+        if (TypeArgFunctions.Contains(fn.FunctionName))
+        {
+            args.Add(fn.Arguments.Count == 0 ? "" : TypeNameFromExpr(fn.Arguments[0]));
+        }
+        else if (LambdaFunctions.Contains(fn.FunctionName))
+        {
+            args.AddRange(fn.Arguments.Cast<object?>());
+        }
+        else
+        {
+            foreach (var arg in fn.Arguments)
+                args.Add(EvaluateExpression(arg, focus, ctx));
+        }
 
         if (!functions.TryInvoke(fn.FunctionName, focus, args, ctx, out var result))
             throw FhirPathException.Runtime($"Function '{fn.FunctionName}' is not supported.");
 
         return result;
     }
+
+    private object? EvaluateIif(FunctionInvocationExpression fn, IReadOnlyList<IFhirNode> focus, FhirPathEvaluationContext ctx)
+    {
+        if (fn.Arguments.Count < 2)
+            throw FhirPathException.Runtime("iif requires at least 2 arguments.");
+        var condition = CoerceToBool(EvaluateExpression(fn.Arguments[0], focus, ctx));
+        if (condition)
+            return EvaluateExpression(fn.Arguments[1], focus, ctx);
+        return fn.Arguments.Count > 2 ? EvaluateExpression(fn.Arguments[2], focus, ctx) : null;
+    }
+
+    private static string TypeNameFromExpr(FhirPathExpression expr)
+        => expr switch
+        {
+            IdentifierExpression id => id.Name,
+            LiteralExpression lit => lit.Value?.ToString() ?? "",
+            MemberInvocationExpression mem => TypeNameFromExpr(mem.Left) + "." + mem.Member,
+            _ => ""
+        };
 
     private object? EvaluateUnary(UnaryExpression u, IReadOnlyList<IFhirNode> input, FhirPathEvaluationContext ctx)
     {
@@ -158,22 +204,27 @@ internal sealed class FhirPathEvaluator(FhirPathFunctionRegistry functions)
         var lv = CoerceComparable(l);
         var rv = CoerceComparable(r);
 
+        if (op == "in")
+            return ContainsIn(r, l);
+        if (op is "+" or "&" && (lv is null || rv is null))
+            return null;
         if (lv is null || rv is null)
             return op is "=" or "~" ? lv is null && rv is null : false;
 
         return op switch
         {
             "=" or "~" => Equals(Normalize(lv), Normalize(rv)),
-            "!=" => !Equals(Normalize(lv), Normalize(rv)),
+            "!=" or "!~" => !Equals(Normalize(lv), Normalize(rv)),
             "<" => Compare(lv, rv) < 0,
             ">" => Compare(lv, rv) > 0,
             "<=" => Compare(lv, rv) <= 0,
             ">=" => Compare(lv, rv) >= 0,
-            "+" => Add(lv, rv),
+            "+" or "&" => Add(lv, rv),
             "-" => Subtract(lv, rv),
             "*" => Multiply(lv, rv),
             "/" => Divide(lv, rv),
-            "in" => ContainsIn(r, l),
+            "div" => DivOp(lv, rv),
+            "mod" => ModOp(lv, rv),
             _ => throw FhirPathException.Runtime($"Operator '{op}' not supported.")
         };
     }
@@ -199,8 +250,7 @@ internal sealed class FhirPathEvaluator(FhirPathFunctionRegistry functions)
         var type = node.TypeName ?? node.Native?.GetType().Name ?? "";
         if (type.StartsWith("Fhir", StringComparison.Ordinal))
             type = type[4..];
-        return type.Equals(typeSpecifier, StringComparison.OrdinalIgnoreCase)
-               || (node.Native?.GetType().Name.Equals(typeSpecifier, StringComparison.OrdinalIgnoreCase) ?? false);
+        return FhirPathTypeMatching.Matches(node, typeSpecifier);
     }
 
     private static List<IFhirNode> CoerceToNodes(object? value) => value switch
@@ -289,8 +339,24 @@ internal sealed class FhirPathEvaluator(FhirPathFunctionRegistry functions)
     {
         int i when rv is int j => i + j,
         decimal d when rv is decimal e => d + e,
-        _ => throw FhirPathException.Runtime("Addition requires numeric operands.")
+        int i when rv is decimal e => i + e,
+        decimal d when rv is int j => d + j,
+        _ => string.Concat(lv, rv)
     };
+
+    private static object? DivOp(object lv, object rv)
+    {
+        if (Convert.ToDecimal(rv) == 0)
+            return null;
+        return Convert.ToInt32(lv) / Convert.ToInt32(rv);
+    }
+
+    private static object? ModOp(object lv, object rv)
+    {
+        if (Convert.ToDecimal(rv) == 0)
+            return null;
+        return Convert.ToInt32(lv) % Convert.ToInt32(rv);
+    }
 
     private static object? Subtract(object lv, object rv)
     {
@@ -332,9 +398,52 @@ internal sealed class FhirPathEvaluator(FhirPathFunctionRegistry functions)
 
     private static bool ContainsIn(object? collection, object? item)
     {
-        var s = item?.ToString();
-        if (collection is string str)
-            return str.Split(',').Any(x => x.Trim() == s);
+        var needle = Normalize(CoerceComparable(item));
+        if (needle is null)
+            return false;
+
+        foreach (var candidate in EnumerateValues(collection))
+        {
+            if (string.Equals(Normalize(candidate), needle, StringComparison.Ordinal))
+                return true;
+        }
+
         return false;
+    }
+
+    private static IEnumerable<object?> EnumerateValues(object? collection)
+    {
+        switch (collection)
+        {
+            case null:
+                yield break;
+            case IFhirNode node:
+                yield return node.GetValue();
+                yield break;
+            case IEnumerable<IFhirNode> nodes:
+                foreach (var node in nodes)
+                    yield return node.GetValue();
+                yield break;
+            case FhirPathCollection col:
+                foreach (var value in col)
+                    yield return value;
+                yield break;
+            case string str:
+                foreach (var part in str.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    yield return part;
+                yield break;
+            case IEnumerable enumerable and not string:
+                foreach (var value in enumerable)
+                {
+                    if (value is IFhirNode n)
+                        yield return n.GetValue();
+                    else
+                        yield return value;
+                }
+                yield break;
+            default:
+                yield return collection;
+                break;
+        }
     }
 }

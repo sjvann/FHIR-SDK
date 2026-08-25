@@ -40,6 +40,7 @@ flowchart TB
 | 套件解析 | `Fhir.Artifacts` | 手寫 | 是 |
 | 官方 CLI | `Fhir.Cli`（`fhir`） | 手寫 | 是（dotnet tool） |
 | 產生器 | `Fhir.ResourceCreator` | 手寫工具 | 否 |
+| 開發者目錄 | `Fhir.Dashboard` | 手寫（Atlas） | 否 |
 
 ## ResourceCreator 做了什麼
 

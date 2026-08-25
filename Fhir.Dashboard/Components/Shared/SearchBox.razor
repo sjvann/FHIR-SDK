@@ -1,0 +1,92 @@
+@inject AtlasCatalog Catalog
+@inject LocaleState Locale
+@inject NavigationManager Nav
+@inject ISpecTranslator Translator
+
+<div class="search">
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" aria-hidden="true">
+        <circle cx="112" cy="112" r="72" />
+        <line x1="168" y1="168" x2="224" y2="224" />
+    </svg>
+    <input id="atlas-search"
+           type="search"
+           autocomplete="off"
+           role="combobox"
+           aria-expanded="@Aria.Bool(_open && _hits.Count > 0)"
+           aria-controls="atlas-suggest"
+           aria-autocomplete="list"
+           placeholder="@UiText.T(Locale.Locale, "search.placeholder")"
+           value="@_query"
+           @oninput="OnInput"
+           @onkeydown="OnKey"
+           @onfocus="() => _open = true"
+           @onblur="CloseSoon" />
+    @if (_open && _query.Trim().Length > 0)
+    {
+        <div id="atlas-suggest" class="suggest" role="listbox">
+            @if (_hits.Count == 0)
+            {
+                <p class="empty">@string.Format(UiText.T(Locale.Locale, "search.empty"), _query.Trim())</p>
+            }
+            else
+            {
+                @for (var i = 0; i < _hits.Count; i++)
+                {
+                    var hit = _hits[i];
+                    var selected = i == _index;
+                    <a role="option"
+                       aria-selected="@Aria.Bool(selected)"
+                       href="@Href(hit)"
+                       @onclick="() => Go(hit)"
+                       @onclick:preventDefault>
+                        <span class="mono">@hit.Name</span>
+                        <span class="muted">@Translator.Resolve(hit.Name, Locale.Locale).Label</span>
+                    </a>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string _query = "";
+    private bool _open;
+    private int _index;
+    private IReadOnlyList<SearchHit> _hits = [];
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? "";
+        _hits = Catalog.Suggest(_query);
+        _index = 0;
+        _open = true;
+    }
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "ArrowDown" && _hits.Count > 0)
+            _index = Math.Min(_index + 1, _hits.Count - 1);
+        else if (e.Key == "ArrowUp" && _hits.Count > 0)
+            _index = Math.Max(_index - 1, 0);
+        else if (e.Key == "Enter" && _hits.Count > 0)
+            Go(_hits[_index]);
+        else if (e.Key == "Escape")
+            _open = false;
+    }
+
+    private static string Href(SearchHit hit)
+        => hit.Kind == "type" ? $"/types/{Uri.EscapeDataString(hit.Name)}" : $"/resources/{Uri.EscapeDataString(hit.Name)}";
+
+    private void Go(SearchHit hit)
+    {
+        _open = false;
+        Nav.NavigateTo(Href(hit));
+    }
+
+    private async void CloseSoon()
+    {
+        await Task.Delay(180);
+        _open = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}

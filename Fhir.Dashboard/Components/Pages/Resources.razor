@@ -1,0 +1,114 @@
+@page "/resources"
+@inject AtlasCatalog Catalog
+@inject LocaleState Locale
+@inject GlossaryStore Glossary
+@inject ISpecTranslator Translator
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@UiText.T(Locale.Locale, "nav.resources")</PageTitle>
+<h1>@UiText.T(Locale.Locale, "nav.resources")</h1>
+<p class="muted">@string.Format(UiText.T(Locale.Locale, "count.resources"), Filtered.Count)</p>
+
+<div class="toolbar">
+    <div class="search" style="max-width:280px">
+        <input type="search"
+               placeholder="@UiText.T(Locale.Locale, "search.placeholder")"
+               value="@_filter"
+               @oninput="OnFilter" />
+    </div>
+    <div class="chip-list">
+        <button type="button" class="chip @(_line is null ? "active" : null)" aria-pressed="@Aria.Bool(_line is null)" @onclick="@(() => SetLine(null))">All</button>
+        @foreach (var line in Catalog.Lines)
+        {
+            <button type="button" class="chip @(_line == line ? "active" : null)" aria-pressed="@Aria.Bool(_line == line)" @onclick="@(() => SetLine(line))">@line</button>
+        }
+        <button type="button" class="chip @(_missingOnly ? "active" : null)" aria-pressed="@Aria.Bool(_missingOnly)" @onclick="ToggleMissing">
+            @UiText.T(Locale.Locale, "missing.only")
+        </button>
+        <button type="button" class="chip @(_pendingOnly ? "active" : null)" aria-pressed="@Aria.Bool(_pendingOnly)" @onclick="TogglePending">
+            @UiText.T(Locale.Locale, "pending.only")
+        </button>
+    </div>
+</div>
+
+@if (Filtered.Count == 0)
+{
+    <p class="empty">@string.Format(UiText.T(Locale.Locale, "search.empty"), _filter)</p>
+}
+else
+{
+    <table class="data">
+        <thead>
+            <tr>
+                <th>@UiText.T(Locale.Locale, "col.fhir")</th>
+                @foreach (var line in Catalog.Lines)
+                {
+                    <th>@line</th>
+                }
+                <th>@UiText.T(Locale.Locale, "col.label")</th>
+                <th>@UiText.T(Locale.Locale, "col.official")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var resource in Filtered)
+            {
+                var text = Translator.Resolve(resource.ResourceType, Locale.Locale);
+                <tr @onclick="@(() => Nav.NavigateTo($"/resources/{Uri.EscapeDataString(resource.ResourceType)}"))">
+                    <td class="mono">@resource.ResourceType</td>
+                    @foreach (var line in Catalog.Lines)
+                    {
+                        var present = resource.Lines.Contains(line);
+                        <td>
+                            <span class="badge @(present ? "ok" : "warn")">
+                                @(present ? UiText.T(Locale.Locale, "present") : UiText.T(Locale.Locale, "absent"))
+                            </span>
+                        </td>
+                    }
+                    <td>
+                        @text.Label
+                        <SourceBadge Source="text.Source" FhirName="@resource.ResourceType" />
+                    </td>
+                    <td>
+                        <a class="btn" href="@OfficialDocs.ResourcePage("R5", resource.ResourceType)" target="_blank" rel="noopener noreferrer" @onclick:stopPropagation>
+                            @UiText.T(Locale.Locale, "open.spec")
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string _filter = "";
+    private string? _line;
+    private bool _missingOnly;
+    private bool _pendingOnly;
+
+    private IReadOnlyList<ResourceEntry> Filtered => Catalog.Resources
+        .Where(r => _line is null || r.Lines.Contains(_line))
+        .Where(r => !_missingOnly || r.Lines.Count < Catalog.Lines.Count)
+        .Where(r => !_pendingOnly || !Translator.HasGlossary(r.ResourceType))
+        .Where(r => _filter.Length == 0 || r.ResourceType.Contains(_filter, StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+
+    private void OnFilter(ChangeEventArgs e) => _filter = e.Value?.ToString() ?? string.Empty;
+    private void SetLine(string? line) => _line = line;
+    private void ToggleMissing() => _missingOnly = !_missingOnly;
+    private void TogglePending() => _pendingOnly = !_pendingOnly;
+
+    protected override void OnInitialized()
+    {
+        Locale.Changed += OnChanged;
+        Glossary.Changed += OnChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Locale.Changed -= OnChanged;
+        Glossary.Changed -= OnChanged;
+    }
+}

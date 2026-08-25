@@ -40,6 +40,7 @@ internal static class ChoiceHelperCodeEmitter
             sb.AppendLine($"{indent}public object? Get{pascal}Choice() => ChoiceAccessor.GetValue(this, \"{stem}\");");
             sb.AppendLine();
             sb.AppendLine($"{indent}/// <summary>是否已設定 <c>{stem}</c> choice。</summary>");
+            sb.AppendLine($"{indent}[System.Text.Json.Serialization.JsonIgnore]");
             sb.AppendLine($"{indent}public bool Has{pascal} => ChoiceAccessor.HasValue(this, \"{stem}\");");
             sb.AppendLine();
             sb.AppendLine($"{indent}/// <summary>作用中變體的 FHIR 型別名稱（如 boolean、dateTime）。</summary>");

@@ -1,0 +1,91 @@
+@page "/types/{FhirName}"
+@inject AtlasCatalog Catalog
+@inject LocaleState Locale
+@inject GlossaryStore Glossary
+@inject ISpecTranslator Translator
+@implements IDisposable
+
+@if (Entry is null)
+{
+    <PageTitle>@FhirName</PageTitle>
+    <p class="empty">@string.Format(UiText.T(Locale.Locale, "search.empty"), FhirName)</p>
+}
+else
+{
+    var text = Translator.Resolve(Entry.FhirName, Locale.Locale);
+    <PageTitle>@Entry.FhirName</PageTitle>
+    <nav class="crumbs" aria-label="breadcrumb">
+        <a href="/">@UiText.T(Locale.Locale, "breadcrumb.home")</a>
+        <span>/</span>
+        <a href="/types">@UiText.T(Locale.Locale, "nav.types")</a>
+        <span>/</span>
+        <span class="mono">@Entry.FhirName</span>
+    </nav>
+    <h1 class="mono">@Entry.FhirName</h1>
+    <p>
+        <strong>@text.Label</strong>
+        <SourceBadge Source="text.Source" FhirName="@Entry.FhirName" />
+        <span class="badge ok">@UiText.T(Locale.Locale, "ready")</span>
+        <span class="badge">@Entry.Kind</span>
+    </p>
+    @if (!string.IsNullOrWhiteSpace(text.Summary))
+    {
+        <p>@text.Summary</p>
+    }
+    <div class="toolbar">
+        <span class="mono muted">@Entry.CsharpName</span>
+        <a class="btn" href="@($"/translate/{Uri.EscapeDataString(Entry.FhirName)}")">
+            @UiText.T(Locale.Locale, "translate.edit")
+        </a>
+        <a class="btn-primary btn" href="@OfficialDocs.ForType(Entry.Kind, "R5", Entry.FhirName)" target="_blank" rel="noopener noreferrer">
+            @UiText.T(Locale.Locale, "open.spec")
+        </a>
+        @foreach (var line in OfficialDocs.Lines.Where(l => l != "R5"))
+        {
+            <a class="btn" href="@OfficialDocs.ForType(Entry.Kind, line, Entry.FhirName)" target="_blank" rel="noopener noreferrer">@line</a>
+        }
+    </div>
+    <p class="mono muted">@UiText.T(Locale.Locale, "canonical"): @OfficialDocs.Canonical(Entry.Kind == TypeKind.Primitive ? Entry.FhirName : Entry.FhirName)</p>
+
+    <h2>@UiText.T(Locale.Locale, "members")</h2>
+    <table class="data">
+        <thead>
+            <tr>
+                <th>JSON</th>
+                <th>C#</th>
+                <th>@UiText.T(Locale.Locale, "col.csharp")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var member in Entry.Members)
+            {
+                <tr>
+                    <td class="mono">@member.JsonName</td>
+                    <td class="mono">@member.CsharpName</td>
+                    <td class="mono">@member.TypeName@(member.IsCollection ? "[]" : "")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="note">@UiText.T(Locale.Locale, "spec.note")</p>
+}
+
+@code {
+    [Parameter] public string FhirName { get; set; } = "";
+
+    private TypeEntry? Entry => Catalog.FindType(FhirName);
+
+    protected override void OnInitialized()
+    {
+        Locale.Changed += OnChanged;
+        Glossary.Changed += OnChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Locale.Changed -= OnChanged;
+        Glossary.Changed -= OnChanged;
+    }
+}

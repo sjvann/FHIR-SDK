@@ -12,7 +12,7 @@ public sealed class ProfileValidationOptions
 {
     public ProfileHandling Handling { get; init; } = ProfileHandling.Strict;
 
-    /// <summary>可選。未提供時，binding 只查目錄內 ValueSet 的 compose.include.concept。</summary>
+    /// <summary>可選。未提供時，binding 只查目錄內 ValueSet 的 compose.include.concept。目錄沒有該 ValueSet 時記 warning，不擋通過。</summary>
     public ITerminologyService? Terminology { get; init; }
 
     /// <summary>第二波 invariant 使用。未提供則略過 FHIRPath constraint。</summary>

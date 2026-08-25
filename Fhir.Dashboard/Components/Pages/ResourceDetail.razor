@@ -1,0 +1,104 @@
+@page "/resources/{ResourceType}"
+@inject AtlasCatalog Catalog
+@inject LocaleState Locale
+@inject GlossaryStore Glossary
+@inject ISpecTranslator Translator
+@implements IDisposable
+
+@if (Entry is null)
+{
+    <PageTitle>@ResourceType</PageTitle>
+    <p class="empty">@string.Format(UiText.T(Locale.Locale, "search.empty"), ResourceType)</p>
+}
+else
+{
+    var text = Translator.Resolve(Entry.ResourceType, Locale.Locale);
+    var line = Entry.Lines.Contains(_line) ? _line : Entry.Lines[0];
+    var members = Entry.MembersByLine[line];
+    <PageTitle>@Entry.ResourceType</PageTitle>
+    <nav class="crumbs" aria-label="breadcrumb">
+        <a href="/">@UiText.T(Locale.Locale, "breadcrumb.home")</a>
+        <span>/</span>
+        <a href="/resources">@UiText.T(Locale.Locale, "nav.resources")</a>
+        <span>/</span>
+        <span class="mono">@Entry.ResourceType</span>
+    </nav>
+    <h1 class="mono">@Entry.ResourceType</h1>
+    <p>
+        <strong>@text.Label</strong>
+        <SourceBadge Source="text.Source" FhirName="@Entry.ResourceType" />
+    </p>
+    @if (!string.IsNullOrWhiteSpace(text.Summary))
+    {
+        <p>@text.Summary</p>
+    }
+    <div class="chip-list toolbar">
+        @foreach (var item in OfficialDocs.Lines)
+        {
+            var present = Entry.Lines.Contains(item);
+            <button type="button"
+                    class="chip @(_line == item ? "active" : null)"
+                    aria-pressed="@Aria.Bool(_line == item)"
+                    disabled="@(!present)"
+                    @onclick="@(() => _line = item)">
+                @item · @(present ? UiText.T(Locale.Locale, "present") : UiText.T(Locale.Locale, "absent"))
+            </button>
+        }
+        <a class="btn" href="@($"/translate/{Uri.EscapeDataString(Entry.ResourceType)}")">
+            @UiText.T(Locale.Locale, "translate.edit")
+        </a>
+        <a class="btn-primary btn" href="@OfficialDocs.ResourcePage(line, Entry.ResourceType)" target="_blank" rel="noopener noreferrer">
+            @UiText.T(Locale.Locale, "open.spec")
+        </a>
+    </div>
+    <p class="mono muted">@UiText.T(Locale.Locale, "canonical"): @OfficialDocs.Canonical(Entry.ResourceType)</p>
+
+    <h2>@line · @UiText.T(Locale.Locale, "members")</h2>
+    <table class="data">
+        <thead>
+            <tr>
+                <th>JSON</th>
+                <th>C#</th>
+                <th>@UiText.T(Locale.Locale, "col.csharp")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var member in members)
+            {
+                <tr>
+                    <td class="mono">@member.JsonName</td>
+                    <td class="mono">@member.CsharpName</td>
+                    <td class="mono">@member.TypeName@(member.IsCollection ? "[]" : "")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="note">@UiText.T(Locale.Locale, "spec.note")</p>
+}
+
+@code {
+    [Parameter] public string ResourceType { get; set; } = "";
+
+    private string _line = "R5";
+    private ResourceEntry? Entry => Catalog.FindResource(ResourceType);
+
+    protected override void OnParametersSet()
+    {
+        if (Entry is not null && !Entry.Lines.Contains(_line))
+            _line = Entry.Lines[0];
+    }
+
+    protected override void OnInitialized()
+    {
+        Locale.Changed += OnChanged;
+        Glossary.Changed += OnChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Locale.Changed -= OnChanged;
+        Glossary.Changed -= OnChanged;
+    }
+}

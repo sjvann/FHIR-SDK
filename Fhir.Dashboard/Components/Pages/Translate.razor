@@ -1,0 +1,270 @@
+@page "/translate"
+@page "/translate/{FhirName}"
+@inject AtlasCatalog Catalog
+@inject LocaleState Locale
+@inject GlossaryStore Store
+@inject ISpecTranslator Translator
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@UiText.T(Locale.Locale, "nav.translate")</PageTitle>
+<h1>@UiText.T(Locale.Locale, "nav.translate")</h1>
+<p class="muted">@string.Format(UiText.T(Locale.Locale, "translate.count"), PendingCount, ReadyCount)</p>
+<p class="note lead">@UiText.T(Locale.Locale, "translate.hint")</p>
+
+<div class="toolbar">
+    <div class="search" style="max-width:280px">
+        <input type="search"
+               placeholder="@UiText.T(Locale.Locale, "search.placeholder")"
+               value="@_filter"
+               @oninput="OnFilter" />
+    </div>
+    <div class="chip-list">
+        <button type="button" class="chip @(_scope is null ? "active" : null)" aria-pressed="@Aria.Bool(_scope is null)" @onclick="@(() => SetScope(null))">All</button>
+        <button type="button" class="chip @(_scope == "type" ? "active" : null)" aria-pressed="@Aria.Bool(_scope == "type")" @onclick="@(() => SetScope("type"))">@UiText.T(Locale.Locale, "nav.types")</button>
+        <button type="button" class="chip @(_scope == "resource" ? "active" : null)" aria-pressed="@Aria.Bool(_scope == "resource")" @onclick="@(() => SetScope("resource"))">@UiText.T(Locale.Locale, "nav.resources")</button>
+        <button type="button" class="chip @(_pendingOnly ? "active" : null)" aria-pressed="@Aria.Bool(_pendingOnly)" @onclick="TogglePending">
+            @UiText.T(Locale.Locale, "pending.only")
+        </button>
+    </div>
+</div>
+
+<div class="translate-layout">
+    <div>
+        @if (Filtered.Count == 0)
+        {
+            <p class="empty">@string.Format(UiText.T(Locale.Locale, "search.empty"), _filter)</p>
+        }
+        else
+        {
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>@UiText.T(Locale.Locale, "col.fhir")</th>
+                        <th>@UiText.T(Locale.Locale, "col.kind")</th>
+                        <th>@UiText.T(Locale.Locale, "col.label")</th>
+                        <th>@UiText.T(Locale.Locale, "col.status")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Filtered)
+                    {
+                        var selected = string.Equals(_selected, item.Name, StringComparison.OrdinalIgnoreCase);
+                        <tr class="@(selected ? "selected" : null)"
+                            tabindex="0"
+                            @onclick="@(() => Select(item.Name))"
+                            @onkeydown="@((KeyboardEventArgs e) => OnRowKey(e, item.Name))">
+                            <td class="mono">@item.Name</td>
+                            <td>@KindLabel(item.Kind)</td>
+                            <td>@item.Label</td>
+                            <td>
+                                <SourceBadge Source="item.Source" FhirName="@item.Name" />
+                                @if (Store.IsOverlay(item.Name))
+                                {
+                                    <span class="badge">@UiText.T(Locale.Locale, "translate.local")</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <aside class="editor" aria-label="@UiText.T(Locale.Locale, "translate.editor")">
+        @if (_draft is null)
+        {
+            <p class="muted">@UiText.T(Locale.Locale, "translate.pick")</p>
+        }
+        else
+        {
+            <h2 class="mono">@_selected</h2>
+            <p>
+                <span class="badge">@KindLabel(CurrentKind)</span>
+                <SourceBadge Source="Store.Has(_selected!) ? TranslationSource.Glossary : TranslationSource.Pending" />
+            </p>
+            <form @onsubmit="Save" @onsubmit:preventDefault>
+                <div class="field">
+                    <label for="zh-label">@UiText.T(Locale.Locale, "translate.zh")</label>
+                    <input id="zh-label" type="text" @bind="_draft.ZhTw" @bind:event="oninput" aria-describedby="zh-error" />
+                    @if (_error is not null)
+                    {
+                        <p id="zh-error" class="field-error">@_error</p>
+                    }
+                </div>
+                <div class="field">
+                    <label for="zh-summary">@UiText.T(Locale.Locale, "translate.zhSummary")</label>
+                    <textarea id="zh-summary" rows="2" @bind="_draft.ZhTwSummary" @bind:event="oninput"></textarea>
+                </div>
+                <div class="field">
+                    <label for="en-label">@UiText.T(Locale.Locale, "translate.en")</label>
+                    <input id="en-label" type="text" @bind="_draft.En" @bind:event="oninput" />
+                </div>
+                <div class="field">
+                    <label for="en-summary">@UiText.T(Locale.Locale, "translate.enSummary")</label>
+                    <textarea id="en-summary" rows="2" @bind="_draft.EnSummary" @bind:event="oninput"></textarea>
+                </div>
+                <div class="field">
+                    <label for="ja-label">@UiText.T(Locale.Locale, "translate.ja")</label>
+                    <input id="ja-label" type="text" @bind="_draft.Ja" @bind:event="oninput" />
+                </div>
+                <div class="field">
+                    <label for="ja-summary">@UiText.T(Locale.Locale, "translate.jaSummary")</label>
+                    <textarea id="ja-summary" rows="2" @bind="_draft.JaSummary" @bind:event="oninput"></textarea>
+                </div>
+                <div class="toolbar">
+                    <button type="submit" class="btn btn-primary">@UiText.T(Locale.Locale, "translate.save")</button>
+                    @if (Store.IsOverlay(_selected!))
+                    {
+                        <button type="button" class="btn" @onclick="Revert">@UiText.T(Locale.Locale, "translate.revert")</button>
+                    }
+                </div>
+                <p class="status" aria-live="polite">@_status</p>
+            </form>
+        }
+    </aside>
+</div>
+
+@code {
+    [Parameter] public string? FhirName { get; set; }
+
+    private string _filter = "";
+    private string? _scope;
+    private bool _pendingOnly;
+    private string? _selected;
+    private Draft? _draft;
+    private string? _error;
+    private string? _status;
+
+    private sealed class Draft
+    {
+        public string En { get; set; } = "";
+        public string ZhTw { get; set; } = "";
+        public string Ja { get; set; } = "";
+        public string EnSummary { get; set; } = "";
+        public string ZhTwSummary { get; set; } = "";
+        public string JaSummary { get; set; } = "";
+    }
+
+    private sealed record Row(string Name, string Kind, string Label, TranslationSource Source);
+
+    private IReadOnlyList<Row> AllRows => Catalog.Types
+        .Select(t => RowOf(t.FhirName, t.Kind == TypeKind.Primitive ? "primitive" : "type"))
+        .Concat(Catalog.Resources.Select(r => RowOf(r.ResourceType, "resource")))
+        .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    private IReadOnlyList<Row> Filtered => AllRows
+        .Where(r => _scope is null || r.Kind == _scope || (_scope == "type" && r.Kind == "primitive"))
+        .Where(r => !_pendingOnly || r.Source == TranslationSource.Pending)
+        .Where(r => _filter.Length == 0
+                    || r.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase)
+                    || r.Label.Contains(_filter, StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+
+    private int PendingCount => AllRows.Count(r => r.Source == TranslationSource.Pending);
+    private int ReadyCount => AllRows.Count(r => r.Source == TranslationSource.Glossary);
+    private string CurrentKind => AllRows.FirstOrDefault(r => r.Name.Equals(_selected, StringComparison.OrdinalIgnoreCase))?.Kind ?? "type";
+
+    private Row RowOf(string name, string kind)
+    {
+        var text = Translator.Resolve(name, Locale.Locale);
+        return new Row(name, kind, text.Label, text.Source);
+    }
+
+    protected override void OnInitialized()
+    {
+        Locale.Changed += OnChanged;
+        Store.Changed += OnChanged;
+        _pendingOnly = string.IsNullOrWhiteSpace(FhirName);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(FhirName) && !string.Equals(_selected, FhirName, StringComparison.OrdinalIgnoreCase))
+            Select(FhirName, navigate: false);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose()
+    {
+        Locale.Changed -= OnChanged;
+        Store.Changed -= OnChanged;
+    }
+
+    private void OnFilter(ChangeEventArgs e) => _filter = e.Value?.ToString() ?? string.Empty;
+    private void SetScope(string? scope) => _scope = scope;
+    private void TogglePending() => _pendingOnly = !_pendingOnly;
+
+    private void OnRowKey(KeyboardEventArgs e, string name)
+    {
+        if (e.Key is "Enter" or " ")
+            Select(name);
+    }
+
+    private void Select(string name, bool navigate = true)
+    {
+        _selected = name;
+        _error = null;
+        _status = null;
+        if (Store.TryGet(name, out var entry))
+        {
+            _draft = new Draft
+            {
+                En = entry.En,
+                ZhTw = entry.ZhTw,
+                Ja = entry.Ja,
+                EnSummary = entry.EnSummary,
+                ZhTwSummary = entry.ZhTwSummary,
+                JaSummary = entry.JaSummary
+            };
+        }
+        else
+        {
+            _draft = new Draft { En = name, ZhTw = "", Ja = "" };
+        }
+
+        if (navigate && !string.Equals(FhirName, name, StringComparison.OrdinalIgnoreCase))
+            Nav.NavigateTo($"/translate/{Uri.EscapeDataString(name)}", replace: true);
+    }
+
+    private void Save()
+    {
+        if (_selected is null || _draft is null)
+            return;
+
+        var zh = _draft.ZhTw.Trim();
+        if (zh.Length == 0)
+        {
+            _error = UiText.T(Locale.Locale, "translate.required");
+            _status = null;
+            return;
+        }
+
+        Store.Upsert(_selected, new GlossaryEntry(
+            string.IsNullOrWhiteSpace(_draft.En) ? _selected : _draft.En.Trim(),
+            zh,
+            string.IsNullOrWhiteSpace(_draft.Ja) ? _selected : _draft.Ja.Trim(),
+            _draft.EnSummary.Trim(),
+            _draft.ZhTwSummary.Trim(),
+            _draft.JaSummary.Trim()));
+        _error = null;
+        _status = UiText.T(Locale.Locale, "translate.saved");
+    }
+
+    private void Revert()
+    {
+        if (_selected is null)
+            return;
+        Store.Revert(_selected);
+        Select(_selected, navigate: false);
+        _status = UiText.T(Locale.Locale, "translate.reverted");
+    }
+
+    private string KindLabel(string kind) => kind switch
+    {
+        "primitive" => UiText.T(Locale.Locale, "filter.primitive"),
+        "resource" => UiText.T(Locale.Locale, "nav.resources"),
+        _ => UiText.T(Locale.Locale, "nav.types")
+    };
+}

@@ -1,0 +1,7 @@
+@inject LocaleState Locale
+
+<div class="lang" role="group" aria-label="@UiText.T(Locale.Locale, "lang")">
+    <button type="button" aria-current="@Aria.Bool(Locale.Locale == "zh-TW")" @onclick='() => Locale.Set("zh-TW")'>繁中</button>
+    <button type="button" aria-current="@Aria.Bool(Locale.Locale == "en")" @onclick='() => Locale.Set("en")'>EN</button>
+    <button type="button" aria-current="@Aria.Bool(Locale.Locale == "ja")" @onclick='() => Locale.Set("ja")'>日本語</button>
+</div>

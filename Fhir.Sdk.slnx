@@ -27,4 +27,5 @@
   <Project Path="Fhir.Artifacts/Fhir.Artifacts.csproj" />
   <Project Path="Fhir.Cli/Fhir.Cli.csproj" />
   <Project Path="Fhir.Docs/Fhir.Docs.csproj" />
+  <Project Path="Fhir.Dashboard/Fhir.Dashboard.csproj" />
 </Solution>

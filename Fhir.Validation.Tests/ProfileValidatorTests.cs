@@ -54,22 +54,167 @@ public sealed class ProfileValidatorTests
     [Fact]
     public void Binding_without_valueset_is_warning_when_lenient()
     {
-        var sd = ObservationSd();
-        sd.Snapshot!.Element!.First(e => e.Path?.StringValue == "Observation.status").Binding =
-            new ElementDefinitionBindingComponent
-            {
-                Strength = new FhirCode("required"),
-                ValueSet = new FhirCanonical("http://hl7.org/fhir/ValueSet/observation-status")
-            };
-
-        var validator = FhirSdkR4.CreateValidator(Catalog(sd), new ProfileValidationOptions
-        {
-            Handling = ProfileHandling.Lenient,
-            EvaluateInvariants = false
-        });
-        var report = validator.Validate(ValidObservation(), [ObservationProfile]);
+        var report = ValidateMissingValueSet(ProfileHandling.Lenient);
         Assert.True(report.Passed);
         Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding");
+    }
+
+    [Fact]
+    public void Binding_without_valueset_is_warning_when_strict()
+    {
+        var report = ValidateMissingValueSet(ProfileHandling.Strict);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding");
+    }
+
+    [Fact]
+    public void Fhirpath_system_string_accepts_id_primitive()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.id"),
+            Min = new FhirUnsignedInt(0),
+            Max = new FhirString("1"),
+            Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("http://hl7.org/fhirpath/System.String") }]
+        });
+
+        var obs = ValidObservation();
+        obs.Id = new FhirId("qa-obs");
+        var report = CreateValidator(sd).Validate(obs, [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "type");
+    }
+
+    [Fact]
+    public void String_primitive_is_compatible_with_code()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.text"),
+            Min = new FhirUnsignedInt(0),
+            Max = new FhirString("1")
+        });
+        sd.Snapshot.Element.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.text.status"),
+            Min = new FhirUnsignedInt(1),
+            Max = new FhirString("1"),
+            Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("code") }]
+        });
+
+        var obs = ValidObservation();
+        obs.Text = new Narrative { Status = new FhirString("generated") };
+        var report = CreateValidator(sd).Validate(obs, [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "type");
+    }
+
+    [Fact]
+    public void Nested_required_child_is_skipped_when_parent_is_absent()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.note"),
+            Min = new FhirUnsignedInt(0),
+            Max = new FhirString("*")
+        });
+        sd.Snapshot.Element.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.note.text"),
+            Min = new FhirUnsignedInt(1),
+            Max = new FhirString("1"),
+            Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("markdown") }]
+        });
+
+        var report = CreateValidator(sd).Validate(ValidObservation(), [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Location == "Observation.note.text");
+    }
+
+    [Fact]
+    public void Nested_required_child_fails_when_parent_is_present()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.note"),
+            Min = new FhirUnsignedInt(0),
+            Max = new FhirString("*")
+        });
+        sd.Snapshot.Element.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.note.text"),
+            Min = new FhirUnsignedInt(1),
+            Max = new FhirString("1"),
+            Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("markdown") }]
+        });
+
+        var obs = ValidObservation();
+        obs.Note = [new Annotation()];
+        var report = CreateValidator(sd).Validate(obs, [ObservationProfile]);
+        Assert.False(report.Passed);
+        Assert.Contains(report.Issues, i => i.Code == "required" && i.Location == "Observation.note.text");
+    }
+
+    [Fact]
+    public void Official_narrative_constraints_pass()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element![0].Constraint =
+        [
+            new ElementDefinitionConstraintComponent
+            {
+                Key = new FhirId("dom-6"),
+                Severity = new FhirCode("error"),
+                Expression = new FhirString("text.`div`.exists()")
+            }
+        ];
+        sd.Snapshot.Element.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.text.div"),
+            Constraint =
+            [
+                new ElementDefinitionConstraintComponent
+                {
+                    Key = new FhirId("txt-1"),
+                    Severity = new FhirCode("error"),
+                    Expression = new FhirString("htmlChecks()")
+                }
+            ]
+        });
+
+        var obs = ValidObservation();
+        obs.Text = new Narrative
+        {
+            Status = new FhirString("generated"),
+            Div = new FhirXhtml("<div xmlns=\"http://www.w3.org/1999/xhtml\">Observation</div>")
+        };
+        var report = CreateValidator(sd).Validate(obs, [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+    }
+
+    [Fact]
+    public void Unsupported_invariant_is_warning()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element![0].Constraint =
+        [
+            new ElementDefinitionConstraintComponent
+            {
+                Key = new FhirId("txt-1"),
+                Severity = new FhirCode("error"),
+                Human = new FhirString("html"),
+                Expression = new FhirString("unknownFn()")
+            }
+        ];
+
+        var validator = FhirSdkR4.CreateValidator(Catalog(sd));
+        var report = validator.Validate(ValidObservation(), [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "invariant");
     }
 
     [Fact]
@@ -311,6 +456,24 @@ public sealed class ProfileValidatorTests
         var artifacts = FhirPackageArtifactReader.Read(tgz);
         Assert.Single(artifacts);
         Assert.Equal("StructureDefinition", artifacts[0].ResourceType);
+    }
+
+    private static ProfileValidationReport ValidateMissingValueSet(ProfileHandling handling)
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.First(e => e.Path?.StringValue == "Observation.status").Binding =
+            new ElementDefinitionBindingComponent
+            {
+                Strength = new FhirCode("required"),
+                ValueSet = new FhirCanonical("http://hl7.org/fhir/ValueSet/observation-status")
+            };
+
+        var validator = FhirSdkR4.CreateValidator(Catalog(sd), new ProfileValidationOptions
+        {
+            Handling = handling,
+            EvaluateInvariants = false
+        });
+        return validator.Validate(ValidObservation(), [ObservationProfile]);
     }
 
     private static IProfileValidator CreateValidator(StructureDefinition sd)

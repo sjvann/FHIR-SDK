@@ -6,10 +6,10 @@ internal enum FhirPathTokenKind
 {
     End, Identifier, Number, String, Boolean, Null,
     Dot, LParen, RParen, LBracket, RBracket, Comma, Pipe,
-    Plus, Minus, Star, Slash,
-    Eq, Ne, Lt, Gt, Le, Ge,
-    Percent, Colon,
-    And, Or, Xor, Implies, In, Is, As, Not,
+    Plus, Minus, Star, Slash, Ampersand,
+    Eq, Ne, Tilde, NotEquivalent, Lt, Gt, Le, Ge,
+    Percent, Dollar, Colon,
+    And, Or, Xor, Implies, In, Is, As, Not, Div, Mod,
     EOF
 }
 
@@ -36,6 +36,9 @@ internal sealed class FhirPathLexer(string input)
         if (c is '\'' or '"')
             return ReadString(start, c);
 
+        if (c == '`')
+            return ReadBacktickIdentifier(start);
+
         _pos++;
         return c switch
         {
@@ -50,10 +53,13 @@ internal sealed class FhirPathLexer(string input)
             '-' => new(FhirPathTokenKind.Minus, "-", start),
             '*' => new(FhirPathTokenKind.Star, "*", start),
             '/' => new(FhirPathTokenKind.Slash, "/", start),
+            '&' => new(FhirPathTokenKind.Ampersand, "&", start),
             '%' => new(FhirPathTokenKind.Percent, "%", start),
+            '$' => new(FhirPathTokenKind.Dollar, "$", start),
             ':' => new(FhirPathTokenKind.Colon, ":", start),
+            '~' => new(FhirPathTokenKind.Tilde, "~", start),
             '=' => ReadEquals(start),
-            '!' => ReadTwoChar(start, '=', FhirPathTokenKind.Ne),
+            '!' => ReadBang(start),
             '<' => ReadLess(start),
             '>' => ReadTwoChar(start, '=', FhirPathTokenKind.Ge, FhirPathTokenKind.Gt),
             _ => throw FhirPathException.Syntax($"Unexpected character '{c}'", start)
@@ -79,6 +85,8 @@ internal sealed class FhirPathLexer(string input)
             "is" => FhirPathTokenKind.Is,
             "as" => FhirPathTokenKind.As,
             "not" => FhirPathTokenKind.Not,
+            "div" => FhirPathTokenKind.Div,
+            "mod" => FhirPathTokenKind.Mod,
             _ => FhirPathTokenKind.Identifier
         };
         return new(kind, text, start);
@@ -112,6 +120,37 @@ internal sealed class FhirPathLexer(string input)
             sb.Append(input[_pos++]);
         }
         throw FhirPathException.Syntax("Unterminated string literal", start);
+    }
+
+    private FhirPathToken ReadBacktickIdentifier(int start)
+    {
+        _pos++;
+        var sb = new System.Text.StringBuilder();
+        while (_pos < input.Length)
+        {
+            if (input[_pos] == '`')
+            {
+                _pos++;
+                return new(FhirPathTokenKind.Identifier, sb.ToString(), start);
+            }
+            sb.Append(input[_pos++]);
+        }
+        throw FhirPathException.Syntax("Unterminated delimited identifier", start);
+    }
+
+    private FhirPathToken ReadBang(int start)
+    {
+        if (_pos < input.Length && input[_pos] == '=')
+        {
+            _pos++;
+            return new(FhirPathTokenKind.Ne, "!=", start);
+        }
+        if (_pos < input.Length && input[_pos] == '~')
+        {
+            _pos++;
+            return new(FhirPathTokenKind.NotEquivalent, "!~", start);
+        }
+        throw FhirPathException.Syntax("Expected '=' or '~' after '!'", start);
     }
 
     private FhirPathToken ReadEquals(int start)

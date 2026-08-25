@@ -1,0 +1,99 @@
+@page "/types"
+@inject AtlasCatalog Catalog
+@inject LocaleState Locale
+@inject GlossaryStore Glossary
+@inject ISpecTranslator Translator
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@UiText.T(Locale.Locale, "nav.types")</PageTitle>
+<h1>@UiText.T(Locale.Locale, "nav.types")</h1>
+<p class="muted">@string.Format(UiText.T(Locale.Locale, "count.types"), Filtered.Count)</p>
+
+<div class="toolbar">
+    <div class="search" style="max-width:280px">
+        <input type="search"
+               placeholder="@UiText.T(Locale.Locale, "search.placeholder")"
+               value="@_filter"
+               @oninput="OnFilter" />
+    </div>
+    <div class="chip-list">
+        <button type="button" class="chip @(_kind is null ? "active" : null)" aria-pressed="@Aria.Bool(_kind is null)" @onclick="@(() => SetKind(null))">All</button>
+        <button type="button" class="chip @(_kind == TypeKind.Primitive ? "active" : null)" aria-pressed="@Aria.Bool(_kind == TypeKind.Primitive)" @onclick="@(() => SetKind(TypeKind.Primitive))">@UiText.T(Locale.Locale, "filter.primitive")</button>
+        <button type="button" class="chip @(_kind == TypeKind.Complex ? "active" : null)" aria-pressed="@Aria.Bool(_kind == TypeKind.Complex)" @onclick="@(() => SetKind(TypeKind.Complex))">@UiText.T(Locale.Locale, "filter.complex")</button>
+        <button type="button" class="chip @(_pendingOnly ? "active" : null)" aria-pressed="@Aria.Bool(_pendingOnly)" @onclick="TogglePending">
+            @UiText.T(Locale.Locale, "pending.only")
+        </button>
+    </div>
+</div>
+
+@if (Filtered.Count == 0)
+{
+    <p class="empty">@string.Format(UiText.T(Locale.Locale, "search.empty"), _filter)</p>
+}
+else
+{
+    <table class="data">
+        <thead>
+            <tr>
+                <th>@UiText.T(Locale.Locale, "col.fhir")</th>
+                <th>@UiText.T(Locale.Locale, "col.csharp")</th>
+                <th>@UiText.T(Locale.Locale, "col.kind")</th>
+                <th>@UiText.T(Locale.Locale, "col.label")</th>
+                <th>@UiText.T(Locale.Locale, "col.official")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var type in Filtered)
+            {
+                var text = Translator.Resolve(type.FhirName, Locale.Locale);
+                <tr @onclick="@(() => Nav.NavigateTo($"/types/{Uri.EscapeDataString(type.FhirName)}"))">
+                    <td class="mono">@type.FhirName</td>
+                    <td class="mono">@type.CsharpName</td>
+                    <td>@type.Kind</td>
+                    <td>
+                        @text.Label
+                        <SourceBadge Source="text.Source" FhirName="@type.FhirName" />
+                    </td>
+                    <td>
+                        <a class="btn" href="@OfficialDocs.ForType(type.Kind, "R5", type.FhirName)" target="_blank" rel="noopener noreferrer" @onclick:stopPropagation>
+                            @UiText.T(Locale.Locale, "open.spec")
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string _filter = "";
+    private TypeKind? _kind;
+    private bool _pendingOnly;
+
+    private void OnFilter(ChangeEventArgs e) => _filter = e.Value?.ToString() ?? string.Empty;
+    private void SetKind(TypeKind? kind) => _kind = kind;
+    private void TogglePending() => _pendingOnly = !_pendingOnly;
+
+    private IReadOnlyList<TypeEntry> Filtered => Catalog.Types
+        .Where(t => _kind is null || t.Kind == _kind)
+        .Where(t => !_pendingOnly || !Translator.HasGlossary(t.FhirName))
+        .Where(t => _filter.Length == 0
+                    || t.FhirName.Contains(_filter, StringComparison.OrdinalIgnoreCase)
+                    || t.CsharpName.Contains(_filter, StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+
+    protected override void OnInitialized()
+    {
+        Locale.Changed += OnChanged;
+        Glossary.Changed += OnChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Locale.Changed -= OnChanged;
+        Glossary.Changed -= OnChanged;
+    }
+}

@@ -22,7 +22,8 @@ public sealed class FhirPathEngine : IFhirPathEngine
             SupportedFunctions = _functions.FunctionNames.OrderBy(x => x).ToList(),
             SupportedOperators =
             [
-                "=", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/",
+                "=", "!=", "~", "!~", "<", ">", "<=", ">=", "+", "-", "*", "/",
+                "&", "div", "mod",
                 "and", "or", "xor", "implies", "|", "in", "is", "as", "not"
             ],
             Version = "2.0"
@@ -60,6 +61,7 @@ public sealed class FhirPathEngine : IFhirPathEngine
         public FhirPathCollection Evaluate(IFhirNode context, FhirPathEvaluationContext? evaluationContext = null)
         {
             var ctx = evaluationContext ?? new FhirPathEvaluationContext();
+            BindFocus(ctx, context);
             var input = BuildInitialInput(ast, context);
             return evaluator.Evaluate(ast, input, ctx);
         }
@@ -67,13 +69,14 @@ public sealed class FhirPathEngine : IFhirPathEngine
         public IReadOnlyList<IFhirNode> EvaluateNodes(IFhirNode context, FhirPathEvaluationContext? evaluationContext = null)
         {
             var ctx = evaluationContext ?? new FhirPathEvaluationContext();
+            BindFocus(ctx, context);
             var input = BuildInitialInput(ast, context);
             return evaluator.EvaluateNodes(ast, input, ctx);
         }
 
         private static IReadOnlyList<IFhirNode> BuildInitialInput(FhirPathExpression ast, IFhirNode context)
         {
-            if (ast is IdentifierExpression id && !id.Name.StartsWith('%'))
+            if (ast is IdentifierExpression id && !id.Name.StartsWith('%') && !id.Name.StartsWith('$'))
             {
                 var typeName = context.TypeName ?? context.Native?.GetType().Name ?? "";
                 if (typeName.StartsWith("Fhir", StringComparison.Ordinal))
@@ -83,6 +86,12 @@ public sealed class FhirPathEngine : IFhirPathEngine
                     return [context];
             }
             return [context];
+        }
+
+        private static void BindFocus(FhirPathEvaluationContext ctx, IFhirNode context)
+        {
+            ctx.SetVariable("this", context);
+            ctx.SetVariable("context", context);
         }
     }
 }

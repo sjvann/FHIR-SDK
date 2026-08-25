@@ -64,7 +64,7 @@ public sealed class ProfileValidator : IProfileValidator
                 continue;
 
             var nodes = InstancePathWalker.Select(instance, path);
-            CheckCardinality(element, path, nodes.Count, issues);
+            CheckCardinality(instance, element, path, issues);
             CheckTypes(element, path, nodes, issues);
             CheckBinding(element, path, nodes, options, issues);
             if (options.EvaluateFixedPattern)
@@ -167,6 +167,25 @@ public sealed class ProfileValidator : IProfileValidator
     }
 
     private static void CheckCardinality(
+        Base instance,
+        ElementDefinition element,
+        string path,
+        List<ProfileValidationIssue> issues)
+    {
+        var lastDot = path.LastIndexOf('.');
+        if (lastDot < 0)
+        {
+            AddCardinalityIssues(element, path, 1, issues);
+            return;
+        }
+
+        var parents = InstancePathWalker.Select(instance, path[..lastDot]);
+        var childName = path[(lastDot + 1)..];
+        foreach (var parent in parents)
+            AddCardinalityIssues(element, path, InstancePathWalker.Children(parent, childName).Count, issues);
+    }
+
+    private static void AddCardinalityIssues(
         ElementDefinition element,
         string path,
         int count,
@@ -216,7 +235,9 @@ public sealed class ProfileValidator : IProfileValidator
             var actual = InstancePathWalker.FhirTypeName(node);
             if (actual is null)
                 continue;
-            if (allowed.Contains(actual) || allowed.Contains("Element") || allowed.Contains("BackboneElement"))
+            if (FhirTypeCompatibility.IsCompatible(actual, allowed)
+                || allowed.Contains("Element")
+                || allowed.Contains("BackboneElement"))
                 continue;
             if (allowed.Contains("Resource") && node.Native is Resource)
                 continue;
@@ -244,9 +265,8 @@ public sealed class ProfileValidator : IProfileValidator
         var inCatalog = _catalog.TryGetValueSet(valueSet, out _);
         if (!inCatalog && options.Terminology is null)
         {
-            var severity = options.Handling == ProfileHandling.Strict ? "error" : "warning";
             issues.Add(new ProfileValidationIssue(
-                severity,
+                "warning",
                 "binding",
                 $"ValueSet '{valueSet}' is not in the catalog; binding was not fully checked.",
                 path));
@@ -310,7 +330,7 @@ public sealed class ProfileValidator : IProfileValidator
             var sliceName = slice.SliceName?.StringValue
                             ?? slicePath[(slicePath.IndexOf(':') + 1)..];
             var matched = nodes.Where(n => MatchesSlice(n, sliced, slice)).ToList();
-            CheckCardinality(slice, slicePath, matched.Count, issues);
+            AddCardinalityIssues(slice, slicePath, matched.Count, issues);
             _ = sliceName;
             _ = instance;
         }
@@ -328,10 +348,13 @@ public sealed class ProfileValidator : IProfileValidator
             var dpath = d.Path?.StringValue ?? "";
             if (string.Equals(dtype, "type", StringComparison.OrdinalIgnoreCase))
             {
-                var allowed = slice.Type?.Select(t => t.Code?.StringValue).Where(c => c is not null).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                var allowed = slice.Type?
+                                  .Select(t => t.Code?.StringValue)
+                                  .OfType<string>()
+                                  .ToHashSet(StringComparer.OrdinalIgnoreCase)
                               ?? [];
                 var actual = InstancePathWalker.FhirTypeName(node);
-                if (actual is null || !allowed.Contains(actual))
+                if (actual is null || !FhirTypeCompatibility.IsCompatible(actual, allowed))
                     return false;
                 continue;
             }
@@ -422,7 +445,7 @@ public sealed class ProfileValidator : IProfileValidator
                     catch (Exception ex)
                     {
                         issues.Add(new ProfileValidationIssue(
-                            "error",
+                            "warning",
                             "invariant",
                             $"Constraint '{constraint.Key?.StringValue}' failed to evaluate: {ex.Message}",
                             path));

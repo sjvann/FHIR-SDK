@@ -1,0 +1,43 @@
+@inherits LayoutComponentBase
+@inject LocaleState Locale
+@inject GlossaryStore Glossary
+@inject NavigationManager Nav
+@implements IDisposable
+
+<a class="skip-link" href="#main">@UiText.T(Locale.Locale, "skip")</a>
+<div class="shell">
+    <header class="topbar">
+        <NavLink class="brand" href="/">
+            <strong>@UiText.T(Locale.Locale, "brand")</strong>
+            <span>@UiText.T(Locale.Locale, "tagline")</span>
+        </NavLink>
+        <SearchBox />
+        <span class="muted">@UiText.T(Locale.Locale, "search.hint")</span>
+        <LangSwitch />
+    </header>
+    <nav class="nav" aria-label="Atlas">
+        <NavLink href="/" Match="NavLinkMatch.All">@UiText.T(Locale.Locale, "nav.overview")</NavLink>
+        <NavLink href="/types">@UiText.T(Locale.Locale, "nav.types")</NavLink>
+        <NavLink href="/resources">@UiText.T(Locale.Locale, "nav.resources")</NavLink>
+        <NavLink href="/translate">@UiText.T(Locale.Locale, "nav.translate")</NavLink>
+    </nav>
+    <main id="main" class="main">
+        @Body
+    </main>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Locale.Changed += OnChanged;
+        Glossary.Changed += OnChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Locale.Changed -= OnChanged;
+        Glossary.Changed -= OnChanged;
+    }
+}

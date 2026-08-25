@@ -89,7 +89,8 @@ public sealed class FhirPathParser
     private FhirPathExpression ParseEquality()
     {
         var left = ParseComparison();
-        while (_current.Kind is FhirPathTokenKind.Eq or FhirPathTokenKind.Ne)
+        while (_current.Kind is FhirPathTokenKind.Eq or FhirPathTokenKind.Ne
+               or FhirPathTokenKind.Tilde or FhirPathTokenKind.NotEquivalent)
         {
             var op = _current.Text;
             Next();
@@ -113,7 +114,7 @@ public sealed class FhirPathParser
     private FhirPathExpression ParseAdditive()
     {
         var left = ParseMultiplicative();
-        while (_current.Kind is FhirPathTokenKind.Plus or FhirPathTokenKind.Minus)
+        while (_current.Kind is FhirPathTokenKind.Plus or FhirPathTokenKind.Minus or FhirPathTokenKind.Ampersand)
         {
             var op = _current.Text;
             Next();
@@ -125,7 +126,8 @@ public sealed class FhirPathParser
     private FhirPathExpression ParseMultiplicative()
     {
         var left = ParseUnary();
-        while (_current.Kind is FhirPathTokenKind.Star or FhirPathTokenKind.Slash)
+        while (_current.Kind is FhirPathTokenKind.Star or FhirPathTokenKind.Slash
+               or FhirPathTokenKind.Div or FhirPathTokenKind.Mod)
         {
             var op = _current.Text;
             Next();
@@ -155,13 +157,13 @@ public sealed class FhirPathParser
         if (_current.Kind == FhirPathTokenKind.Is)
         {
             Next();
-            var type = ExpectIdentifier();
+            var type = ExpectName();
             return new TypeExpression(left, type, IsTypeCheck: true);
         }
         if (_current.Kind == FhirPathTokenKind.As)
         {
             Next();
-            var type = ExpectIdentifier();
+            var type = ExpectName();
             return new TypeExpression(left, type, IsTypeCheck: false);
         }
         return left;
@@ -175,7 +177,7 @@ public sealed class FhirPathParser
             if (_current.Kind == FhirPathTokenKind.Dot)
             {
                 Next();
-                var member = ExpectIdentifier();
+                var member = ExpectName();
                 if (_current.Kind == FhirPathTokenKind.LParen)
                     expr = ParseFunctionAfterDot(expr, member);
                 else
@@ -206,10 +208,16 @@ public sealed class FhirPathParser
         if (_current.Kind == FhirPathTokenKind.Percent)
         {
             Next();
-            return new IdentifierExpression("%" + ExpectIdentifier());
+            return new IdentifierExpression("%" + ExpectName());
         }
 
-        if (_current.Kind == FhirPathTokenKind.Identifier)
+        if (_current.Kind == FhirPathTokenKind.Dollar)
+        {
+            Next();
+            return new IdentifierExpression("$" + ExpectName());
+        }
+
+        if (_current.Kind == FhirPathTokenKind.Identifier || IsNameKeyword(_current.Kind))
         {
             var name = _current.Text;
             Next();
@@ -276,14 +284,20 @@ public sealed class FhirPathParser
         return args;
     }
 
-    private string ExpectIdentifier()
+    private string ExpectName()
     {
-        if (_current.Kind != FhirPathTokenKind.Identifier)
+        if (_current.Kind != FhirPathTokenKind.Identifier && !IsNameKeyword(_current.Kind))
             throw FhirPathException.Syntax("Expected identifier", _current.Position);
         var text = _current.Text;
         Next();
         return text;
     }
+
+    private static bool IsNameKeyword(FhirPathTokenKind kind)
+        => kind is FhirPathTokenKind.As or FhirPathTokenKind.Is or FhirPathTokenKind.In
+            or FhirPathTokenKind.Not or FhirPathTokenKind.And or FhirPathTokenKind.Or
+            or FhirPathTokenKind.Xor or FhirPathTokenKind.Implies or FhirPathTokenKind.Div
+            or FhirPathTokenKind.Mod;
 
     private void Expect(FhirPathTokenKind kind)
     {

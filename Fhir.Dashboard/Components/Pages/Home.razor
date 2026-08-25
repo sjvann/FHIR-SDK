@@ -1,0 +1,84 @@
+@page "/"
+@inject AtlasCatalog Catalog
+@inject LocaleState Locale
+@implements IDisposable
+
+<PageTitle>@UiText.T(Locale.Locale, "brand")</PageTitle>
+<h1>@UiText.T(Locale.Locale, "nav.overview")</h1>
+
+<section class="grid-stats">
+    <a class="card" href="/types">
+        <div class="muted">@UiText.T(Locale.Locale, "stat.primitives")</div>
+        <div class="num">@Catalog.Primitives.Count</div>
+    </a>
+    <a class="card" href="/types">
+        <div class="muted">@UiText.T(Locale.Locale, "stat.complex")</div>
+        <div class="num">@Catalog.ComplexTypes.Count</div>
+    </a>
+    @foreach (var line in Catalog.Lines)
+    {
+        var count = Catalog.Resources.Count(r => r.Lines.Contains(line));
+        <a class="card" href="/resources">
+            <div class="muted">@line</div>
+            <div class="num">@count</div>
+            <div class="muted">@UiText.T(Locale.Locale, "stat.resources")</div>
+        </a>
+    }
+</section>
+
+<section>
+    <h2>@UiText.T(Locale.Locale, "coverage")</h2>
+    @{
+        var max = Math.Max(1, Catalog.Resources.Count);
+    }
+    <div class="bars" aria-hidden="true">
+        @foreach (var line in Catalog.Lines)
+        {
+            var count = Catalog.Resources.Count(r => r.Lines.Contains(line));
+            <div class="bar-row">
+                <span class="mono">@line</span>
+                <div class="bar-track"><div class="bar-fill" style="width: @(100.0 * count / max)%"></div></div>
+                <span class="mono">@count</span>
+            </div>
+        }
+    </div>
+    <table class="data">
+        <caption class="muted">@UiText.T(Locale.Locale, "coverage")</caption>
+        <thead>
+            <tr>
+                <th>@UiText.T(Locale.Locale, "col.line")</th>
+                <th>@UiText.T(Locale.Locale, "stat.resources")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Catalog.Lines)
+            {
+                <tr @onclick='() => NavTo("/resources")'>
+                    <td class="mono">@line</td>
+                    <td>@Catalog.Resources.Count(r => r.Lines.Contains(line))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>@UiText.T(Locale.Locale, "home.shortcuts")</h2>
+    <div class="toolbar">
+        <a class="btn" href="/types/string">string</a>
+        <a class="btn" href="/types/HumanName">HumanName</a>
+        <a class="btn" href="/resources/Patient">Patient</a>
+        <a class="btn" href="/resources/Observation">Observation</a>
+    </div>
+</section>
+
+<p class="note">@UiText.T(Locale.Locale, "spec.note")</p>
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    protected override void OnInitialized() => Locale.Changed += OnChanged;
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    private void NavTo(string href) => Nav.NavigateTo(href);
+    public void Dispose() => Locale.Changed -= OnChanged;
+}

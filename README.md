@@ -24,6 +24,16 @@
 
 應用層（QueryBuilder、Terminology、CQL 等）請使用 **[FHIR.Solutions](https://github.com/sjvann/FHIR.Solutions)**，以 NuGet 引用本 SDK。
 
+## SDK Atlas（開發者目錄）
+
+`Fhir.Dashboard` 是給工程師看的目錄，不是產品線、不發佈 NuGet。可檢視 TypeFramework datatype、ResourceCreator 已生成的 R4／R4B／R5 資源，並連回 HL7 官方文件；介面詞彙支援 zh-TW／en／ja。
+
+```bash
+dotnet run --project Fhir.Dashboard --urls http://localhost:5090
+```
+
+AION 控制台群組 **SDK** → **FHIR SDK Atlas**（埠 5090）。設計規格在 [`design-system/fhir-sdk-atlas/`](design-system/fhir-sdk-atlas/MASTER.md)。
+
 ## 建置
 
 ```bash
