@@ -1,0 +1,21 @@
+@inject LocaleState Locale
+
+<footer class="itri-footer" role="contentinfo">
+    <div class="itri-footer-inner">
+        <div class="itri-footer-brand">
+            <img src="images/ITRI_logo.jpg"
+                 alt="@UiText.T(Locale.Locale, "footer.alt")"
+                 class="itri-footer-logo" />
+            <div class="itri-footer-copy">
+                <div>@string.Format(UiText.T(Locale.Locale, "footer.copyright"), DateTime.Now.Year)</div>
+                <div>@UiText.T(Locale.Locale, "brand")</div>
+            </div>
+        </div>
+        <div class="itri-footer-contact">
+            <div>@UiText.T(Locale.Locale, "footer.contact")</div>
+            <div>
+                <a href="mailto:sjvann@itri.org.tw">sjvann@itri.org.tw</a>
+            </div>
+        </div>
+    </div>
+</footer>
