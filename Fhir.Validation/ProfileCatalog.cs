@@ -73,19 +73,57 @@ public sealed class ProfileCatalog
     private static ValueSetExpansion ExtractValueSet(Base resource, string url)
     {
         var codes = new HashSet<string>(StringComparer.Ordinal);
+        var closed = true;
+        var sawInclude = false;
         var root = PocoElementNavigator.Wrap(resource);
+
         foreach (var include in Walk(root, "compose", "include"))
         {
-            var system = FirstString(include, "system");
-            foreach (var concept in include.Children("concept"))
-            {
-                var code = FirstString(concept, "code");
-                if (!string.IsNullOrEmpty(code))
-                    codes.Add(Key(system, code));
-            }
+            sawInclude = true;
+            CollectIncludeCodes(include, codes, ref closed);
         }
 
-        return new ValueSetExpansion(url, codes);
+        if (Walk(root, "compose", "exclude").Any())
+            closed = false;
+        if (!sawInclude)
+            closed = false;
+
+        foreach (var contains in Walk(root, "expansion", "contains"))
+            AddExpansionContains(contains, codes);
+
+        return new ValueSetExpansion(url, codes, closed);
+    }
+
+    private static void CollectIncludeCodes(IFhirNode include, HashSet<string> codes, ref bool closed)
+    {
+        var system = FirstString(include, "system");
+        var concepts = include.Children("concept");
+        var filters = include.Children("filter");
+        var nested = include.Children("valueSet");
+
+        if (filters.Count > 0 || nested.Count > 0)
+            closed = false;
+        if (concepts.Count == 0 && !string.IsNullOrEmpty(system))
+            closed = false;
+        if (concepts.Count == 0 && nested.Count == 0 && string.IsNullOrEmpty(system))
+            closed = false;
+
+        foreach (var concept in concepts)
+        {
+            var code = FirstString(concept, "code");
+            if (!string.IsNullOrEmpty(code))
+                codes.Add(Key(system, code));
+        }
+    }
+
+    private static void AddExpansionContains(IFhirNode contains, HashSet<string> codes)
+    {
+        var code = FirstString(contains, "code");
+        if (!string.IsNullOrEmpty(code))
+            codes.Add(Key(FirstString(contains, "system"), code));
+
+        foreach (var child in contains.Children("contains"))
+            AddExpansionContains(child, codes);
     }
 
     private static IEnumerable<IFhirNode> Walk(IFhirNode root, params string[] path)
@@ -134,4 +172,4 @@ public sealed class ProfileCatalog
 
 public sealed record ProfileSnapshot(string Canonical, string? TypeName, IReadOnlyList<ElementDefinition> Elements);
 
-public sealed record ValueSetExpansion(string Canonical, IReadOnlySet<string> Codes);
+public sealed record ValueSetExpansion(string Canonical, IReadOnlySet<string> Codes, bool IsClosedEnumeration = false);

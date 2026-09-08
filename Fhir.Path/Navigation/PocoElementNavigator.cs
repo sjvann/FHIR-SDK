@@ -101,8 +101,23 @@ internal class ComplexFhirNode : IFhirNode
     public IReadOnlyList<IFhirNode> AllChildren()
     {
         var result = new List<IFhirNode>();
-        foreach (var key in _meta.Elements.Keys)
+        var choiceMemberNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var (key, binding) in _meta.Elements)
+        {
+            if (!binding.IsChoice || binding.ChoiceMembers is null)
+                continue;
+            foreach (var member in binding.ChoiceMembers)
+                choiceMemberNames.Add(member.ElementName);
             result.AddRange(Children(key));
+        }
+
+        foreach (var (key, binding) in _meta.Elements)
+        {
+            if (binding.IsChoice || choiceMemberNames.Contains(key))
+                continue;
+            result.AddRange(Children(key));
+        }
+
         if (Native is Base b && b.Overflow is not null)
         {
             foreach (var name in b.Overflow.Keys)

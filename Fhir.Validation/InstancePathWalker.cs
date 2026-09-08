@@ -1,6 +1,7 @@
 using Fhir.Path.Abstractions;
 using Fhir.Path.Navigation;
 using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Choices;
 
 namespace Fhir.Validation;
 
@@ -34,8 +35,12 @@ internal static class InstancePathWalker
         if (elementName.EndsWith("[x]", StringComparison.Ordinal))
         {
             var stem = elementName[..^3];
+            var declared = node.Children(stem);
+            if (declared.Count > 0)
+                return declared;
+
             return node.AllChildren()
-                .Where(c => c.Name.StartsWith(stem, StringComparison.OrdinalIgnoreCase))
+                .Where(c => ChoiceElementNaming.IsChoiceVariantJsonName(c.Name, stem))
                 .ToList();
         }
 

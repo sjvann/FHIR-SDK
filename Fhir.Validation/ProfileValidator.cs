@@ -60,14 +60,17 @@ public sealed class ProfileValidator : IProfileValidator
             if (string.IsNullOrEmpty(path))
                 continue;
 
-            if (path.Contains(':', StringComparison.Ordinal))
+            // Official snapshots keep slice entries on the unsliced path (Patient.extension
+            // + sliceName=race, max=1). Colon paths (Patient.extension:race) are the other
+            // style. Neither may cap the whole list — that belongs to CheckSlicing.
+            if (IsSliceDefinition(element, path))
                 continue;
 
             var nodes = InstancePathWalker.Select(instance, path);
             CheckCardinality(instance, element, path, issues);
             CheckTypes(element, path, nodes, issues);
             CheckBinding(element, path, nodes, options, issues);
-            if (options.EvaluateFixedPattern)
+            if (options.EvaluateFixedPattern && !IsChildOfSlicedElement(snapshot, path))
                 CheckFixedPattern(element, path, nodes, issues);
 
             if (options.EvaluateSlicing && element.Slicing is not null)
@@ -164,6 +167,25 @@ public sealed class ProfileValidator : IProfileValidator
         }
 
         return true;
+    }
+
+    private static bool IsSliceDefinition(ElementDefinition element, string path)
+        => path.Contains(':', StringComparison.Ordinal)
+           || !string.IsNullOrWhiteSpace(element.SliceName?.StringValue);
+
+    /// <summary>
+    /// 切片子元素的 pattern／fixed 只屬於各 slice（由 <see cref="CheckSlicing"/> 比對），
+    /// 不可套到整份清單（例如兩個 Observation.component 各有不同 LOINC）。
+    /// </summary>
+    private static bool IsChildOfSlicedElement(ProfileSnapshot snapshot, string path)
+    {
+        var lastDot = path.LastIndexOf('.');
+        if (lastDot < 0)
+            return false;
+        var parent = path[..lastDot];
+        return snapshot.Elements.Any(e =>
+            string.Equals(e.Path?.StringValue, parent, StringComparison.Ordinal)
+            && e.Slicing is not null);
     }
 
     private static void CheckCardinality(
@@ -273,6 +295,7 @@ public sealed class ProfileValidator : IProfileValidator
             return;
         }
 
+        var warnedIncomplete = false;
         foreach (var (system, code) in CollectCodes(nodes))
         {
             var result = terminology.ValidateCode(system, code, valueSet);
@@ -283,7 +306,17 @@ public sealed class ProfileValidator : IProfileValidator
                     "binding",
                     result.Diagnostics ?? $"Code '{system}|{code}' failed binding to '{valueSet}'.",
                     path));
+                continue;
             }
+
+            if (warnedIncomplete || string.IsNullOrEmpty(result.Diagnostics))
+                continue;
+            warnedIncomplete = true;
+            issues.Add(new ProfileValidationIssue(
+                "warning",
+                "binding",
+                result.Diagnostics,
+                path));
         }
     }
 

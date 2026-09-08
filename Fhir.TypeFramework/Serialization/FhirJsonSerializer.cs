@@ -1,7 +1,9 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Fhir.TypeFramework.Bases;
+using Fhir.TypeFramework.Choices;
 
 namespace Fhir.TypeFramework.Serialization;
 
@@ -155,7 +157,16 @@ public static class FhirJsonSerializer
             }
 
             if (IsChoiceHelperProperty(prop))
+            {
                 prop.ShouldSerialize = static (_, _) => false;
+                continue;
+            }
+
+            if (prop.AttributeProvider is MemberInfo member
+                && ChoiceElementNaming.TryGetChoiceStem(member.Name, out _, out _))
+            {
+                prop.Name = ChoiceElementNaming.ToFhirJsonName(member.Name);
+            }
         }
     }
 

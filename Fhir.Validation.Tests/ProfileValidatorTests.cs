@@ -284,6 +284,226 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
+    public void Snapshot_style_slice_max_does_not_apply_to_all_extensions()
+    {
+        var canonical = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient";
+        var sd = new StructureDefinition
+        {
+            Url = new FhirUri(canonical),
+            Type = new FhirUri("Patient"),
+            Snapshot = new StructureDefinition.SnapshotComponent
+            {
+                Element =
+                [
+                    new ElementDefinition { Path = new FhirString("Patient"), Min = new FhirUnsignedInt(0), Max = new FhirString("*") },
+                    new ElementDefinition
+                    {
+                        Path = new FhirString("Patient.extension"),
+                        Min = new FhirUnsignedInt(0),
+                        Max = new FhirString("*"),
+                        Slicing = new ElementDefinitionSlicingComponent
+                        {
+                            Rules = new FhirCode("open"),
+                            Discriminator =
+                            [
+                                new ElementDefinitionSlicingDiscriminatorComponent
+                                {
+                                    Type = new FhirCode("value"),
+                                    Path = new FhirString("url")
+                                }
+                            ]
+                        }
+                    },
+                    SnapshotExtensionSlice("race"),
+                    SnapshotExtensionSlice("ethnicity"),
+                    SnapshotExtensionSlice("sex"),
+                    SnapshotExtensionSlice("interpreterRequired")
+                ]
+            }
+        };
+
+        var patient = new Patient
+        {
+            Extension =
+            [
+                new Extension { Url = new FhirString("http://hl7.org/fhir/us/core/StructureDefinition/us-core-race") },
+                new Extension { Url = new FhirString("http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity") },
+                new Extension { Url = new FhirString("http://hl7.org/fhir/us/core/StructureDefinition/us-core-tribal-affiliation") },
+                new Extension { Url = new FhirString("http://hl7.org/fhir/us/core/StructureDefinition/us-core-sex") },
+                new Extension { Url = new FhirString("http://hl7.org/fhir/us/core/StructureDefinition/us-core-interpreter-needed") }
+            ]
+        };
+
+        var report = FhirSdkR4.CreateValidator(Catalog(sd)).Validate(patient, [canonical]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "max" && i.Location == "Patient.extension");
+    }
+
+    [Fact]
+    public void Choice_x_with_one_populated_variant_counts_as_one()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.effective[x]"),
+            Min = new FhirUnsignedInt(0),
+            Max = new FhirString("1"),
+            Type =
+            [
+                new ElementDefinitionTypeComponent { Code = new FhirUri("dateTime") },
+                new ElementDefinitionTypeComponent { Code = new FhirUri("Period") }
+            ]
+        });
+
+        var obs = ValidObservation();
+        obs.EffectiveDateTime = new FhirDateTime("2020-01-01");
+        var report = CreateValidator(sd).Validate(obs, [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "max");
+    }
+
+    [Fact]
+    public void Pattern_on_child_of_sliced_element_does_not_apply_to_all_items()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.component"),
+            Min = new FhirUnsignedInt(0),
+            Max = new FhirString("*"),
+            Slicing = new ElementDefinitionSlicingComponent
+            {
+                Rules = new FhirCode("open"),
+                Discriminator =
+                [
+                    new ElementDefinitionSlicingDiscriminatorComponent
+                    {
+                        Type = new FhirCode("value"),
+                        Path = new FhirString("code")
+                    }
+                ]
+            }
+        });
+        sd.Snapshot.Element.Add(new ElementDefinition
+        {
+            Path = new FhirString("Observation.component.code"),
+            Min = new FhirUnsignedInt(1),
+            Max = new FhirString("1"),
+            PatternCodeableConcept = new CodeableConcept
+            {
+                Coding = [new Coding { Code = new FhirString("8480-6") }]
+            }
+        });
+
+        var obs = ValidObservation();
+        obs.Component =
+        [
+            new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept { Coding = [new Coding { Code = new FhirString("8480-6") }] }
+            },
+            new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept { Coding = [new Coding { Code = new FhirString("8462-4") }] }
+            }
+        ];
+        var report = CreateValidator(sd).Validate(obs, [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "pattern");
+    }
+
+    [Fact]
+    public void Open_valueset_system_include_is_warning_not_required_error()
+    {
+        var sd = ObservationSd();
+        sd.Snapshot!.Element!.First(e => e.Path?.StringValue == "Observation.status").Binding =
+            new ElementDefinitionBindingComponent
+            {
+                Strength = new FhirCode("required"),
+                ValueSet = new FhirCanonical("http://example.org/ValueSet/open-status")
+            };
+
+        var vs = new ValueSet
+        {
+            Url = new FhirUri("http://example.org/ValueSet/open-status"),
+            Compose = new ValueSet.ComposeComponent
+            {
+                Include =
+                [
+                    new ValueSet.ComposeComponent.ComposeIncludeComponent
+                    {
+                        System = new FhirUri("http://hl7.org/fhir/observation-status")
+                    }
+                ]
+            }
+        };
+
+        var catalog = Catalog(sd);
+        catalog.Add(vs);
+        var report = FhirSdkR4.CreateValidator(catalog).Validate(ValidObservation(), [ObservationProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding");
+        Assert.DoesNotContain(report.Issues, i => i.Severity == "error" && i.Code == "binding");
+    }
+
+    [Fact]
+    public void Choice_json_codeable_concept_roundtrips_fhir_camel_case()
+    {
+        const string json =
+            """{"resourceType":"MedicationRequest","status":"active","intent":"order","subject":{"reference":"Patient/x"},"medicationCodeableConcept":{"text":"nizatidine"}}""";
+        var parsed = Assert.IsType<MedicationRequest>(FhirSdkR4.ParseJson(json));
+        Assert.Equal("nizatidine", parsed.MedicationCodeableconcept?.Text?.StringValue);
+        var back = FhirSdkR4.SerializeJson(parsed);
+        Assert.Contains("medicationCodeableConcept", back, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"medicationCodeableconcept\"", back, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Sibling_id_property_does_not_steal_reference_element()
+    {
+        var canonical = "http://hl7.org/fhir/StructureDefinition/Coverage";
+        var sd = new StructureDefinition
+        {
+            Url = new FhirUri(canonical),
+            Type = new FhirUri("Coverage"),
+            Snapshot = new StructureDefinition.SnapshotComponent
+            {
+                Element =
+                [
+                    new ElementDefinition { Path = new FhirString("Coverage"), Min = new FhirUnsignedInt(0), Max = new FhirString("*") },
+                    new ElementDefinition
+                    {
+                        Path = new FhirString("Coverage.subscriber"),
+                        Min = new FhirUnsignedInt(0),
+                        Max = new FhirString("1"),
+                        Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("Reference") }]
+                    }
+                ]
+            }
+        };
+
+        var coverage = new Coverage
+        {
+            Subscriber = new Reference { ReferenceValue = new FhirString("Patient/x") },
+            SubscriberId = new FhirString("abc")
+        };
+        var report = FhirSdkR4.CreateValidator(Catalog(sd)).Validate(coverage, [canonical]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "type");
+    }
+
+    [Fact]
+    public void Dosage_dose_and_rate_deserializes_without_abstract_backbone()
+    {
+        const string json =
+            """{"resourceType":"MedicationRequest","status":"active","intent":"order","subject":{"reference":"Patient/x"},"medicationCodeableConcept":{"text":"nizatidine"},"dosageInstruction":[{"text":"10 mL bid","timing":{"repeat":{"frequency":2,"period":1,"periodUnit":"d"}},"doseAndRate":[{"doseQuantity":{"value":10,"unit":"ml"}}]}]}""";
+        var parsed = Assert.IsType<MedicationRequest>(FhirSdkR4.ParseJson(json));
+        Assert.NotNull(parsed.DosageInstruction);
+        Assert.NotNull(parsed.DosageInstruction![0].DoseAndRate);
+        Assert.NotNull(parsed.DosageInstruction[0].Timing?.Repeat);
+    }
+
+    [Fact]
     public void Value_slicing_enforces_slice_cardinality()
     {
         var sd = ObservationSd();
@@ -494,6 +714,14 @@ public sealed class ProfileValidatorTests
         {
             Coding = [new Coding { System = new FhirUri("http://loinc.org"), Code = new FhirString("29463-7") }]
         }
+    };
+
+    private static ElementDefinition SnapshotExtensionSlice(string name) => new()
+    {
+        Path = new FhirString("Patient.extension"),
+        SliceName = new FhirString(name),
+        Min = new FhirUnsignedInt(0),
+        Max = new FhirString("1")
     };
 
     private static StructureDefinition ObservationSd() => new()
