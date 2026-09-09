@@ -1,15 +1,17 @@
 using Fhir.Resources.R4;
 using Fhir.Sdk.R4;
+using Fhir.TypeFramework.Abstractions;
 using Fhir.TypeFramework.DataTypes;
 using Fhir.TypeFramework.DataTypes.PrimitiveTypes;
 using Fhir.TypeFramework.Serialization;
-using Fhir.Validation.Packages;
+using Fhir.Artifacts;
 
 namespace Fhir.Validation.Tests;
 
 public sealed class ProfileValidatorTests
 {
     private const string ObservationProfile = "http://hl7.org/fhir/StructureDefinition/Observation";
+    private const string UsCorePatientProfile = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient";
 
     [Fact]
     public void Unknown_canonical_is_error()
@@ -284,6 +286,139 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
+    public void Official_extension_slices_do_not_apply_slice_max_to_all_extensions()
+    {
+        var sd = PatientExtensionSliceSd();
+        var patient = PatientWithExtensions(
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-tribal-affiliation",
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-genderIdentity");
+
+        var report = CreateValidator(sd).Validate(patient, [UsCorePatientProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "max" && i.Location == "Patient.extension");
+    }
+
+    [Fact]
+    public void Official_extension_slice_max_is_enforced_per_url()
+    {
+        var sd = PatientExtensionSliceSd();
+        var patient = PatientWithExtensions(
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race");
+
+        var report = CreateValidator(sd).Validate(patient, [UsCorePatientProfile]);
+        Assert.False(report.Passed);
+        Assert.Contains(report.Issues, i => i.Code == "max" && i.Location == "Patient.extension:race");
+    }
+
+    [Fact]
+    public void Whole_system_valueset_without_concepts_is_warning_not_error()
+    {
+        const string vsUrl = "http://hl7.org/fhir/us/core/ValueSet/us-core-usps-state";
+        var sd = PatientAddressStateSd(vsUrl, "extensible");
+        var vs = new ValueSet
+        {
+            Url = new FhirUri(vsUrl),
+            Compose = new ValueSet.ComposeComponent
+            {
+                Include =
+                [
+                    new ValueSet.ComposeComponent.ComposeIncludeComponent
+                    {
+                        System = new FhirUri("https://www.usps.com/")
+                    }
+                ]
+            }
+        };
+
+        var catalog = Catalog(sd);
+        catalog.Add(vs);
+        var patient = new Patient
+        {
+            Address = [new Address { State = new FhirString("OK") }]
+        };
+        var report = FhirSdkR4.CreateValidator(catalog).Validate(patient, [UsCorePatientProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding" && i.Location == "Patient.address.state");
+        Assert.DoesNotContain(report.Issues, i => i.Diagnostics.Contains("|OK", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Expansion_contains_is_used_for_string_binding()
+    {
+        const string vsUrl = "http://hl7.org/fhir/us/core/ValueSet/us-core-usps-state";
+        var sd = PatientAddressStateSd(vsUrl, "extensible");
+        var vs = new ValueSet
+        {
+            Url = new FhirUri(vsUrl),
+            Expansion = new ValueSet.ExpansionComponent
+            {
+                Contains =
+                [
+                    new ValueSet.ExpansionComponent.ExpansionContainsComponent
+                    {
+                        System = new FhirUri("https://www.usps.com/"),
+                        Code = new FhirCode("OK")
+                    }
+                ]
+            }
+        };
+
+        var catalog = Catalog(sd);
+        catalog.Add(vs);
+        var patient = new Patient
+        {
+            Address = [new Address { State = new FhirString("OK") }]
+        };
+        var report = FhirSdkR4.CreateValidator(catalog).Validate(patient, [UsCorePatientProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "binding");
+    }
+
+    [Fact]
+    public void Extensible_binding_mismatch_is_warning()
+    {
+        const string vsUrl = "http://example.org/ValueSet/usps";
+        var sd = PatientAddressStateSd(vsUrl, "extensible");
+        var vs = new ValueSet
+        {
+            Url = new FhirUri(vsUrl),
+            Compose = new ValueSet.ComposeComponent
+            {
+                Include =
+                [
+                    new ValueSet.ComposeComponent.ComposeIncludeComponent
+                    {
+                        System = new FhirUri("https://www.usps.com/"),
+                        Concept =
+                        [
+                            new ValueSet.ComposeComponent.ComposeIncludeComponent.ComposeIncludeConceptComponent
+                            {
+                                Code = new FhirCode("CA")
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var catalog = Catalog(sd);
+        catalog.Add(vs);
+        var patient = new Patient
+        {
+            Address = [new Address { State = new FhirString("OK") }]
+        };
+        var report = FhirSdkR4.CreateValidator(catalog).Validate(patient, [UsCorePatientProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding");
+        Assert.Contains(report.Issues, i => i.Diagnostics.Contains("OK", StringComparison.Ordinal)
+                                            && !i.Diagnostics.Contains("|OK", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Value_slicing_enforces_slice_cardinality()
     {
         var sd = ObservationSd();
@@ -518,6 +653,102 @@ public sealed class ProfileValidatorTests
                     Min = new FhirUnsignedInt(1),
                     Max = new FhirString("1"),
                     Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("CodeableConcept") }]
+                }
+            ]
+        }
+    };
+
+    private static StructureDefinition PatientExtensionSliceSd()
+    {
+        var race = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race";
+        var ethnicity = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity";
+        var tribal = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-tribal-affiliation";
+        var birthsex = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex";
+        var genderIdentity = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-genderIdentity";
+        return new StructureDefinition
+        {
+            Url = new FhirUri(UsCorePatientProfile),
+            Type = new FhirUri("Patient"),
+            Snapshot = new StructureDefinition.SnapshotComponent
+            {
+                Element =
+                [
+                    new ElementDefinition { Path = new FhirString("Patient"), Min = new FhirUnsignedInt(0), Max = new FhirString("*") },
+                    new ElementDefinition
+                    {
+                        Path = new FhirString("Patient.extension"),
+                        Min = new FhirUnsignedInt(0),
+                        Max = new FhirString("*"),
+                        Slicing = new ElementDefinitionSlicingComponent
+                        {
+                            Rules = new FhirCode("open"),
+                            Discriminator =
+                            [
+                                new ElementDefinitionSlicingDiscriminatorComponent
+                                {
+                                    Type = new FhirCode("value"),
+                                    Path = new FhirString("url")
+                                }
+                            ]
+                        }
+                    },
+                    ExtensionSlice("race", "1", race),
+                    ExtensionSlice("ethnicity", "1", ethnicity),
+                    ExtensionSlice("tribalAffiliation", "*", tribal),
+                    ExtensionSlice("birthsex", "1", birthsex),
+                    ExtensionSlice("genderIdentity", "*", genderIdentity)
+                ]
+            }
+        };
+    }
+
+    private static ElementDefinition ExtensionSlice(string name, string max, string profile) => new()
+    {
+        Path = new FhirString("Patient.extension"),
+        SliceName = new FhirString(name),
+        Min = new FhirUnsignedInt(0),
+        Max = new FhirString(max),
+        Type =
+        [
+            new ElementDefinitionTypeComponent
+            {
+                Code = new FhirUri("Extension"),
+                Profile = [new FhirCanonical(profile)]
+            }
+        ]
+    };
+
+    private static Patient PatientWithExtensions(params string[] urls) => new()
+    {
+        Extension = urls.Select(u => (IExtension)new Extension { Url = new FhirString(u) }).ToList()
+    };
+
+    private static StructureDefinition PatientAddressStateSd(string valueSet, string strength) => new()
+    {
+        Url = new FhirUri(UsCorePatientProfile),
+        Type = new FhirUri("Patient"),
+        Snapshot = new StructureDefinition.SnapshotComponent
+        {
+            Element =
+            [
+                new ElementDefinition { Path = new FhirString("Patient"), Min = new FhirUnsignedInt(0), Max = new FhirString("*") },
+                new ElementDefinition
+                {
+                    Path = new FhirString("Patient.address"),
+                    Min = new FhirUnsignedInt(0),
+                    Max = new FhirString("*")
+                },
+                new ElementDefinition
+                {
+                    Path = new FhirString("Patient.address.state"),
+                    Min = new FhirUnsignedInt(0),
+                    Max = new FhirString("1"),
+                    Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("string") }],
+                    Binding = new ElementDefinitionBindingComponent
+                    {
+                        Strength = new FhirCode(strength),
+                        ValueSet = new FhirCanonical(valueSet)
+                    }
                 }
             ]
         }

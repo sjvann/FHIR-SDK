@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Fhir.Validation\Fhir.Validation.csproj" />
+    <ProjectReference Include="..\Fhir.Artifacts\Fhir.Artifacts.csproj" />
     <ProjectReference Include="..\Fhir.Sdk.R4\Fhir.Sdk.R4.csproj" />
     <ProjectReference Include="..\Fhir.Sdk.R4B\Fhir.Sdk.R4B.csproj" />
     <ProjectReference Include="..\Fhir.Sdk.R5\Fhir.Sdk.R5.csproj" />

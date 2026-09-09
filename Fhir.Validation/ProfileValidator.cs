@@ -60,7 +60,11 @@ public sealed class ProfileValidator : IProfileValidator
             if (string.IsNullOrEmpty(path))
                 continue;
 
+            // Official snapshots keep path without colon (Patient.extension) and set sliceName.
+            // Colon-in-path is only an unofficial fixture convention (Patient.extension:race).
             if (path.Contains(':', StringComparison.Ordinal))
+                continue;
+            if (!string.IsNullOrEmpty(element.SliceName?.StringValue))
                 continue;
 
             var nodes = InstancePathWalker.Select(instance, path);
@@ -262,7 +266,7 @@ public sealed class ProfileValidator : IProfileValidator
             return;
 
         var terminology = options.Terminology ?? new CatalogTerminologyService(_catalog);
-        var inCatalog = _catalog.TryGetValueSet(valueSet, out _);
+        var inCatalog = _catalog.TryGetValueSet(valueSet, out var expansion);
         if (!inCatalog && options.Terminology is null)
         {
             issues.Add(new ProfileValidationIssue(
@@ -273,15 +277,32 @@ public sealed class ProfileValidator : IProfileValidator
             return;
         }
 
+        if (inCatalog && expansion.Codes.Count == 0 && options.Terminology is null)
+        {
+            issues.Add(new ProfileValidationIssue(
+                "warning",
+                "binding",
+                $"ValueSet '{valueSet}' has no enumerated concepts; binding was not fully checked.",
+                path));
+            return;
+        }
+
+        var strength = element.Binding?.Strength?.StringValue;
+        var failSeverity = string.Equals(strength, "extensible", StringComparison.OrdinalIgnoreCase)
+                           || string.Equals(strength, "preferred", StringComparison.OrdinalIgnoreCase)
+                           || string.Equals(strength, "example", StringComparison.OrdinalIgnoreCase)
+            ? "warning"
+            : "error";
+
         foreach (var (system, code) in CollectCodes(nodes))
         {
             var result = terminology.ValidateCode(system, code, valueSet);
             if (!result.Ok)
             {
                 issues.Add(new ProfileValidationIssue(
-                    "error",
+                    failSeverity,
                     "binding",
-                    result.Diagnostics ?? $"Code '{system}|{code}' failed binding to '{valueSet}'.",
+                    result.Diagnostics ?? $"Code '{ProfileCatalog.FormatCode(system, code)}' failed binding to '{valueSet}'.",
                     path));
             }
         }
@@ -320,20 +341,38 @@ public sealed class ProfileValidator : IProfileValidator
     {
         var prefix = path + ":";
         var slices = snapshot.Elements
-            .Where(e => e.Path?.StringValue is { } p && p.StartsWith(prefix, StringComparison.Ordinal)
-                        && p.IndexOf('.', prefix.Length) < 0)
+            .Where(e => IsSliceOf(e, path, prefix))
             .ToList();
 
         foreach (var slice in slices)
         {
             var slicePath = slice.Path!.StringValue!;
             var sliceName = slice.SliceName?.StringValue
-                            ?? slicePath[(slicePath.IndexOf(':') + 1)..];
+                            ?? (slicePath.Contains(':', StringComparison.Ordinal)
+                                ? slicePath[(slicePath.IndexOf(':') + 1)..]
+                                : slicePath);
+            var location = string.IsNullOrEmpty(sliceName) ? slicePath : $"{path}:{sliceName}";
             var matched = nodes.Where(n => MatchesSlice(n, sliced, slice)).ToList();
-            AddCardinalityIssues(slice, slicePath, matched.Count, issues);
-            _ = sliceName;
+            AddCardinalityIssues(slice, location, matched.Count, issues);
             _ = instance;
         }
+    }
+
+    private static bool IsSliceOf(ElementDefinition element, string unslicedPath, string colonPrefix)
+    {
+        var p = element.Path?.StringValue;
+        if (string.IsNullOrEmpty(p))
+            return false;
+
+        var sliceName = element.SliceName?.StringValue;
+        if (string.IsNullOrEmpty(sliceName))
+            return false;
+
+        if (string.Equals(p, unslicedPath, StringComparison.Ordinal))
+            return true;
+
+        return p.StartsWith(colonPrefix, StringComparison.Ordinal)
+               && p.IndexOf('.', colonPrefix.Length) < 0;
     }
 
     private static bool MatchesSlice(IFhirNode node, ElementDefinition sliced, ElementDefinition slice)
@@ -391,6 +430,20 @@ public sealed class ProfileValidator : IProfileValidator
                 if (codes.Count == 0)
                     codes.Add(target.Children("code").FirstOrDefault()?.GetValue()?.ToString());
                 if (expected is not null && !codes.Contains(expected))
+                    return false;
+            }
+
+            var expectedProfiles = slice.Type?
+                .SelectMany(t => t.Profile ?? [])
+                .Select(p => p.StringValue)
+                .Where(s => !string.IsNullOrEmpty(s))
+                .ToList() ?? [];
+            if (expectedProfiles.Count > 0)
+            {
+                var actualUrl = target.GetValue()?.ToString();
+                if (string.IsNullOrEmpty(actualUrl))
+                    actualUrl = node.Children("url").FirstOrDefault()?.GetValue()?.ToString();
+                if (!expectedProfiles.Contains(actualUrl, StringComparer.Ordinal))
                     return false;
             }
         }

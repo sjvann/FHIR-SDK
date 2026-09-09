@@ -85,7 +85,20 @@ public sealed class ProfileCatalog
             }
         }
 
+        foreach (var contains in Walk(root, "expansion", "contains"))
+            AddExpansionContains(contains, codes);
+
         return new ValueSetExpansion(url, codes);
+    }
+
+    private static void AddExpansionContains(IFhirNode node, HashSet<string> codes)
+    {
+        var code = FirstString(node, "code");
+        if (!string.IsNullOrEmpty(code))
+            codes.Add(Key(FirstString(node, "system"), code));
+
+        foreach (var nested in node.Children("contains"))
+            AddExpansionContains(nested, codes);
     }
 
     private static IEnumerable<IFhirNode> Walk(IFhirNode root, params string[] path)
@@ -103,6 +116,9 @@ public sealed class ProfileCatalog
         => node.Children(name).FirstOrDefault()?.GetValue()?.ToString();
 
     internal static string Key(string? system, string? code) => $"{system ?? ""}|{code ?? ""}";
+
+    internal static string FormatCode(string? system, string? code)
+        => string.IsNullOrEmpty(system) ? code ?? "" : $"{system}|{code}";
 
     private static string? ReadString(object instance, string propertyName)
     {
