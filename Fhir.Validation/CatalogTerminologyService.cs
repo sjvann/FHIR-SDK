@@ -20,6 +20,17 @@ public sealed class CatalogTerminologyService(ProfileCatalog catalog) : ITermino
             || vs.Codes.Any(c => c.EndsWith("|" + code, StringComparison.Ordinal)))
             return new BindingValidationResult(true, null);
 
+<<<<<<< HEAD
         return new BindingValidationResult(false, $"Code '{ProfileCatalog.FormatCode(system, code)}' is not in ValueSet '{valueSetCanonical}'.");
+=======
+        if (!vs.IsClosedEnumeration)
+        {
+            return new BindingValidationResult(
+                true,
+                $"ValueSet '{valueSetCanonical}' is not a closed concept list; binding was not fully checked.");
+        }
+
+        return new BindingValidationResult(false, $"Code '{system}|{code}' is not in ValueSet '{valueSetCanonical}'.");
+>>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
     }
 }

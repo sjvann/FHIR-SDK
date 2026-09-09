@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FHIR SDK Atlas">
+  <title>FHIR SDK Atlas</title>
+  <defs>
+    <linearGradient id="atlas-bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4ADE80"/>
+      <stop offset="100%" stop-color="#166534"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#atlas-bg)"/>
+  <ellipse cx="256" cy="256" rx="128" ry="128" fill="none" stroke="#ffffff" stroke-width="28"/>
+  <ellipse cx="256" cy="256" rx="56" ry="128" fill="none" stroke="#d8f0ea" stroke-width="18"/>
+  <path d="M128 256 h256" fill="none" stroke="#d8f0ea" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="256" cy="148" r="16" fill="#ffffff"/>
+  <circle cx="348" cy="256" r="16" fill="#ffffff"/>
+  <circle cx="214" cy="332" r="16" fill="#ffffff"/>
+</svg>

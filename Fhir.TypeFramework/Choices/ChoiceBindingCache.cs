@@ -36,7 +36,7 @@ public static class ChoiceBindingCache
 
         foreach (var prop in props)
         {
-            var jsonName = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
+            var jsonName = JsonName(prop);
             if (jsonName == "resourceType")
                 continue;
 
@@ -68,15 +68,13 @@ public static class ChoiceBindingCache
         return result;
     }
 
-    private static string GetMemberTypeSuffix(string propertyName)
-    {
-        foreach (var suffix in ChoiceElementNaming.TypeSuffixes.OrderByDescending(s => s.Length))
-        {
-            if (!propertyName.EndsWith(suffix, StringComparison.Ordinal))
-                continue;
-            return char.ToLowerInvariant(suffix[0]) + suffix[1..];
-        }
+    private static string JsonName(PropertyInfo prop)
+        => ChoiceElementNaming.TryGetChoiceStem(prop.Name, out _, out _)
+            ? ChoiceElementNaming.ToFhirJsonName(prop.Name)
+            : prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
 
-        return propertyName;
-    }
+    private static string GetMemberTypeSuffix(string propertyName)
+        => ChoiceElementNaming.TryGetChoiceStem(propertyName, out _, out var suffix)
+            ? ChoiceElementNaming.ToJsonTypeSuffix(suffix)
+            : propertyName;
 }

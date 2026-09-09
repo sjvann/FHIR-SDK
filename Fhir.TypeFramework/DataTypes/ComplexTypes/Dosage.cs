@@ -17,8 +17,8 @@ public class Dosage : ComplexTypeBase
     [JsonPropertyName("site")] public CodeableConcept? Site { get; set; }
     [JsonPropertyName("route")] public CodeableConcept? Route { get; set; }
     [JsonPropertyName("method")] public CodeableConcept? Method { get; set; }
-    [JsonPropertyName("doseAndRate")] public List<BackboneElement>? DoseAndRate { get; set; }
-    [JsonPropertyName("maxDosePerPeriod")] public List<BackboneElement>? MaxDosePerPeriod { get; set; }
+    [JsonPropertyName("doseAndRate")] public List<DoseAndRateComponent>? DoseAndRate { get; set; }
+    [JsonPropertyName("maxDosePerPeriod")] public List<Ratio>? MaxDosePerPeriod { get; set; }
     [JsonPropertyName("maxDosePerAdministration")] public Quantity? MaxDosePerAdministration { get; set; }
     [JsonPropertyName("maxDosePerLifetime")] public Quantity? MaxDosePerLifetime { get; set; }
 
@@ -76,5 +76,43 @@ public class Dosage : ComplexTypeBase
         foreach (var r in ValidateList(MaxDosePerPeriod, validationContext)) yield return r;
         foreach (var r in ValidateItem(MaxDosePerAdministration, validationContext)) yield return r;
         foreach (var r in ValidateItem(MaxDosePerLifetime, validationContext)) yield return r;
+    }
+
+    /// <summary>Dosage.doseAndRate 具體 backbone，不得使用抽象 <see cref="BackboneElement"/>（STJ 無法反序列化）。</summary>
+    public sealed class DoseAndRateComponent : BackboneElement
+    {
+        [JsonPropertyName("type")] public CodeableConcept? Type { get; set; }
+        [JsonPropertyName("doseRange")] public global::Fhir.TypeFramework.DataTypes.Range? DoseRange { get; set; }
+        [JsonPropertyName("doseQuantity")] public Quantity? DoseQuantity { get; set; }
+        [JsonPropertyName("rateRatio")] public Ratio? RateRatio { get; set; }
+        [JsonPropertyName("rateRange")] public global::Fhir.TypeFramework.DataTypes.Range? RateRange { get; set; }
+        [JsonPropertyName("rateQuantity")] public Quantity? RateQuantity { get; set; }
+
+        public override Base DeepCopy()
+        {
+            var copy = (DoseAndRateComponent)base.DeepCopy();
+            copy.Type = Type?.DeepCopy() as CodeableConcept;
+            copy.DoseRange = DoseRange?.DeepCopy() as global::Fhir.TypeFramework.DataTypes.Range;
+            copy.DoseQuantity = DoseQuantity?.DeepCopy() as Quantity;
+            copy.RateRatio = RateRatio?.DeepCopy() as Ratio;
+            copy.RateRange = RateRange?.DeepCopy() as global::Fhir.TypeFramework.DataTypes.Range;
+            copy.RateQuantity = RateQuantity?.DeepCopy() as Quantity;
+            return copy;
+        }
+
+        public override bool IsExactly(Base other)
+        {
+            if (other is not DoseAndRateComponent o || !base.IsExactly(other))
+                return false;
+            return Eq(Type, o.Type)
+                   && Eq(DoseRange, o.DoseRange)
+                   && Eq(DoseQuantity, o.DoseQuantity)
+                   && Eq(RateRatio, o.RateRatio)
+                   && Eq(RateRange, o.RateRange)
+                   && Eq(RateQuantity, o.RateQuantity);
+        }
+
+        private static bool Eq<T>(T? a, T? b) where T : Base =>
+            a is null && b is null || a is not null && b is not null && a.IsExactly(b);
     }
 }

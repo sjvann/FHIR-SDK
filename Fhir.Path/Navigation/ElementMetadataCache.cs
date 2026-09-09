@@ -27,7 +27,7 @@ public static class ElementMetadataCache
 
         foreach (var prop in props)
         {
-            var jsonName = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
+            var jsonName = JsonName(prop);
             if (jsonName == "resourceType" || prop.Name == "ResourceTypeJson")
                 continue;
 
@@ -48,6 +48,13 @@ public static class ElementMetadataCache
 
         foreach (var (baseName, members) in choiceCandidates)
         {
+            if (elements.ContainsKey(baseName))
+            {
+                foreach (var member in members)
+                    elements[member.JsonName] = new ElementBinding(member.JsonName, member.Prop);
+                continue;
+            }
+
             var choiceBindings = members.Select(m => new ElementBinding(m.JsonName, m.Prop)).ToList();
             elements[baseName] = ElementBinding.ForChoice(baseName, choiceBindings);
 
@@ -60,6 +67,11 @@ public static class ElementMetadataCache
 
         return new TypeMetadata(type, elements);
     }
+
+    private static string JsonName(PropertyInfo prop)
+        => ChoiceElementNaming.TryGetChoiceStem(prop.Name, out _, out _)
+            ? ChoiceElementNaming.ToFhirJsonName(prop.Name)
+            : prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
 
 }
 
