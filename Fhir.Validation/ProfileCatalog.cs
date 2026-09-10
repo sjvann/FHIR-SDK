@@ -83,12 +83,6 @@ public sealed class ProfileCatalog
             CollectIncludeCodes(include, codes, ref closed);
         }
 
-<<<<<<< HEAD
-        foreach (var contains in Walk(root, "expansion", "contains"))
-            AddExpansionContains(contains, codes);
-
-        return new ValueSetExpansion(url, codes);
-=======
         if (Walk(root, "compose", "exclude").Any())
             closed = false;
         if (!sawInclude)
@@ -120,17 +114,6 @@ public sealed class ProfileCatalog
             if (!string.IsNullOrEmpty(code))
                 codes.Add(Key(system, code));
         }
-    }
-
-    private static void AddExpansionContains(IFhirNode contains, HashSet<string> codes)
-    {
-        var code = FirstString(contains, "code");
-        if (!string.IsNullOrEmpty(code))
-            codes.Add(Key(FirstString(contains, "system"), code));
-
-        foreach (var child in contains.Children("contains"))
-            AddExpansionContains(child, codes);
->>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
     }
 
     private static void AddExpansionContains(IFhirNode node, HashSet<string> codes)

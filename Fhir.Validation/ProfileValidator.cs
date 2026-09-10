@@ -60,16 +60,10 @@ public sealed class ProfileValidator : IProfileValidator
             if (string.IsNullOrEmpty(path))
                 continue;
 
-<<<<<<< HEAD
-            // Official snapshots keep path without colon (Patient.extension) and set sliceName.
-            // Colon-in-path is only an unofficial fixture convention (Patient.extension:race).
-            if (path.Contains(':', StringComparison.Ordinal))
-=======
             // Official snapshots keep slice entries on the unsliced path (Patient.extension
             // + sliceName=race, max=1). Colon paths (Patient.extension:race) are the other
             // style. Neither may cap the whole list — that belongs to CheckSlicing.
             if (IsSliceDefinition(element, path))
->>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
                 continue;
             if (!string.IsNullOrEmpty(element.SliceName?.StringValue))
                 continue;
@@ -303,7 +297,6 @@ public sealed class ProfileValidator : IProfileValidator
             return;
         }
 
-<<<<<<< HEAD
         if (inCatalog && expansion.Codes.Count == 0 && options.Terminology is null)
         {
             issues.Add(new ProfileValidationIssue(
@@ -321,9 +314,7 @@ public sealed class ProfileValidator : IProfileValidator
             ? "warning"
             : "error";
 
-=======
         var warnedIncomplete = false;
->>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
         foreach (var (system, code) in CollectCodes(nodes))
         {
             var result = terminology.ValidateCode(system, code, valueSet);

@@ -286,7 +286,6 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
-<<<<<<< HEAD
     public void Official_extension_slices_do_not_apply_slice_max_to_all_extensions()
     {
         var sd = PatientExtensionSliceSd();
@@ -298,7 +297,11 @@ public sealed class ProfileValidatorTests
             "http://hl7.org/fhir/us/core/StructureDefinition/us-core-genderIdentity");
 
         var report = CreateValidator(sd).Validate(patient, [UsCorePatientProfile]);
-=======
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "max" && i.Location == "Patient.extension");
+    }
+
+    [Fact]
     public void Snapshot_style_slice_max_does_not_apply_to_all_extensions()
     {
         var canonical = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient";
@@ -350,13 +353,11 @@ public sealed class ProfileValidatorTests
         };
 
         var report = FhirSdkR4.CreateValidator(Catalog(sd)).Validate(patient, [canonical]);
->>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
         Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
         Assert.DoesNotContain(report.Issues, i => i.Code == "max" && i.Location == "Patient.extension");
     }
 
     [Fact]
-<<<<<<< HEAD
     public void Official_extension_slice_max_is_enforced_per_url()
     {
         var sd = PatientExtensionSliceSd();
@@ -370,14 +371,6 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
-    public void Whole_system_valueset_without_concepts_is_warning_not_error()
-    {
-        const string vsUrl = "http://hl7.org/fhir/us/core/ValueSet/us-core-usps-state";
-        var sd = PatientAddressStateSd(vsUrl, "extensible");
-        var vs = new ValueSet
-        {
-            Url = new FhirUri(vsUrl),
-=======
     public void Choice_x_with_one_populated_variant_counts_as_one()
     {
         var sd = ObservationSd();
@@ -451,6 +444,38 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
+    public void Whole_system_valueset_without_concepts_is_warning_not_error()
+    {
+        const string vsUrl = "http://hl7.org/fhir/us/core/ValueSet/us-core-usps-state";
+        var sd = PatientAddressStateSd(vsUrl, "extensible");
+        var vs = new ValueSet
+        {
+            Url = new FhirUri(vsUrl),
+            Compose = new ValueSet.ComposeComponent
+            {
+                Include =
+                [
+                    new ValueSet.ComposeComponent.ComposeIncludeComponent
+                    {
+                        System = new FhirUri("https://www.usps.com/")
+                    }
+                ]
+            }
+        };
+
+        var catalog = Catalog(sd);
+        catalog.Add(vs);
+        var patient = new Patient
+        {
+            Address = [new Address { State = new FhirString("OK") }]
+        };
+        var report = FhirSdkR4.CreateValidator(catalog).Validate(patient, [UsCorePatientProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding" && i.Location == "Patient.address.state");
+        Assert.DoesNotContain(report.Issues, i => i.Diagnostics.Contains("|OK", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Open_valueset_system_include_is_warning_not_required_error()
     {
         var sd = ObservationSd();
@@ -464,18 +489,13 @@ public sealed class ProfileValidatorTests
         var vs = new ValueSet
         {
             Url = new FhirUri("http://example.org/ValueSet/open-status"),
->>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
             Compose = new ValueSet.ComposeComponent
             {
                 Include =
                 [
                     new ValueSet.ComposeComponent.ComposeIncludeComponent
                     {
-<<<<<<< HEAD
-                        System = new FhirUri("https://www.usps.com/")
-=======
                         System = new FhirUri("http://hl7.org/fhir/observation-status")
->>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
                     }
                 ]
             }
@@ -483,15 +503,10 @@ public sealed class ProfileValidatorTests
 
         var catalog = Catalog(sd);
         catalog.Add(vs);
-<<<<<<< HEAD
-        var patient = new Patient
-        {
-            Address = [new Address { State = new FhirString("OK") }]
-        };
-        var report = FhirSdkR4.CreateValidator(catalog).Validate(patient, [UsCorePatientProfile]);
+        var report = FhirSdkR4.CreateValidator(catalog).Validate(ValidObservation(), [ObservationProfile]);
         Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
-        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding" && i.Location == "Patient.address.state");
-        Assert.DoesNotContain(report.Issues, i => i.Diagnostics.Contains("|OK", StringComparison.Ordinal));
+        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding");
+        Assert.DoesNotContain(report.Issues, i => i.Severity == "error" && i.Code == "binding");
     }
 
     [Fact]
@@ -564,11 +579,6 @@ public sealed class ProfileValidatorTests
         Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding");
         Assert.Contains(report.Issues, i => i.Diagnostics.Contains("OK", StringComparison.Ordinal)
                                             && !i.Diagnostics.Contains("|OK", StringComparison.Ordinal));
-=======
-        var report = FhirSdkR4.CreateValidator(catalog).Validate(ValidObservation(), [ObservationProfile]);
-        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
-        Assert.Contains(report.Issues, i => i.Severity == "warning" && i.Code == "binding");
-        Assert.DoesNotContain(report.Issues, i => i.Severity == "error" && i.Code == "binding");
     }
 
     [Fact]
@@ -626,7 +636,6 @@ public sealed class ProfileValidatorTests
         Assert.NotNull(parsed.DosageInstruction);
         Assert.NotNull(parsed.DosageInstruction![0].DoseAndRate);
         Assert.NotNull(parsed.DosageInstruction[0].Timing?.Repeat);
->>>>>>> 8d43c94fc33d2c6f4e2de67a954a5de6bdef3e63
     }
 
     [Fact]
