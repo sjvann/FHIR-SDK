@@ -383,7 +383,7 @@ public sealed class ProfileValidator : IProfileValidator
                                 ? slicePath[(slicePath.IndexOf(':') + 1)..]
                                 : slicePath);
             var location = string.IsNullOrEmpty(sliceName) ? slicePath : $"{path}:{sliceName}";
-            var matched = nodes.Where(n => MatchesSlice(n, sliced, slice)).ToList();
+            var matched = nodes.Where(n => MatchesSlice(n, snapshot, sliced, slice)).ToList();
             AddCardinalityIssues(slice, location, matched.Count, issues);
             _ = instance;
         }
@@ -406,7 +406,11 @@ public sealed class ProfileValidator : IProfileValidator
                && p.IndexOf('.', colonPrefix.Length) < 0;
     }
 
-    private static bool MatchesSlice(IFhirNode node, ElementDefinition sliced, ElementDefinition slice)
+    private static bool MatchesSlice(
+        IFhirNode node,
+        ProfileSnapshot snapshot,
+        ElementDefinition sliced,
+        ElementDefinition slice)
     {
         var discriminators = sliced.Slicing?.Discriminator;
         if (discriminators is null || discriminators.Count == 0)
@@ -435,32 +439,13 @@ public sealed class ProfileValidator : IProfileValidator
             if (target is null)
                 return false;
 
-            if (slice.FixedCode?.StringValue is { } fixedCode
-                && !string.Equals(target.GetValue()?.ToString(), fixedCode, StringComparison.Ordinal))
-                return false;
-
-            if (slice.FixedUri?.StringValue is { } fixedUri
-                && !string.Equals(target.GetValue()?.ToString(), fixedUri, StringComparison.Ordinal))
-                return false;
-
-            if (slice.PatternCoding is { } patternCoding)
+            // Official snapshots put pattern/fixed on the discriminator child
+            // (Observation.component:systolic.code), not the slice root.
+            var constraint = DiscriminatorConstraint(snapshot, slice, dpath);
+            var patterns = CollectFixedOrPattern(constraint).ToList();
+            foreach (var (_, expected) in patterns)
             {
-                var code = target.Children("code").FirstOrDefault()?.GetValue()?.ToString()
-                           ?? target.GetValue()?.ToString();
-                if (patternCoding.Code?.StringValue is { } expected
-                    && !string.Equals(code, expected, StringComparison.Ordinal))
-                    return false;
-            }
-
-            if (slice.PatternCodeableConcept?.Coding is { Count: > 0 } patternCc)
-            {
-                var expected = patternCc[0].Code?.StringValue;
-                var codes = target.Children("coding")
-                    .Select(c => c.Children("code").FirstOrDefault()?.GetValue()?.ToString())
-                    .ToList();
-                if (codes.Count == 0)
-                    codes.Add(target.Children("code").FirstOrDefault()?.GetValue()?.ToString());
-                if (expected is not null && !codes.Contains(expected))
+                if (!MatchesFixedOrPattern(target, expected))
                     return false;
             }
 
@@ -476,10 +461,110 @@ public sealed class ProfileValidator : IProfileValidator
                     actualUrl = node.Children("url").FirstOrDefault()?.GetValue()?.ToString();
                 if (!expectedProfiles.Contains(actualUrl, StringComparer.Ordinal))
                     return false;
+                continue;
             }
+
+            // value／pattern 切片必須有可區分的值，否則每個 instance 都會灌進第一個 slice。
+            if (patterns.Count == 0
+                && (string.Equals(dtype, "value", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(dtype, "pattern", StringComparison.OrdinalIgnoreCase)))
+                return false;
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// value／pattern discriminator 的比對值在切片子元素上（例如 <c>code</c>），
+    /// 找不到時才退回 slice 根（category:vital 把 pattern 寫在根上）。
+    /// </summary>
+    private static ElementDefinition DiscriminatorConstraint(
+        ProfileSnapshot snapshot,
+        ElementDefinition slice,
+        string discriminatorPath)
+    {
+        if (string.IsNullOrEmpty(discriminatorPath) || discriminatorPath == "$this")
+            return slice;
+
+        var child = FindSliceChild(snapshot.Elements, slice, discriminatorPath);
+        if (child is not null && HasFixedOrPattern(child))
+            return child;
+        return slice;
+    }
+
+    private static bool HasFixedOrPattern(ElementDefinition element)
+        => CollectFixedOrPattern(element).Any();
+
+    private static ElementDefinition? FindSliceChild(
+        IReadOnlyList<ElementDefinition> elements,
+        ElementDefinition slice,
+        string relativePath)
+    {
+        var unsliced = UnslicedPath(slice.Path?.StringValue);
+        var sliceName = slice.SliceName?.StringValue ?? "";
+        var colonRoot = slice.Path?.StringValue is { } slicePath && slicePath.Contains(':', StringComparison.Ordinal)
+            ? slicePath
+            : $"{unsliced}:{sliceName}";
+        var expectedId = $"{unsliced}:{sliceName}.{relativePath}";
+        var expectedPaths = new HashSet<string>(StringComparer.Ordinal)
+        {
+            $"{unsliced}.{relativePath}",
+            $"{colonRoot}.{relativePath}"
+        };
+
+        var start = IndexOfElement(elements, slice);
+        if (start >= 0)
+        {
+            for (var i = start + 1; i < elements.Count; i++)
+            {
+                var e = elements[i];
+                if (IsSliceSibling(e, unsliced, sliceName))
+                    break;
+                if (string.Equals(e.Id?.StringValue, expectedId, StringComparison.Ordinal)
+                    || expectedPaths.Contains(e.Path?.StringValue ?? ""))
+                    return e;
+            }
+        }
+
+        return elements.FirstOrDefault(e =>
+            string.Equals(e.Id?.StringValue, expectedId, StringComparison.Ordinal));
+    }
+
+    private static int IndexOfElement(IReadOnlyList<ElementDefinition> elements, ElementDefinition slice)
+    {
+        for (var i = 0; i < elements.Count; i++)
+        {
+            if (ReferenceEquals(elements[i], slice))
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static bool IsSliceSibling(ElementDefinition element, string unslicedPath, string currentSlice)
+    {
+        var name = element.SliceName?.StringValue;
+        if (string.IsNullOrEmpty(name) || string.Equals(name, currentSlice, StringComparison.Ordinal))
+            return false;
+
+        var path = element.Path?.StringValue ?? "";
+        if (string.Equals(path, unslicedPath, StringComparison.Ordinal))
+            return true;
+
+        return path.StartsWith(unslicedPath + ":", StringComparison.Ordinal)
+               && path.IndexOf('.', unslicedPath.Length) < 0;
+    }
+
+    private static string UnslicedPath(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "";
+        var colon = path.IndexOf(':');
+        if (colon < 0)
+            return path;
+        var after = path[(colon + 1)..];
+        var dot = after.IndexOf('.');
+        return dot < 0 ? path[..colon] : $"{path[..colon]}{after[dot..]}";
     }
 
     private static IEnumerable<IFhirNode> WalkRelative(IFhirNode node, string relativePath)

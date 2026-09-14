@@ -12,6 +12,7 @@ public sealed class ProfileValidatorTests
 {
     private const string ObservationProfile = "http://hl7.org/fhir/StructureDefinition/Observation";
     private const string UsCorePatientProfile = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient";
+    private const string UsCoreBloodPressureProfile = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-blood-pressure";
 
     [Fact]
     public void Unknown_canonical_is_error()
@@ -690,6 +691,40 @@ public sealed class ProfileValidatorTests
     }
 
     [Fact]
+    public void Pattern_on_slice_child_does_not_count_other_slices()
+    {
+        var sd = UsCoreBloodPressureSd();
+        var report = CreateValidator(sd).Validate(BloodPressureObservation(), [UsCoreBloodPressureProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "max");
+    }
+
+    [Fact]
+    public void Duplicate_systolic_component_still_fails_slice_max()
+    {
+        var sd = UsCoreBloodPressureSd();
+        var obs = BloodPressureObservation();
+        obs.Component =
+        [
+            BloodPressureComponent("8480-6"),
+            BloodPressureComponent("8480-6")
+        ];
+        var report = CreateValidator(sd).Validate(obs, [UsCoreBloodPressureProfile]);
+        Assert.False(report.Passed);
+        Assert.Contains(report.Issues, i => i.Location == "Observation.component:systolic" && i.Code == "max");
+        Assert.Contains(report.Issues, i => i.Location == "Observation.component:diastolic" && i.Code == "required");
+    }
+
+    [Fact]
+    public void Colon_path_slice_child_pattern_discriminates_components()
+    {
+        var sd = UsCoreBloodPressureSd(colonChildPaths: true);
+        var report = CreateValidator(sd).Validate(BloodPressureObservation(), [UsCoreBloodPressureProfile]);
+        Assert.True(report.Passed, string.Join("; ", report.Issues.Select(i => i.Diagnostics)));
+        Assert.DoesNotContain(report.Issues, i => i.Code == "max");
+    }
+
+    [Fact]
     public void ElementDefinition_json_keeps_binding_constraint_and_slicing()
     {
         var ed = new ElementDefinition
@@ -850,6 +885,121 @@ public sealed class ProfileValidatorTests
             Coding = [new Coding { System = new FhirUri("http://loinc.org"), Code = new FhirString("29463-7") }]
         }
     };
+
+    private static Observation BloodPressureObservation()
+    {
+        var obs = ValidObservation();
+        obs.Code = new CodeableConcept
+        {
+            Coding = [new Coding { System = new FhirUri("http://loinc.org"), Code = new FhirString("85354-9") }],
+            Text = new FhirString("Blood pressure systolic and diastolic")
+        };
+        obs.Component =
+        [
+            BloodPressureComponent("8480-6"),
+            BloodPressureComponent("8462-4")
+        ];
+        return obs;
+    }
+
+    private static Observation.ComponentComponent BloodPressureComponent(string loinc)
+        => new()
+        {
+            Code = new CodeableConcept
+            {
+                Coding = [new Coding { System = new FhirUri("http://loinc.org"), Code = new FhirString(loinc) }]
+            }
+        };
+
+    private static StructureDefinition UsCoreBloodPressureSd(bool colonChildPaths = false)
+    {
+        string ChildPath(string slice) => colonChildPaths
+            ? $"Observation.component:{slice}.code"
+            : "Observation.component.code";
+
+        return new StructureDefinition
+        {
+            Url = new FhirUri(UsCoreBloodPressureProfile),
+            Type = new FhirUri("Observation"),
+            Snapshot = new StructureDefinition.SnapshotComponent
+            {
+                Element =
+                [
+                    new ElementDefinition { Path = new FhirString("Observation"), Min = new FhirUnsignedInt(0), Max = new FhirString("*") },
+                    new ElementDefinition
+                    {
+                        Path = new FhirString("Observation.status"),
+                        Min = new FhirUnsignedInt(1),
+                        Max = new FhirString("1"),
+                        Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("code") }]
+                    },
+                    new ElementDefinition
+                    {
+                        Path = new FhirString("Observation.code"),
+                        Min = new FhirUnsignedInt(1),
+                        Max = new FhirString("1"),
+                        Type = [new ElementDefinitionTypeComponent { Code = new FhirUri("CodeableConcept") }]
+                    },
+                    new ElementDefinition
+                    {
+                        Path = new FhirString("Observation.component"),
+                        Min = new FhirUnsignedInt(2),
+                        Max = new FhirString("*"),
+                        Slicing = new ElementDefinitionSlicingComponent
+                        {
+                            Rules = new FhirCode("open"),
+                            Discriminator =
+                            [
+                                new ElementDefinitionSlicingDiscriminatorComponent
+                                {
+                                    Type = new FhirCode("pattern"),
+                                    Path = new FhirString("code")
+                                }
+                            ]
+                        }
+                    },
+                    new ElementDefinition
+                    {
+                        Id = new FhirString("Observation.component:systolic"),
+                        Path = new FhirString("Observation.component"),
+                        SliceName = new FhirString("systolic"),
+                        Min = new FhirUnsignedInt(1),
+                        Max = new FhirString("1")
+                    },
+                    new ElementDefinition
+                    {
+                        Id = new FhirString("Observation.component:systolic.code"),
+                        Path = new FhirString(ChildPath("systolic")),
+                        Min = new FhirUnsignedInt(1),
+                        Max = new FhirString("1"),
+                        PatternCodeableConcept = new CodeableConcept
+                        {
+                            Coding = [new Coding { System = new FhirUri("http://loinc.org"), Code = new FhirString("8480-6") }]
+                        }
+                    },
+                    new ElementDefinition
+                    {
+                        Id = new FhirString("Observation.component:diastolic"),
+                        Path = new FhirString("Observation.component"),
+                        SliceName = new FhirString("diastolic"),
+                        Min = new FhirUnsignedInt(1),
+                        Max = new FhirString("1")
+                    },
+                    new ElementDefinition
+                    {
+                        Id = new FhirString("Observation.component:diastolic.code"),
+                        Path = new FhirString(ChildPath("diastolic")),
+                        Min = new FhirUnsignedInt(1),
+                        Max = new FhirString("1"),
+                        PatternCodeableConcept = new CodeableConcept
+                        {
+                            Coding = [new Coding { System = new FhirUri("http://loinc.org"), Code = new FhirString("8462-4") }]
+                        }
+                    }
+                ]
+            }
+        };
+    }
 
     private static ElementDefinition SnapshotExtensionSlice(string name) => new()
     {

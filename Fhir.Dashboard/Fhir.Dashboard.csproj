@@ -7,6 +7,8 @@
     <RootNamespace>Fhir.Dashboard</RootNamespace>
     <AssemblyName>Fhir.Dashboard</AssemblyName>
     <IsPackable>false</IsPackable>
+    <ApplicationIcon Condition="'$(ApplicationIcon)' == '' and Exists('$(MSBuildProjectDirectory)\wwwroot\favicon.ico')">wwwroot\favicon.ico</ApplicationIcon>
+    <ApplicationIcon Condition="'$(ApplicationIcon)' == '' and Exists('$(MSBuildProjectDirectory)\Assets\app.ico')">Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
